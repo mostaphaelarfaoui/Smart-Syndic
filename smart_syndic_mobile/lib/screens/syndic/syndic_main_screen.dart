@@ -67,6 +67,7 @@ class _SyndicMainScreenState extends State<SyndicMainScreen> {
     );
 
     if (confirmed == true && mounted) {
+      Provider.of<SyndicProvider>(context, listen: false).clear();
       await Provider.of<AuthProvider>(context, listen: false).logout();
     }
   }

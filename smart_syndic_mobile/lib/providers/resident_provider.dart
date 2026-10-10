@@ -25,6 +25,17 @@ class ResidentProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
+  void clear() {
+    _balanceInfo = null;
+    _myPayments = [];
+    _transparencyData = null;
+    _mySuggestions = [];
+    _polls = [];
+    _isLoading = false;
+    _errorMessage = null;
+    notifyListeners();
+  }
+
   Future<void> fetchMyBalance() async {
     _isLoading = true;
     _errorMessage = null;

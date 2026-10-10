@@ -36,6 +36,21 @@ class SyndicProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
+  void clear() {
+    _kpis = null;
+    _payments = [];
+    _expenses = [];
+    _apartments = [];
+    _buildings = [];
+    _pendingResidents = [];
+    _suggestions = [];
+    _polls = [];
+    _invitationCode = null;
+    _isLoading = false;
+    _errorMessage = null;
+    notifyListeners();
+  }
+
   Future<void> fetchDashboardKpis() async {
     _isLoading = true;
     _errorMessage = null;

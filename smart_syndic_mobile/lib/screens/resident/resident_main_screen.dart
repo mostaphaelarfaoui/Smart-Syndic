@@ -64,6 +64,7 @@ class _ResidentMainScreenState extends State<ResidentMainScreen> {
     );
 
     if (confirmed == true && mounted) {
+      Provider.of<ResidentProvider>(context, listen: false).clear();
       await Provider.of<AuthProvider>(context, listen: false).logout();
     }
   }
