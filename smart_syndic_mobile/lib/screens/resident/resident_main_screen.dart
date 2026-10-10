@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/resident_provider.dart';
+import '../../core/services/api_service.dart';
 import '../settings/server_settings_dialog.dart';
 import '../settings/profile_settings_screen.dart';
 import 'tabs/resident_home_tab.dart';
@@ -105,6 +106,27 @@ class _ResidentMainScreenState extends State<ResidentMainScreen> {
               context: context,
               builder: (_) => const ServerSettingsDialog(),
             ),
+          ),
+          ValueListenableBuilder<bool>(
+            valueListenable: ApiService().isNetworkActive,
+            builder: (context, isActive, child) {
+              if (isActive) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
           ),
           IconButton(
             icon: const Icon(Icons.logout, color: AppColors.danger),

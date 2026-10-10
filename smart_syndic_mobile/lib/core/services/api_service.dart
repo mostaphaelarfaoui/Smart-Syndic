@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/api_constants.dart';
@@ -7,6 +8,22 @@ class ApiService {
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
   ApiService._internal();
+
+  final ValueNotifier<bool> isNetworkActive = ValueNotifier(false);
+  int _activeRequests = 0;
+
+  void _startRequest() {
+    _activeRequests++;
+    if (_activeRequests == 1) isNetworkActive.value = true;
+  }
+
+  void _endRequest() {
+    _activeRequests--;
+    if (_activeRequests <= 0) {
+      _activeRequests = 0;
+      isNetworkActive.value = false;
+    }
+  }
 
   String? _token;
   String _baseUrl = ApiConstants.defaultBaseUrl;
@@ -46,16 +63,20 @@ class ApiService {
 
   Future<dynamic> get(String endpoint) async {
     final url = Uri.parse('$_baseUrl$endpoint');
+    _startRequest();
     try {
       final response = await http.get(url, headers: _headers);
       return _handleResponse(response);
     } catch (e) {
       throw Exception('تعذر الاتصال بالخادم: $e');
+    } finally {
+      _endRequest();
     }
   }
 
   Future<dynamic> post(String endpoint, Map<String, dynamic> data) async {
     final url = Uri.parse('$_baseUrl$endpoint');
+    _startRequest();
     try {
       final response = await http.post(
         url,
@@ -65,11 +86,14 @@ class ApiService {
       return _handleResponse(response);
     } catch (e) {
       throw Exception('تعذر الاتصال بالخادم: $e');
+    } finally {
+      _endRequest();
     }
   }
 
   Future<dynamic> put(String endpoint, Map<String, dynamic> data) async {
     final url = Uri.parse('$_baseUrl$endpoint');
+    _startRequest();
     try {
       final response = await http.put(
         url,
@@ -79,6 +103,8 @@ class ApiService {
       return _handleResponse(response);
     } catch (e) {
       throw Exception('تعذر الاتصال بالخادم: $e');
+    } finally {
+      _endRequest();
     }
   }
 
