@@ -73,6 +73,38 @@ class SuggestionPollController extends Controller
         ], 201);
     }
 
+    /**
+     * POST /api/v1/syndic/suggestions/{id}/accept
+     */
+    public function acceptSuggestion(Request $request, string $id): JsonResponse
+    {
+        $suggestion = Suggestion::where('tenant_id', $request->user()->tenant_id)
+            ->findOrFail($id);
+
+        $suggestion->markAccepted($request->input('notes'));
+
+        return response()->json([
+            'message'    => 'تمت الموافقة على الاقتراح بنجاح',
+            'suggestion' => $suggestion,
+        ]);
+    }
+
+    /**
+     * POST /api/v1/syndic/suggestions/{id}/reject
+     */
+    public function rejectSuggestion(Request $request, string $id): JsonResponse
+    {
+        $suggestion = Suggestion::where('tenant_id', $request->user()->tenant_id)
+            ->findOrFail($id);
+
+        $suggestion->markRejected($request->input('notes'));
+
+        return response()->json([
+            'message'    => 'تم رفض الاقتراح',
+            'suggestion' => $suggestion,
+        ]);
+    }
+
     // ─── Polls ────────────────────────────────────────────────────────
 
     /**

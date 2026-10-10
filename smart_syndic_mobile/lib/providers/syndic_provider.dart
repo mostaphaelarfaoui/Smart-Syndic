@@ -322,6 +322,34 @@ class SyndicProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> acceptSuggestion(String suggestionId, {String? notes}) async {
+    try {
+      await _api.post('${ApiConstants.syndicSuggestions}/$suggestionId/accept', {
+        if (notes != null) 'notes': notes,
+      });
+      await fetchSuggestions();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> rejectSuggestion(String suggestionId, {String? notes}) async {
+    try {
+      await _api.post('${ApiConstants.syndicSuggestions}/$suggestionId/reject', {
+        if (notes != null) 'notes': notes,
+      });
+      await fetchSuggestions();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> createPoll({
     required String title,
     required String description,

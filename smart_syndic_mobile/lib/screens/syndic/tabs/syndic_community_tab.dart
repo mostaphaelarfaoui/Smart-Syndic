@@ -32,6 +32,37 @@ class _SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTick
     super.dispose();
   }
 
+  Future<bool?> _showConfirmDialog(
+    BuildContext context, {
+    required String title,
+    required String message,
+    required String confirmText,
+    required Color confirmColor,
+  }) {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title, style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 16)),
+        content: Text(message, style: GoogleFonts.cairo(fontSize: 13)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('إلغاء', style: GoogleFonts.cairo(color: AppColors.textSecondary)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: confirmColor,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(confirmText, style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final syndic = context.watch<SyndicProvider>();
@@ -299,12 +330,16 @@ class _SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTick
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withAlpha(20),
+                              color: suggestion.statusColor.withAlpha(20),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
                               suggestion.statusArabic,
-                              style: GoogleFonts.cairo(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.bold),
+                              style: GoogleFonts.cairo(
+                                fontSize: 11,
+                                color: suggestion.statusColor,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ],
@@ -334,11 +369,89 @@ class _SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTick
                       ),
                       if (suggestion.status == 'PENDING') ...[
                         const Divider(height: 20),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.success,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                onPressed: () async {
+                                  final confirm = await _showConfirmDialog(
+                                    context,
+                                    title: 'قبول الاقتراح',
+                                    message: 'هل تريد تأكيد قبول هذا الاقتراح والموافقة عليه؟',
+                                    confirmText: 'تأكيد القبول',
+                                    confirmColor: AppColors.success,
+                                  );
+                                  if (confirm == true) {
+                                    await syndic.acceptSuggestion(suggestion.id);
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          backgroundColor: AppColors.success,
+                                          content: Text('تمت الموافقة على الاقتراح بنجاح ✓'),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                                icon: const Icon(Icons.check_circle_outline, size: 16),
+                                label: Text(
+                                  'قبول',
+                                  style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppColors.danger,
+                                  side: const BorderSide(color: AppColors.danger),
+                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                onPressed: () async {
+                                  final confirm = await _showConfirmDialog(
+                                    context,
+                                    title: 'رفض الاقتراح',
+                                    message: 'هل تريد تأكيد رفض هذا الاقتراح؟',
+                                    confirmText: 'تأكيد الرفض',
+                                    confirmColor: AppColors.danger,
+                                  );
+                                  if (confirm == true) {
+                                    await syndic.rejectSuggestion(suggestion.id);
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          backgroundColor: AppColors.danger,
+                                          content: Text('تم رفض الاقتراح'),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                                icon: const Icon(Icons.cancel_outlined, size: 16),
+                                label: Text(
+                                  'رفض',
+                                  style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
                         ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.secondary,
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             minimumSize: const Size(double.infinity, 36),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           ),
                           onPressed: () {
                             showDialog(
