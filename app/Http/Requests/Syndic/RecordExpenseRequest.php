@@ -19,7 +19,8 @@ class RecordExpenseRequest extends FormRequest
             'title'              => ['required', 'string', 'min:3', 'max:255'],
             'amount'             => ['required', 'numeric', 'min:0.01', 'max:999999.99'],
             'expense_date'       => ['required', 'date', 'before_or_equal:today'],
-            'invoice_proof'      => ['required', 'file', 'max:5120'],
+            'invoice_proof'      => ['nullable', 'file', 'max:5120'],
+            'invoice_proof_path' => ['nullable', 'string'],
         ];
     }
 }

@@ -123,6 +123,39 @@ class ApiService {
     }
   }
 
+  Future<dynamic> postMultipart(
+    String endpoint,
+    Map<String, String> fields, {
+    String? fileField,
+    String? filePath,
+  }) async {
+    final url = Uri.parse('$_baseUrl$endpoint');
+    _startRequest();
+    try {
+      final request = http.MultipartRequest('POST', url);
+      request.headers.addAll({
+        'Accept': 'application/json',
+        'Accept-Language': 'ar',
+        'Bypass-Tunnel-Reminder': 'true',
+        if (_token != null) 'Authorization': 'Bearer $_token',
+      });
+
+      request.fields.addAll(fields);
+
+      if (fileField != null && filePath != null && filePath.isNotEmpty) {
+        request.files.add(await http.MultipartFile.fromPath(fileField, filePath));
+      }
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      return _handleResponse(response);
+    } catch (e) {
+      throw Exception('تعذر الاتصال بالخادم: $e');
+    } finally {
+      _endRequest();
+    }
+  }
+
   dynamic _handleResponse(http.Response response) {
     dynamic body;
     try {

@@ -28,7 +28,7 @@ return new class extends Migration
             $table->string('title', 255);
             $table->decimal('amount', 10, 2);
             $table->date('expense_date');
-            $table->text('invoice_proof_path');
+            $table->text('invoice_proof_path')->nullable();
 
             $table->timestampsTz();
 

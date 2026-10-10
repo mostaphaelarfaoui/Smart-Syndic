@@ -24,11 +24,15 @@ class ExpenseController extends Controller
     {
         $data = $request->validated();
 
-        // Upload invoice proof
-        $data['invoice_proof_path'] = $this->uploadService->upload(
-            $request->file('invoice_proof'),
-            'expense-proofs'
-        );
+        // Upload invoice proof if provided
+        if ($request->hasFile('invoice_proof')) {
+            $data['invoice_proof_path'] = $this->uploadService->upload(
+                $request->file('invoice_proof'),
+                'expense-proofs'
+            );
+        } else {
+            $data['invoice_proof_path'] = $data['invoice_proof_path'] ?? '';
+        }
 
         $expense = Expense::create([
             'tenant_id'          => $request->user()->tenant_id,

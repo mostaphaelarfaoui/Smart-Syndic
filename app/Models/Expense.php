@@ -28,6 +28,8 @@ class Expense extends Model
         'expense_date' => 'date',
     ];
 
+    protected $appends = ['invoice_proof_url'];
+
     // ─── Relationships ────────────────────────────────────────────────
 
     public function building(): BelongsTo
@@ -43,8 +45,12 @@ class Expense extends Model
             return null;
         }
 
-        $ttl = config('smartsyndic.uploads.signed_url_ttl', 15);
-        return Storage::disk(config('smartsyndic.uploads.storage_disk'))
-            ->temporaryUrl($this->invoice_proof_path, now()->addMinutes($ttl));
+        $disk = config('smartsyndic.uploads.storage_disk', 'public');
+        if ($disk === 's3') {
+            $ttl = config('smartsyndic.uploads.signed_url_ttl', 15);
+            return Storage::disk('s3')->temporaryUrl($this->invoice_proof_path, now()->addMinutes($ttl));
+        }
+
+        return url('storage/' . $this->invoice_proof_path);
     }
 }

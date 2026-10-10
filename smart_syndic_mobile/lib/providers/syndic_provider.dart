@@ -143,20 +143,36 @@ class SyndicProvider extends ChangeNotifier {
     required String title,
     required double amount,
     required String expenseDate,
-    String? invoiceProofPath,
+    String? invoiceFilePath,
   }) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      await _api.post(ApiConstants.syndicExpenses, {
+      final fields = <String, String>{
         if (buildingId != null) 'building_id': buildingId,
         'category': category,
         'title': title,
-        'amount': amount,
+        'amount': amount.toString(),
         'expense_date': expenseDate,
-        'invoice_proof_path': invoiceProofPath ?? 'sample_receipt.pdf',
-      });
+      };
+
+      if (invoiceFilePath != null && invoiceFilePath.isNotEmpty) {
+        await _api.postMultipart(
+          ApiConstants.syndicExpenses,
+          fields,
+          fileField: 'invoice_proof',
+          filePath: invoiceFilePath,
+        );
+      } else {
+        await _api.post(ApiConstants.syndicExpenses, {
+          if (buildingId != null) 'building_id': buildingId,
+          'category': category,
+          'title': title,
+          'amount': amount,
+          'expense_date': expenseDate,
+        });
+      }
 
       await fetchExpenses();
       await fetchDashboardKpis();

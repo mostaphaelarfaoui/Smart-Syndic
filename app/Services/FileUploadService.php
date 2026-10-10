@@ -30,10 +30,11 @@ class FileUploadService
         $extension = $this->getExtensionFromMime($file->getMimeType());
         $filename  = Str::uuid()->toString() . '.' . $extension;
 
-        $disk = config('smartsyndic.uploads.storage_disk', 's3');
+        $disk = config('smartsyndic.uploads.storage_disk', 'public');
+        $visibility = ($disk === 's3') ? 'private' : 'public';
         $path = $file->storeAs($directory, $filename, [
             'disk'       => $disk,
-            'visibility' => 'private',
+            'visibility' => $visibility,
         ]);
 
         if (! $path) {

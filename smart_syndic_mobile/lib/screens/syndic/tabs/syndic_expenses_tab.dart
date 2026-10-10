@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/services/api_service.dart';
 import '../../../providers/syndic_provider.dart';
 import '../../../widgets/empty_state.dart';
 import '../dialogs/record_expense_dialog.dart';
@@ -200,9 +201,10 @@ class _SyndicExpensesTabState extends State<SyndicExpensesTab> {
                                       icon: const Icon(Icons.receipt, color: AppColors.primary, size: 20),
                                       tooltip: 'معاينة الفاتورة',
                                       onPressed: () async {
-                                        final uri = Uri.parse(expense.invoiceProofUrl!);
+                                        final resolved = ApiService().resolveMediaUrl(expense.invoiceProofUrl!);
+                                        final uri = Uri.parse(resolved);
                                         if (await canLaunchUrl(uri)) {
-                                          await launchUrl(uri);
+                                          await launchUrl(uri, mode: LaunchMode.externalApplication);
                                         }
                                       },
                                     ),
