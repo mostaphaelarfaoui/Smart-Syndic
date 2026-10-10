@@ -277,9 +277,11 @@ class _ResidentCommunityTabState extends State<ResidentCommunityTab> with Single
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'إجمالي الأصوات: $total',
-                            style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textLight),
+                          Expanded(
+                            child: Text(
+                              'إجمالي الأصوات: $total',
+                              style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textLight),
+                            ),
                           ),
                           Text(
                             'تاريخ الإغلاق: ${poll.expiresAt}',

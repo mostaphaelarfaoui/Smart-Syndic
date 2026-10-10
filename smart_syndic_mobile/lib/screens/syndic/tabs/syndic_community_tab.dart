@@ -469,9 +469,11 @@ class _SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTick
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'إجمالي الأصوات: $total صوت',
-                            style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textLight),
+                          Expanded(
+                            child: Text(
+                              'إجمالي الأصوات: $total صوت',
+                              style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textLight),
+                            ),
                           ),
                           Text(
                             'ينتهي في: ${poll.expiresAt}',
