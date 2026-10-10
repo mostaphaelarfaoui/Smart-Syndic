@@ -8,6 +8,7 @@ import '../models/poll_model.dart';
 class ResidentProvider extends ChangeNotifier {
   final ApiService _api = ApiService();
 
+  Map<String, dynamic>? _profile;
   Map<String, dynamic>? _balanceInfo;
   List<PaymentModel> _myPayments = [];
   Map<String, dynamic>? _transparencyData;
@@ -17,6 +18,7 @@ class ResidentProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
+  Map<String, dynamic>? get profile => _profile;
   Map<String, dynamic>? get balanceInfo => _balanceInfo;
   List<PaymentModel> get myPayments => _myPayments;
   Map<String, dynamic>? get transparencyData => _transparencyData;
@@ -26,6 +28,7 @@ class ResidentProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   void clear() {
+    _profile = null;
     _balanceInfo = null;
     _myPayments = [];
     _transparencyData = null;
@@ -34,6 +37,25 @@ class ResidentProvider extends ChangeNotifier {
     _isLoading = false;
     _errorMessage = null;
     notifyListeners();
+  }
+
+  Future<void> fetchProfile() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _api.get(ApiConstants.residentProfile);
+      if (response is Map<String, dynamic>) {
+        _profile = response;
+      }
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> fetchMyBalance() async {

@@ -6,7 +6,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/resident_provider.dart';
 import '../../core/services/api_service.dart';
 import '../settings/server_settings_dialog.dart';
-import '../settings/profile_settings_screen.dart';
+import 'resident_profile_screen.dart';
 import 'tabs/resident_home_tab.dart';
 import 'tabs/resident_payments_tab.dart';
 import 'tabs/resident_transparency_tab.dart';
@@ -32,6 +32,7 @@ class _ResidentMainScreenState extends State<ResidentMainScreen> {
 
   void _loadData() {
     final res = Provider.of<ResidentProvider>(context, listen: false);
+    res.fetchProfile();
     res.fetchMyBalance();
     res.fetchMyPayments();
     res.fetchTransparencyLedger();
@@ -94,10 +95,10 @@ class _ResidentMainScreenState extends State<ResidentMainScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.person_outline, color: AppColors.primary),
-            tooltip: 'حسابي',
+            tooltip: 'ملفي الشخصي',
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ProfileSettingsScreen()),
+              MaterialPageRoute(builder: (_) => const ResidentProfileScreen()),
             ),
           ),
           IconButton(

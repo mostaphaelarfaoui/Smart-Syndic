@@ -23,6 +23,7 @@ class ApiConstants {
   static const String syndicReportsExport = '/syndic/reports/export';
 
   // Resident endpoints
+  static const String residentProfile = '/resident/profile';
   static const String residentBalance = '/resident/my-balance';
   static const String residentPayments = '/resident/payments';
   static const String residentTransparency = '/resident/transparency-ledger';

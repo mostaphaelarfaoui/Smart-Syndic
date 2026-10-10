@@ -116,6 +116,9 @@ Route::middleware(['auth:sanctum', 'tenant.scope', 'tenant.active'])->group(func
         ->middleware('role:RESIDENT')
         ->group(function () {
 
+            Route::get('/profile', [ResidentController::class, 'profile'])
+                ->name('resident.profile');
+
             Route::get('/my-balance', [ResidentController::class, 'myBalance'])
                 ->name('resident.my-balance');
 

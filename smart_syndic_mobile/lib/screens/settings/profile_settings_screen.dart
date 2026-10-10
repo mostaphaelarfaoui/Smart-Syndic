@@ -28,7 +28,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     if (auth.user != null) {
       _firstNameController.text = auth.user!.firstName;
       _lastNameController.text = auth.user!.lastName;
-      _phoneController.text = auth.user!.phone ?? '';
+      _phoneController.text = auth.user!.phone;
     }
   }
 

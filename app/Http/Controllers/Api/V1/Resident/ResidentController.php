@@ -11,6 +11,7 @@ use App\Models\Payment;
 use App\Models\Poll;
 use App\Models\PollVote;
 use App\Models\Suggestion;
+use App\Models\User;
 use App\Services\FileUploadService;
 use App\Services\PaymentService;
 use Illuminate\Http\JsonResponse;
@@ -22,6 +23,72 @@ class ResidentController extends Controller
         private readonly PaymentService $paymentService,
         private readonly FileUploadService $uploadService,
     ) {}
+
+    /**
+     * GET /api/v1/resident/profile
+     */
+    public function profile(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $apartment = $user->apartments()->with('building')->first();
+        $tenant = $user->tenant;
+
+        $syndic = User::where('tenant_id', $tenant->id)
+            ->where('role', 'ADMIN_SYNDIC')
+            ->first();
+
+        $balance = null;
+        $totalPaid = 0.0;
+        $paymentsCount = 0;
+
+        if ($apartment) {
+            $balance = $this->paymentService->getApartmentBalance($apartment);
+            $payments = Payment::where('apartment_id', $apartment->id);
+            $totalPaid = (float) $payments->sum('amount');
+            $paymentsCount = (int) $payments->count();
+        }
+
+        return response()->json([
+            'user' => [
+                'id'         => $user->id,
+                'first_name' => $user->first_name,
+                'last_name'  => $user->last_name,
+                'full_name'  => trim($user->first_name . ' ' . $user->last_name),
+                'email'      => $user->email,
+                'phone'      => $user->phone,
+                'role'       => $user->role,
+                'status'     => $user->status,
+                'created_at' => $user->created_at?->format('Y-m-d'),
+            ],
+            'apartment' => $apartment ? [
+                'id'                 => $apartment->id,
+                'unit_number'        => $apartment->unit_number,
+                'floor'              => $apartment->floor,
+                'monthly_fee'        => (float) $apartment->monthly_fee,
+                'building_name'      => $apartment->building?->name,
+                'occupancy_type'     => $apartment->pivot?->occupancy_type ?? 'OWNER',
+                'is_primary_contact' => (bool) ($apartment->pivot?->is_primary_contact ?? true),
+            ] : null,
+            'residence' => [
+                'id'                      => $tenant->id,
+                'name'                    => $tenant->name,
+                'bank_rib'                => $tenant->bank_rib,
+                'is_transparency_enabled' => (bool) $tenant->is_transparency_enabled,
+            ],
+            'syndic' => $syndic ? [
+                'name'  => trim($syndic->first_name . ' ' . $syndic->last_name),
+                'phone' => $syndic->phone,
+                'email' => $syndic->email,
+            ] : null,
+            'financial_summary' => [
+                'total_due'      => $balance ? (float) $balance['total_due'] : 0.0,
+                'total_paid'     => $totalPaid,
+                'payments_count' => $paymentsCount,
+                'is_up_to_date'  => $balance ? ($balance['total_due'] <= 0) : true,
+                'unpaid_months'  => $balance['unpaid_months'] ?? [],
+            ],
+        ]);
+    }
 
     // ─── Dashboard / Balance ──────────────────────────────────────────
 
