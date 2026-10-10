@@ -82,8 +82,8 @@ class _ConvertToPollDialogState extends State<ConvertToPollDialog> {
 
     String finalDesc = _descController.text.trim();
     if (_showResidentInfo) {
-      final unit = widget.suggestion.apartment?.unitNumber ?? 'غير معروف';
-      final name = widget.suggestion.user?.name ?? 'غير معروف';
+      final unit = widget.suggestion.apartmentUnit ?? 'غير معروف';
+      final name = widget.suggestion.userName ?? 'غير معروف';
       finalDesc += '\n\n(مُقترح من طرف $name - شقة $unit)';
     }
 

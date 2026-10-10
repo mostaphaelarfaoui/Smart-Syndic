@@ -328,22 +328,7 @@ class SyndicProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> createPoll(String title, String? description, List<String> options, String expiresAt) async {
-    try {
-      await _api.post(ApiConstants.syndicPolls, {
-        'title': title,
-        if (description != null) 'description': description,
-        'options': options,
-        'expires_at': expiresAt,
-      });
-      await fetchPolls();
-      return true;
-    } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
-      notifyListeners();
-      return false;
-    }
-  }
+
 
   Future<void> regenerateInvitationCode() async {
     try {
