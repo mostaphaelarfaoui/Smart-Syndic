@@ -60,9 +60,13 @@ class Payment extends Model
             return null;
         }
 
-        $ttl = config('smartsyndic.uploads.signed_url_ttl', 15);
-        return Storage::disk(config('smartsyndic.uploads.storage_disk'))
-            ->temporaryUrl($this->receipt_pdf_path, now()->addMinutes($ttl));
+        $disk = config('smartsyndic.uploads.storage_disk', 'public');
+        if ($disk === 's3') {
+            $ttl = config('smartsyndic.uploads.signed_url_ttl', 15);
+            return Storage::disk('s3')->temporaryUrl($this->receipt_pdf_path, now()->addMinutes($ttl));
+        }
+
+        return url('storage/' . $this->receipt_pdf_path);
     }
 
     /**
@@ -74,9 +78,13 @@ class Payment extends Model
             return null;
         }
 
-        $ttl = config('smartsyndic.uploads.signed_url_ttl', 15);
-        return Storage::disk(config('smartsyndic.uploads.storage_disk'))
-            ->temporaryUrl($this->bank_receipt_proof, now()->addMinutes($ttl));
+        $disk = config('smartsyndic.uploads.storage_disk', 'public');
+        if ($disk === 's3') {
+            $ttl = config('smartsyndic.uploads.signed_url_ttl', 15);
+            return Storage::disk('s3')->temporaryUrl($this->bank_receipt_proof, now()->addMinutes($ttl));
+        }
+
+        return url('storage/' . $this->bank_receipt_proof);
     }
 
     // ─── Receipt Number Generator ─────────────────────────────────────

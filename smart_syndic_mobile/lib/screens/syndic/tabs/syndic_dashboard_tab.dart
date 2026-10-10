@@ -9,6 +9,7 @@ import '../../../providers/syndic_provider.dart';
 import '../../../widgets/stat_card.dart';
 import '../dialogs/record_payment_dialog.dart';
 import '../dialogs/record_expense_dialog.dart';
+import '../dialogs/generate_report_dialog.dart';
 
 class SyndicDashboardTab extends StatelessWidget {
   final Function(int) onNavigateTab;
@@ -220,6 +221,75 @@ class SyndicDashboardTab extends StatelessWidget {
                 onTap: () => onNavigateTab(1),
               ),
             ],
+          ),
+          // Official Assembly Report Banner
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.primary.withAlpha(20),
+                  AppColors.primary.withAlpha(8),
+                ],
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.primary.withAlpha(60)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.picture_as_pdf, color: Colors.white, size: 24),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'التقرير المالي للجمع العام',
+                        style: GoogleFonts.cairo(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        'كشف الحسابات والميزانية (القانون 18-00)',
+                        style: GoogleFonts.cairo(
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (_) => const GenerateReportDialog(),
+                    );
+                  },
+                  child: Text(
+                    'توليد',
+                    style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 16),
 

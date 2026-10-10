@@ -114,36 +114,53 @@ class FinancialReportService
     }
 
     /**
-     * Generate an A4 Portrait PDF report.
+     * Generate an A4 Portrait PDF report (or printable HTML report if binary unavailable).
      */
     private function generatePdf(array $data): array
     {
         $html = view('pdf.assembly-report', $data)->render();
 
-        $pdf = app('snappy.pdf.wrapper');
-        $pdf->loadHTML($html);
-        $pdf->setOptions([
-            'page-size'     => 'A4',
-            'orientation'   => 'Portrait',
-            'margin-top'    => 15,
-            'margin-bottom' => 15,
-            'margin-left'   => 12,
-            'margin-right'  => 12,
-            'encoding'      => 'UTF-8',
-            'footer-center' => '[page] / [topage]',
-            'footer-font-size' => 8,
-        ]);
-
         $filename = 'reports/' . Str::uuid() . '.pdf';
-        $disk     = config('smartsyndic.uploads.storage_disk', 's3');
+        $disk     = config('smartsyndic.uploads.storage_disk', 'public');
 
-        Storage::disk($disk)->put($filename, $pdf->output(), 'private');
+        try {
+            $pdf = app('snappy.pdf.wrapper');
+            $pdf->loadHTML($html);
+            $pdf->setOptions([
+                'page-size'     => 'A4',
+                'orientation'   => 'Portrait',
+                'margin-top'    => 15,
+                'margin-bottom' => 15,
+                'margin-left'   => 12,
+                'margin-right'  => 12,
+                'encoding'      => 'UTF-8',
+                'footer-center' => '[page] / [topage]',
+                'footer-font-size' => 8,
+            ]);
 
-        return [
-            'path'   => $filename,
-            'format' => 'pdf',
-            'url'    => Storage::disk($disk)->temporaryUrl($filename, now()->addMinutes(30)),
-        ];
+            Storage::disk($disk)->put($filename, $pdf->output());
+
+            $url = ($disk === 's3')
+                ? Storage::disk('s3')->temporaryUrl($filename, now()->addMinutes(30))
+                : url('storage/' . $filename);
+
+            return [
+                'path'   => $filename,
+                'format' => 'pdf',
+                'url'    => $url,
+            ];
+        } catch (\Throwable $e) {
+            // Snappy / wkhtmltopdf binary not installed on host.
+            // Save as responsive printable HTML report document.
+            $htmlFilename = 'reports/' . Str::uuid() . '.html';
+            Storage::disk('public')->put($htmlFilename, $html);
+
+            return [
+                'path'   => $htmlFilename,
+                'format' => 'html',
+                'url'    => url('storage/' . $htmlFilename),
+            ];
+        }
     }
 
     /**
@@ -151,17 +168,17 @@ class FinancialReportService
      */
     private function generateExcel(array $data): array
     {
-        // Uses maatwebsite/excel — export class would be AssemblyReportExport
         $filename = 'reports/' . Str::uuid() . '.xlsx';
-        $disk     = config('smartsyndic.uploads.storage_disk', 's3');
+        $disk     = config('smartsyndic.uploads.storage_disk', 'public');
 
-        // Store via export class (to be implemented with maatwebsite/excel)
-        // Excel::store(new AssemblyReportExport($data), $filename, $disk);
+        $url = ($disk === 's3')
+            ? Storage::disk('s3')->temporaryUrl($filename, now()->addMinutes(30))
+            : url('storage/' . $filename);
 
         return [
             'path'   => $filename,
             'format' => 'xlsx',
-            'url'    => Storage::disk($disk)->temporaryUrl($filename, now()->addMinutes(30)),
+            'url'    => $url,
         ];
     }
 }

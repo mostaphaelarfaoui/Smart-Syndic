@@ -43,6 +43,21 @@ class ApiService {
     await prefs.setString('custom_base_url', newUrl);
   }
 
+  String resolveMediaUrl(String? url) {
+    if (url == null || url.isEmpty) return '';
+    try {
+      final serverUri = Uri.parse(_baseUrl);
+      final targetUri = Uri.parse(url);
+      if (targetUri.host == 'localhost' || targetUri.host == '127.0.0.1') {
+        return targetUri.replace(
+          host: serverUri.host,
+          port: serverUri.port,
+        ).toString();
+      }
+    } catch (_) {}
+    return url;
+  }
+
   Future<void> setToken(String? token) async {
     _token = token;
     final prefs = await SharedPreferences.getInstance();

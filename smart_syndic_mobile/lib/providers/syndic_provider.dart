@@ -355,4 +355,36 @@ class SyndicProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<Map<String, dynamic>?> generateFinancialReport({
+    required String from,
+    required String to,
+    String format = 'pdf',
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _api.get(
+        '${ApiConstants.syndicReportsExport}?from=$from&to=$to&format=$format',
+      );
+      _isLoading = false;
+      notifyListeners();
+
+      if (response != null && response['download'] != null) {
+        final data = Map<String, dynamic>.from(response['download']);
+        if (data['url'] != null) {
+          data['url'] = _api.resolveMediaUrl(data['url']);
+        }
+        return data;
+      }
+      return null;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
+      return null;
+    }
+  }
 }

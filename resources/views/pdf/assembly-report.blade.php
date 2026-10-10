@@ -83,11 +83,20 @@
             color: #666;
         }
 
-        .page-break { page-break-before: always; }
-        .footer-note { font-size: 8px; color: #999; text-align: center; margin-top: 20px; }
+        @media print {
+            .no-print { display: none !important; }
+            body { padding: 0; }
+        }
     </style>
 </head>
 <body>
+    <div class="no-print" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; background: #eef2ff; padding: 12px 16px; border-radius: 8px; border: 1px solid #c7d2fe;">
+        <span style="font-size: 12px; font-weight: bold; color: #3730a3;">📄 وثيقة رسمية للجمع العام طبقاً للقانون 18-00</span>
+        <button onclick="window.print()" style="cursor: pointer; background: #0f3460; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: bold;">
+            🖨️ طباعة / حفظ كـ PDF
+        </button>
+    </div>
+
     {{-- ─── Header ──────────────────────────────────────────── --}}
     <div class="header-section">
         <h1>{{ $tenant->name }}</h1>

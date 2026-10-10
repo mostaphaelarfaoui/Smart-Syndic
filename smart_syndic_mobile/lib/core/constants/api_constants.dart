@@ -20,6 +20,7 @@ class ApiConstants {
   static const String syndicSuggestions = '/syndic/suggestions';
   static const String syndicPolls = '/syndic/polls';
   static const String syndicInviteCodeRegen = '/syndic/invitation-code/regenerate';
+  static const String syndicReportsExport = '/syndic/reports/export';
 
   // Resident endpoints
   static const String residentBalance = '/resident/my-balance';
