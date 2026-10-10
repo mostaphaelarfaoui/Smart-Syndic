@@ -21,9 +21,18 @@ class RegisterResidentController extends Controller
      */
     public function __invoke(RegisterResidentRequest $request)
     {
-        $tenant = Tenant::where('invitation_code', $request->invitation_code)
+        $code = $request->invitation_code ?? $request->invite_code;
+        $tenant = Tenant::where('invitation_code', $code)
             ->where('status', 'ACTIVE')
             ->firstOrFail();
+
+        // Check if apartment already has a resident (Requirement 4)
+        $apartment = \App\Models\Apartment::findOrFail($request->apartment_id);
+        if ($apartment->residents()->exists()) {
+            return response()->json([
+                'message' => 'هذه الشقة مشغولة ومسجل بها ساكن مسبقاً، يرجى اختيار شقة أخرى أو التواصل مع السانديك.',
+            ], 422);
+        }
 
         $user = DB::transaction(function () use ($request, $tenant) {
             // Create user in PENDING state

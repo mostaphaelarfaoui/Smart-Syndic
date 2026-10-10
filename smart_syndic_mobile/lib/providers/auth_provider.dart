@@ -137,6 +137,53 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> registerSyndic({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String phone,
+    required String password,
+    required String organizationName,
+    required String propertyType,
+    int? totalUnits,
+    int? totalFloors,
+    int? unitsPerFloor,
+    double? defaultMonthlyFee,
+    List<Map<String, dynamic>>? buildings,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final data = <String, dynamic>{
+        'first_name': firstName,
+        'last_name': lastName,
+        'email': email,
+        'phone': phone,
+        'password': password,
+        'organization_name': organizationName,
+        'property_type': propertyType,
+        if (totalUnits != null) 'total_units': totalUnits,
+        if (totalFloors != null) 'total_floors': totalFloors,
+        if (unitsPerFloor != null) 'units_per_floor': unitsPerFloor,
+        if (defaultMonthlyFee != null) 'default_monthly_fee': defaultMonthlyFee,
+        if (buildings != null && buildings.isNotEmpty) 'buildings': buildings,
+      };
+
+      await _api.post(ApiConstants.registerSyndic, data);
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> updateProfile(Map<String, dynamic> data) async {
     _isLoading = true;
     _errorMessage = null;

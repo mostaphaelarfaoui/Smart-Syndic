@@ -198,12 +198,13 @@ class SyndicProvider extends ChangeNotifier {
         for (var b in buildings) {
           final bName = b['name'];
           final bId = b['id'];
-          parsedBuildings.add({'id': bId, 'name': bName});
+          final block = b['block'];
+          parsedBuildings.add({'id': bId, 'name': bName, 'block': block});
           
           final apts = b['apartments'] as List?;
           if (apts != null) {
             for (var a in apts) {
-              parsedApartments.add(ApartmentModel.fromJson(a, bName: bName, bId: bId));
+              parsedApartments.add(ApartmentModel.fromJson(a, bName: bName, bId: bId, blockName: block));
             }
           }
         }
@@ -235,6 +236,92 @@ class SyndicProvider extends ChangeNotifier {
         'monthly_fee': monthlyFee,
       });
 
+      await fetchApartments();
+      await fetchDashboardKpis();
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> bulkGenerateApartments({
+    String? buildingId,
+    String? buildingName,
+    String? block,
+    int? totalFloors,
+    int? unitsPerFloor,
+    int? totalUnits,
+    required double monthlyFee,
+    String? unitPrefix,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final data = <String, dynamic>{
+        'monthly_fee': monthlyFee,
+      };
+      if (buildingId != null && buildingId.isNotEmpty) data['building_id'] = buildingId;
+      if (buildingName != null && buildingName.isNotEmpty) data['building_name'] = buildingName;
+      if (block != null && block.isNotEmpty) data['block'] = block;
+      if (totalFloors != null) data['total_floors'] = totalFloors;
+      if (unitsPerFloor != null) data['units_per_floor'] = unitsPerFloor;
+      if (totalUnits != null) data['total_units'] = totalUnits;
+      if (unitPrefix != null && unitPrefix.isNotEmpty) data['unit_prefix'] = unitPrefix;
+
+      await _api.post(ApiConstants.syndicBulkApartments, data);
+      await fetchApartments();
+      await fetchDashboardKpis();
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updateApartment({
+    required String apartmentId,
+    required String unitNumber,
+    required int floor,
+    required double monthlyFee,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _api.put('${ApiConstants.syndicApartments}/$apartmentId', {
+        'unit_number': unitNumber,
+        'floor': floor,
+        'monthly_fee': monthlyFee,
+      });
+
+      await fetchApartments();
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> deleteApartment(String apartmentId) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _api.delete('${ApiConstants.syndicApartments}/$apartmentId');
       await fetchApartments();
       await fetchDashboardKpis();
       _isLoading = false;

@@ -8,12 +8,14 @@ class ApiConstants {
   // Auth endpoints
   static const String login = '/auth/login';
   static const String registerResident = '/auth/register-resident';
+  static const String registerSyndic = '/auth/register-syndic';
   static const String verifyInviteCode = '/auth/verify-invite-code';
   static const String updateProfile = '/auth/profile';
 
   // Syndic endpoints
   static const String syndicKpis = '/syndic/dashboard/kpis';
   static const String syndicApartments = '/syndic/apartments';
+  static const String syndicBulkApartments = '/syndic/apartments/bulk-generate';
   static const String syndicPendingResidents = '/syndic/pending-residents';
   static const String syndicPayments = '/syndic/payments';
   static const String syndicExpenses = '/syndic/expenses';

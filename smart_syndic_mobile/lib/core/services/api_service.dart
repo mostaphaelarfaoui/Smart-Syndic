@@ -123,6 +123,22 @@ class ApiService {
     }
   }
 
+  Future<dynamic> delete(String endpoint) async {
+    final url = Uri.parse('$_baseUrl$endpoint');
+    _startRequest();
+    try {
+      final response = await http.delete(
+        url,
+        headers: _headers,
+      );
+      return _handleResponse(response);
+    } catch (e) {
+      throw Exception('تعذر الاتصال بالخادم: $e');
+    } finally {
+      _endRequest();
+    }
+  }
+
   Future<dynamic> postMultipart(
     String endpoint,
     Map<String, String> fields, {

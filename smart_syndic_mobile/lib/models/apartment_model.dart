@@ -5,6 +5,7 @@ class ApartmentModel {
   final double monthlyFee;
   final String? buildingName;
   final String? buildingId;
+  final String? block;
   final Map<String, dynamic>? resident;
   final double totalPaid;
   final double arrears;
@@ -19,6 +20,7 @@ class ApartmentModel {
     required this.monthlyFee,
     this.buildingName,
     this.buildingId,
+    this.block,
     this.resident,
     this.totalPaid = 0.0,
     this.arrears = 0.0,
@@ -27,7 +29,7 @@ class ApartmentModel {
     this.payments = const [],
   });
 
-  factory ApartmentModel.fromJson(Map<String, dynamic> json, {String? bName, String? bId}) {
+  factory ApartmentModel.fromJson(Map<String, dynamic> json, {String? bName, String? bId, String? blockName}) {
     final rawPayments = json['payments'] as List?;
     final parsedPayments = rawPayments != null
         ? List<Map<String, dynamic>>.from(rawPayments)
@@ -43,6 +45,7 @@ class ApartmentModel {
       monthlyFee: (json['monthly_fee'] as num?)?.toDouble() ?? 0.0,
       buildingName: bName ?? json['building_name'] ?? json['building']?['name'],
       buildingId: bId ?? json['building_id'],
+      block: blockName ?? json['block'] ?? json['building']?['block'],
       resident: json['resident'],
       totalPaid: (json['total_paid'] as num?)?.toDouble() ?? 0.0,
       arrears: (json['arrears'] as num?)?.toDouble() ?? 0.0,

@@ -65,6 +65,12 @@ Route::middleware(['auth:sanctum', 'tenant.scope', 'tenant.active'])->group(func
             Route::post('/apartments', [ApartmentController::class, 'store'])
                 ->middleware('throttle:financial')
                 ->name('syndic.apartments.store');
+            Route::post('/apartments/bulk-generate', [ApartmentController::class, 'bulkGenerate'])
+                ->name('syndic.apartments.bulk-generate');
+            Route::put('/apartments/{id}', [ApartmentController::class, 'update'])
+                ->name('syndic.apartments.update');
+            Route::delete('/apartments/{id}', [ApartmentController::class, 'destroy'])
+                ->name('syndic.apartments.destroy');
 
             // Pending Resident Management
             Route::get('/pending-residents', [PendingResidentController::class, 'index'])

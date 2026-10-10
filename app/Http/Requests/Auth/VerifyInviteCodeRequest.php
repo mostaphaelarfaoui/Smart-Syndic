@@ -14,7 +14,8 @@ class VerifyInviteCodeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'invitation_code' => ['required', 'string', 'min:4', 'max:32', 'exists:tenants,invitation_code'],
+            'invitation_code' => ['required_without:invite_code', 'string', 'min:4', 'max:32'],
+            'invite_code'     => ['sometimes', 'string'],
         ];
     }
 

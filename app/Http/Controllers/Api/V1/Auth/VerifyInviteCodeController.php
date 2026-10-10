@@ -16,7 +16,8 @@ class VerifyInviteCodeController extends Controller
      */
     public function __invoke(VerifyInviteCodeRequest $request)
     {
-        $tenant = Tenant::where('invitation_code', $request->invitation_code)
+        $code = $request->invitation_code ?? $request->invite_code;
+        $tenant = Tenant::where('invitation_code', $code)
             ->where('status', 'ACTIVE')
             ->first();
 
@@ -29,16 +30,19 @@ class VerifyInviteCodeController extends Controller
 
         // Return condominium topology for dynamic form rendering
         $buildings = $tenant->buildings()
-            ->with(['apartments' => fn ($q) => $q->orderBy('floor')->orderBy('unit_number')])
+            ->with(['apartments' => fn ($q) => $q->with('residents')->orderBy('floor')->orderBy('unit_number')])
             ->get()
             ->map(fn ($building) => [
                 'id'           => $building->id,
+                'block'        => $building->block,
                 'name'         => $building->name,
                 'total_floors' => $building->total_floors,
                 'apartments'   => $building->apartments->map(fn ($apt) => [
                     'id'          => $apt->id,
                     'unit_number' => $apt->unit_number,
                     'floor'       => $apt->floor,
+                    'monthly_fee' => (float) $apt->monthly_fee,
+                    'is_occupied' => $apt->residents->isNotEmpty(),
                 ]),
             ]);
 
