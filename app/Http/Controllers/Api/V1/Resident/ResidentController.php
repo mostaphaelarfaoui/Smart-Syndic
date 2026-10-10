@@ -181,8 +181,9 @@ class ResidentController extends Controller
             ->get();
 
         $userApartmentIds = $request->user()->apartments()->pluck('apartments.id')->toArray();
+        $userId = $request->user()->id;
 
-        $polls->transform(function ($poll) use ($userApartmentIds) {
+        $polls->transform(function ($poll) use ($userApartmentIds, $userId) {
             $poll->has_voted = $poll->votes
                 ->whereIn('apartment_id', $userApartmentIds)
                 ->isNotEmpty();
@@ -199,7 +200,7 @@ class ResidentController extends Controller
 
             $poll->comments = $poll->votes
                 ->whereNotNull('comment')
-                ->map(function ($vote) {
+                ->map(function ($vote) use ($userId) {
                     $isAnonymous = $vote->is_anonymous_comment;
                     return [
                         'apartment'     => $isAnonymous ? 'مجهول' : ($vote->apartment->unit_number ?? 'غير معروف'),
@@ -207,6 +208,7 @@ class ResidentController extends Controller
                         'comment'       => $vote->comment,
                         'created_at'    => $vote->created_at,
                         'is_anonymous'  => $isAnonymous,
+                        'is_mine'       => $vote->user_id === $userId,
                     ];
                 })->values();
 

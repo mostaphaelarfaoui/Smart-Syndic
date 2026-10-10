@@ -339,6 +339,13 @@ class _ResidentCommunityTabState extends State<ResidentCommunityTab> with Single
   }
 
   void _showPollDetailsDialog(BuildContext context, dynamic poll) {
+    final sortedComments = List<Map<String, dynamic>>.from(poll.comments);
+    sortedComments.sort((a, b) {
+      if (a['is_mine'] == true && b['is_mine'] != true) return -1;
+      if (b['is_mine'] == true && a['is_mine'] != true) return 1;
+      return 0;
+    });
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -361,9 +368,9 @@ class _ResidentCommunityTabState extends State<ResidentCommunityTab> with Single
               const SizedBox(height: 16),
               Expanded(
                 child: ListView.builder(
-                  itemCount: poll.comments.length,
+                  itemCount: sortedComments.length,
                   itemBuilder: (context, idx) {
-                    final vote = poll.comments[idx];
+                    final vote = sortedComments[idx];
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(12),
@@ -387,10 +394,26 @@ class _ResidentCommunityTabState extends State<ResidentCommunityTab> with Single
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    if (vote['is_anonymous'] == true)
-                                      Text('مجهول', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary))
-                                    else
-                                      Text('شقة ${vote['apartment']} - عمارة ${vote['building']}', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                                    Row(
+                                      children: [
+                                        if (vote['is_anonymous'] == true)
+                                          Text('مجهول', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary))
+                                        else
+                                          Text('شقة ${vote['apartment']} - عمارة ${vote['building']}', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                                        if (vote['is_mine'] == true)
+                                          Padding(
+                                            padding: const EdgeInsets.only(right: 8.0),
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.primary.withAlpha(20),
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                              child: Text('تعليقي الخاص', style: GoogleFonts.cairo(fontSize: 10, color: AppColors.primary, fontWeight: FontWeight.bold)),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
                                   ],
                                 ),
                               ),
