@@ -19,9 +19,12 @@ class ApartmentController extends Controller
     {
         $buildings = Building::where('tenant_id', $request->user()->tenant_id)
             ->with(['apartments' => function ($q) {
-                $q->with(['residents', 'payments' => fn ($p) => $p->latest('payment_date')->limit(1)])
-                  ->orderBy('floor')
-                  ->orderBy('unit_number');
+                $q->with([
+                    'residents',
+                    'payments' => fn ($p) => $p->orderByDesc('payment_date'),
+                ])
+                ->orderBy('floor')
+                ->orderBy('unit_number');
             }])
             ->orderBy('name')
             ->get();
@@ -31,20 +34,41 @@ class ApartmentController extends Controller
                 'id'           => $building->id,
                 'name'         => $building->name,
                 'total_floors' => $building->total_floors,
-                'apartments'   => $building->apartments->map(function ($apt) {
+                'apartments'   => $building->apartments->map(function ($apt) use ($building) {
                     $resident = $apt->residents->first();
+                    $totalPaid = (float) $apt->payments->sum('amount_paid');
+                    
+                    $monthsActive = max(1, $apt->created_at->diffInMonths(now()) + 1);
+                    $totalDue = $apt->monthly_fee * $monthsActive;
+                    $arrears = max(0, round($totalDue - $totalPaid, 2));
+
                     return [
-                        'id'           => $apt->id,
-                        'unit_number'  => $apt->unit_number,
-                        'floor'        => $apt->floor,
-                        'monthly_fee'  => $apt->monthly_fee,
-                        'resident'     => $resident ? [
+                        'id'             => $apt->id,
+                        'building_id'    => $building->id,
+                        'building_name'  => $building->name,
+                        'unit_number'    => $apt->unit_number,
+                        'floor'          => $apt->floor,
+                        'monthly_fee'    => (float) $apt->monthly_fee,
+                        'total_paid'     => $totalPaid,
+                        'arrears'        => $arrears,
+                        'is_settled'     => $arrears <= 0,
+                        'resident'       => $resident ? [
                             'id'             => $resident->id,
                             'name'           => $resident->full_name,
+                            'email'          => $resident->email,
                             'phone'          => $resident->phone,
-                            'occupancy_type' => $resident->pivot->occupancy_type,
+                            'occupancy_type' => $resident->pivot->occupancy_type ?? 'OWNER',
                         ] : null,
-                        'last_payment' => $apt->payments->first()?->payment_date?->format('Y-m-d'),
+                        'last_payment'   => $apt->payments->first()?->payment_date?->format('Y-m-d'),
+                        'payments'       => $apt->payments->map(fn ($p) => [
+                            'id'             => $p->id,
+                            'receipt_number' => $p->receipt_number,
+                            'amount_paid'    => (float) $p->amount_paid,
+                            'payment_method' => $p->payment_method,
+                            'payment_date'   => $p->payment_date?->format('Y-m-d'),
+                            'covered_months' => $p->covered_months,
+                            'receipt_url'    => $p->receipt_url,
+                        ])->values(),
                     ];
                 }),
             ];
