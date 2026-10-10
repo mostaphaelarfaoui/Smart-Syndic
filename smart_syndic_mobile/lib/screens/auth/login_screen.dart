@@ -5,6 +5,7 @@ import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../settings/server_settings_dialog.dart';
 import 'register_resident_screen.dart';
+import 'register_syndic_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -198,7 +199,23 @@ class _LoginScreenState extends State<LoginScreen> {
                       );
                     },
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 10),
+
+                  // Register Syndic button (Requirement 1)
+                  TextButton.icon(
+                    icon: const Icon(Icons.business_center_outlined, color: AppColors.secondary, size: 18),
+                    label: Text(
+                      'تسجيل سانديك جديد (عمارة أو مجمع سكني)',
+                      style: GoogleFonts.cairo(color: AppColors.secondary, fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const RegisterSyndicScreen()),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 24),
 
                   // Quick Demo Logins
                   Container(
