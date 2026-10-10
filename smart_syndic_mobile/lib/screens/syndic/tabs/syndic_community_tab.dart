@@ -594,7 +594,7 @@ class _SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTick
                                           Row(
                                             children: [
                                               Text('شقة ${vote['apartment']} - عمارة ${vote['building']}', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                                              if (vote['is_anonymous'] == true)
+                                              if (vote['is_anonymous'] == true || vote['is_anonymous'] == 1 || vote['is_anonymous'] == '1')
                                                 Padding(
                                                   padding: const EdgeInsets.only(right: 6),
                                                   child: Container(

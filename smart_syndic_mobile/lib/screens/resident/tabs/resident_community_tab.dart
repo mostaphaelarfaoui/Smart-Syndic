@@ -341,8 +341,10 @@ class _ResidentCommunityTabState extends State<ResidentCommunityTab> with Single
   void _showPollDetailsDialog(BuildContext context, dynamic poll) {
     final sortedComments = List<Map<String, dynamic>>.from(poll.comments);
     sortedComments.sort((a, b) {
-      if (a['is_mine'] == true && b['is_mine'] != true) return -1;
-      if (b['is_mine'] == true && a['is_mine'] != true) return 1;
+      bool aIsMine = a['is_mine'] == true || a['is_mine'] == 1 || a['is_mine'] == '1';
+      bool bIsMine = b['is_mine'] == true || b['is_mine'] == 1 || b['is_mine'] == '1';
+      if (aIsMine && !bIsMine) return -1;
+      if (bIsMine && !aIsMine) return 1;
       return 0;
     });
 
@@ -396,11 +398,11 @@ class _ResidentCommunityTabState extends State<ResidentCommunityTab> with Single
                                   children: [
                                     Row(
                                       children: [
-                                        if (vote['is_anonymous'] == true)
+                                        if (vote['is_anonymous'] == true || vote['is_anonymous'] == 1 || vote['is_anonymous'] == '1')
                                           Text('مجهول', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary))
                                         else
                                           Text('شقة ${vote['apartment']} - عمارة ${vote['building']}', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                                        if (vote['is_mine'] == true)
+                                        if (vote['is_mine'] == true || vote['is_mine'] == 1 || vote['is_mine'] == '1')
                                           Padding(
                                             padding: const EdgeInsets.only(right: 8.0),
                                             child: Container(

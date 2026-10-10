@@ -20,6 +20,10 @@ class PollVote extends Model
         'is_anonymous_comment',
     ];
 
+    protected $casts = [
+        'is_anonymous_comment' => 'boolean',
+    ];
+
     // ─── Relationships ────────────────────────────────────────────────
 
     public function poll(): BelongsTo
