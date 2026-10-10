@@ -7,6 +7,7 @@ import '../../providers/syndic_provider.dart';
 import '../settings/server_settings_dialog.dart';
 import '../settings/profile_settings_screen.dart';
 import 'tabs/syndic_dashboard_tab.dart';
+import 'tabs/syndic_apartments_tab.dart';
 import 'tabs/syndic_payments_tab.dart';
 import 'tabs/syndic_expenses_tab.dart';
 import 'tabs/syndic_community_tab.dart';
@@ -76,6 +77,7 @@ class _SyndicMainScreenState extends State<SyndicMainScreen> {
 
     final titles = [
       'لوحة قيادة السانديك',
+      'إدارة الشقق',
       'إدارة استخلاص الواجبات',
       'دفتر مصاريف الإقامة',
       'شؤون السكان والمجتمع',
@@ -122,6 +124,7 @@ class _SyndicMainScreenState extends State<SyndicMainScreen> {
         index: _currentIndex,
         children: [
           SyndicDashboardTab(onNavigateTab: _navigateTab),
+          const SyndicApartmentsTab(),
           const SyndicPaymentsTab(),
           const SyndicExpensesTab(),
           const SyndicCommunityTab(),
@@ -138,6 +141,11 @@ class _SyndicMainScreenState extends State<SyndicMainScreen> {
             icon: Icon(Icons.dashboard_outlined),
             selectedIcon: Icon(Icons.dashboard, color: AppColors.primary),
             label: 'الرئيسية',
+          ),
+          const NavigationDestination(
+            icon: Icon(Icons.apartment_outlined),
+            selectedIcon: Icon(Icons.apartment, color: AppColors.primary),
+            label: 'الشقق',
           ),
           const NavigationDestination(
             icon: Icon(Icons.receipt_long_outlined),

@@ -15,6 +15,7 @@ class SyndicProvider extends ChangeNotifier {
   List<PaymentModel> _payments = [];
   List<ExpenseModel> _expenses = [];
   List<ApartmentModel> _apartments = [];
+  List<Map<String, dynamic>> _buildings = [];
   List<Map<String, dynamic>> _pendingResidents = [];
   List<SuggestionModel> _suggestions = [];
   List<PollModel> _polls = [];
@@ -27,6 +28,7 @@ class SyndicProvider extends ChangeNotifier {
   List<PaymentModel> get payments => _payments;
   List<ExpenseModel> get expenses => _expenses;
   List<ApartmentModel> get apartments => _apartments;
+  List<Map<String, dynamic>> get buildings => _buildings;
   List<Map<String, dynamic>> get pendingResidents => _pendingResidents;
   List<SuggestionModel> get suggestions => _suggestions;
   List<PollModel> get polls => _polls;
@@ -157,15 +159,61 @@ class SyndicProvider extends ChangeNotifier {
   Future<void> fetchApartments() async {
     try {
       final response = await _api.get(ApiConstants.syndicApartments);
-      if (response is List) {
-        _apartments = response.map((a) => ApartmentModel.fromJson(a)).toList();
-      } else if (response['data'] != null) {
-        _apartments = (response['data'] as List).map((a) => ApartmentModel.fromJson(a)).toList();
+      List<ApartmentModel> parsedApartments = [];
+      List<Map<String, dynamic>> parsedBuildings = [];
+      
+      final buildings = response['buildings'] as List?;
+      if (buildings != null) {
+        for (var b in buildings) {
+          final bName = b['name'];
+          final bId = b['id'];
+          parsedBuildings.add({'id': bId, 'name': bName});
+          
+          final apts = b['apartments'] as List?;
+          if (apts != null) {
+            for (var a in apts) {
+              parsedApartments.add(ApartmentModel.fromJson(a, bName: bName, bId: bId));
+            }
+          }
+        }
       }
+      
+      _apartments = parsedApartments;
+      _buildings = parsedBuildings;
       notifyListeners();
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
       notifyListeners();
+    }
+  }
+
+  Future<bool> addApartment({
+    required String buildingId,
+    required String unitNumber,
+    required int floor,
+    required double monthlyFee,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _api.post(ApiConstants.syndicApartments, {
+        'building_id': buildingId,
+        'unit_number': unitNumber,
+        'floor': floor,
+        'monthly_fee': monthlyFee,
+      });
+
+      await fetchApartments();
+      await fetchDashboardKpis();
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
   }
 

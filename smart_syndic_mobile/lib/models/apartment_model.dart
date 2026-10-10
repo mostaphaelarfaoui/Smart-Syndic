@@ -4,7 +4,8 @@ class ApartmentModel {
   final int floor;
   final double monthlyFee;
   final String? buildingName;
-  final List<ApartmentResident> residents;
+  final String? buildingId;
+  final Map<String, dynamic>? resident;
 
   ApartmentModel({
     required this.id,
@@ -12,53 +13,19 @@ class ApartmentModel {
     required this.floor,
     required this.monthlyFee,
     this.buildingName,
-    required this.residents,
+    this.buildingId,
+    this.resident,
   });
 
-  factory ApartmentModel.fromJson(Map<String, dynamic> json) {
-    var resList = <ApartmentResident>[];
-    if (json['residents'] != null && json['residents'] is List) {
-      resList = (json['residents'] as List)
-          .map((r) => ApartmentResident.fromJson(r))
-          .toList();
-    }
-
+  factory ApartmentModel.fromJson(Map<String, dynamic> json, {String? bName, String? bId}) {
     return ApartmentModel(
       id: json['id'] ?? '',
       unitNumber: json['unit_number'] ?? '',
       floor: json['floor'] ?? 0,
       monthlyFee: (json['monthly_fee'] as num?)?.toDouble() ?? 0.0,
-      buildingName: json['building']?['name'],
-      residents: resList,
-    );
-  }
-}
-
-class ApartmentResident {
-  final String id;
-  final String name;
-  final String phone;
-  final String email;
-  final String status;
-  final String occupancyType; // 'OWNER' or 'TENANT'
-
-  ApartmentResident({
-    required this.id,
-    required this.name,
-    required this.phone,
-    required this.email,
-    required this.status,
-    required this.occupancyType,
-  });
-
-  factory ApartmentResident.fromJson(Map<String, dynamic> json) {
-    return ApartmentResident(
-      id: json['id'] ?? '',
-      name: '${json['first_name'] ?? ''} ${json['last_name'] ?? ''}'.trim(),
-      phone: json['phone'] ?? '',
-      email: json['email'] ?? '',
-      status: json['status'] ?? 'ACTIVE',
-      occupancyType: json['pivot']?['occupancy_type'] ?? 'OWNER',
+      buildingName: bName ?? json['building']?['name'],
+      buildingId: bId,
+      resident: json['resident'],
     );
   }
 }

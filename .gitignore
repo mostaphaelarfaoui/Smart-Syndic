@@ -28,3 +28,4 @@ yarn-error.log
 firebase-credentials.json
 google-services.json
 storage/app/firebase-credentials.json
+TEST_ACCOUNTS.md

@@ -113,26 +113,30 @@ class _ConvertToPollDialogState extends State<ConvertToPollDialog> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: AppColors.secondary.withAlpha(25),
-                            borderRadius: BorderRadius.circular(10),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.secondary.withAlpha(25),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(Icons.how_to_vote_outlined, color: AppColors.secondary, size: 24),
                           ),
-                          child: const Icon(Icons.how_to_vote_outlined, color: AppColors.secondary, size: 24),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'تحويل الاقتراح لتصويت عام',
-                          style: GoogleFonts.cairo(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'تحويل الاقتراح لتصويت عام',
+                              style: GoogleFonts.cairo(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close, color: AppColors.textLight),

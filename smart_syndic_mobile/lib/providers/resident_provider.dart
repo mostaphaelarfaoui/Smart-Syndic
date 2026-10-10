@@ -90,7 +90,11 @@ class ResidentProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final String? apartmentId = _balanceInfo?['apartment']?['id'];
+      if (apartmentId == null) throw Exception("لا يمكن تحديد شقة الساكن.");
+
       await _api.post(ApiConstants.residentSuggestions, {
+        'apartment_id': apartmentId,
         'title': title,
         'description': description,
       });
@@ -111,6 +115,8 @@ class ResidentProvider extends ChangeNotifier {
       final response = await _api.get(ApiConstants.residentPolls);
       if (response is List) {
         _polls = response.map((p) => PollModel.fromJson(p)).toList();
+      } else if (response['polls'] != null) {
+        _polls = (response['polls'] as List).map((p) => PollModel.fromJson(p)).toList();
       } else if (response['data'] != null) {
         _polls = (response['data'] as List).map((p) => PollModel.fromJson(p)).toList();
       }
@@ -123,8 +129,12 @@ class ResidentProvider extends ChangeNotifier {
 
   Future<bool> castVote(String pollId, String optionId) async {
     try {
+      final String? apartmentId = _balanceInfo?['apartment']?['id'];
+      if (apartmentId == null) throw Exception("لا يمكن تحديد شقة الساكن.");
+
       await _api.post('${ApiConstants.residentPolls}/$pollId/vote', {
-        'option_id': optionId,
+        'poll_option_id': optionId,
+        'apartment_id': apartmentId,
       });
       await fetchPolls();
       return true;
