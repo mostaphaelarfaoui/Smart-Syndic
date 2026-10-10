@@ -379,17 +379,20 @@ class _SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTick
                 final poll = polls[index];
                 final total = poll.totalVotes;
 
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                return InkWell(
+                  onTap: () => _showPollDetailsDialog(context, poll),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -483,9 +486,82 @@ class _SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTick
                       ),
                     ],
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
+          ),
+    );
+  }
+
+  void _showPollDetailsDialog(BuildContext context, dynamic poll) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.7,
+          padding: const EdgeInsets.all(20),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'تفاصيل تصويت السكان',
+                style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary),
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: poll.options.length,
+                  itemBuilder: (context, idx) {
+                    final opt = poll.options[idx];
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withAlpha(20),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '${opt.optionText} (${opt.votesCount} أصوات)',
+                            style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                          ),
+                        ),
+                        if (opt.detailedVotes.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Text('لم يقم أحد بالتصويت على هذا الخيار', style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary)),
+                          )
+                        else
+                          ...opt.detailedVotes.map<Widget>((vote) {
+                            return ListTile(
+                              leading: CircleAvatar(
+                                radius: 16,
+                                backgroundColor: AppColors.primary.withAlpha(25),
+                                child: const Icon(Icons.person, size: 16, color: AppColors.primary),
+                              ),
+                              title: Text(vote['resident_name'] ?? 'مجهول', style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.w600)),
+                              subtitle: Text('شقة ${vote['apartment']} - عمارة ${vote['building']}', style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary)),
+                              dense: true,
+                            );
+                          }).toList(),
+                        const SizedBox(height: 16),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

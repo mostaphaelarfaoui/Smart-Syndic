@@ -46,18 +46,21 @@ class PollOptionModel {
   final String id;
   final String optionText;
   final int votesCount;
+  final List<Map<String, dynamic>> detailedVotes;
 
   PollOptionModel({
     required this.id,
     required this.optionText,
     required this.votesCount,
+    this.detailedVotes = const [],
   });
 
   factory PollOptionModel.fromJson(Map<String, dynamic> json) {
     return PollOptionModel(
       id: json['id'] ?? '',
       optionText: json['option_text'] ?? '',
-      votesCount: json['votes_count'] ?? json['votes']?.length ?? 0,
+      votesCount: json['votes_count'] ?? json['vote_count'] ?? json['votes']?.length ?? 0,
+      detailedVotes: json['detailed_votes'] != null ? List<Map<String, dynamic>>.from(json['detailed_votes']) : [],
     );
   }
 }

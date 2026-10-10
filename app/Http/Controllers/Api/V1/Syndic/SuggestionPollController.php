@@ -81,7 +81,7 @@ class SuggestionPollController extends Controller
     public function polls(Request $request): JsonResponse
     {
         $polls = Poll::where('tenant_id', $request->user()->tenant_id)
-            ->with(['options.votes', 'votes'])
+            ->with(['options.votes.user', 'options.votes.apartment.building', 'votes'])
             ->orderByDesc('created_at')
             ->get();
 
@@ -93,7 +93,18 @@ class SuggestionPollController extends Controller
                 $option->vote_percentage = $totalVotes > 0
                     ? round(($option->vote_count / $totalVotes) * 100, 1)
                     : 0;
-                unset($option->votes);
+                
+                // Format votes for the frontend
+                $option->detailed_votes = $option->votes->map(function ($vote) {
+                    return [
+                        'resident_name' => $vote->user->full_name ?? 'غير معروف',
+                        'apartment'     => $vote->apartment->unit_number ?? 'غير معروف',
+                        'building'      => $vote->apartment->building->name ?? 'غير معروف',
+                        'created_at'    => $vote->created_at,
+                    ];
+                });
+                
+                unset($option->votes); // Hide the raw models to save bandwidth
                 return $option;
             });
             
