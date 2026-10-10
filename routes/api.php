@@ -121,6 +121,9 @@ Route::middleware(['auth:sanctum', 'tenant.scope', 'tenant.active'])->group(func
             Route::get('/transparency-ledger', [ResidentController::class, 'transparencyLedger'])
                 ->name('resident.transparency-ledger');
 
+            Route::get('/suggestions', [ResidentController::class, 'mySuggestions'])
+                ->name('resident.suggestions.index');
+
             Route::post('/suggestions', [ResidentController::class, 'submitSuggestion'])
                 ->name('resident.suggestions.store');
 

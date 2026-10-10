@@ -125,6 +125,19 @@ class ResidentController extends Controller
     // ─── Suggestions ──────────────────────────────────────────────────
 
     /**
+     * GET /api/v1/resident/suggestions
+     */
+    public function mySuggestions(Request $request): JsonResponse
+    {
+        $suggestions = Suggestion::where('user_id', $request->user()->id)
+            ->where('tenant_id', $request->user()->tenant_id)
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json(['data' => $suggestions]);
+    }
+
+    /**
      * POST /api/v1/resident/suggestions
      */
     public function submitSuggestion(SubmitSuggestionRequest $request): JsonResponse
