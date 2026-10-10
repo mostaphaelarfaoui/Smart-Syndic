@@ -7,6 +7,7 @@ class PollModel {
   final List<PollOptionModel> options;
   final bool hasVoted;
   final String? userVotedOptionId;
+  final List<Map<String, dynamic>> comments;
 
   PollModel({
     required this.id,
@@ -17,6 +18,7 @@ class PollModel {
     required this.options,
     this.hasVoted = false,
     this.userVotedOptionId,
+    this.comments = const [],
   });
 
   int get totalVotes => options.fold(0, (sum, opt) => sum + opt.votesCount);
@@ -38,6 +40,7 @@ class PollModel {
       options: optList,
       hasVoted: json['has_voted'] == true,
       userVotedOptionId: json['user_voted_option_id'],
+      comments: json['comments'] != null ? List<Map<String, dynamic>>.from(json['comments']) : [],
     );
   }
 }

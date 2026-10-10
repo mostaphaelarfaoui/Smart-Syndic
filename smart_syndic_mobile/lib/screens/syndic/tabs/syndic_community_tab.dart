@@ -515,47 +515,98 @@ class _SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTick
               ),
               const SizedBox(height: 16),
               Expanded(
-                child: ListView.builder(
-                  itemCount: poll.options.length,
-                  itemBuilder: (context, idx) {
-                    final opt = poll.options[idx];
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withAlpha(20),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ...poll.options.map<Widget>((opt) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withAlpha(20),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                '${opt.optionText} (${opt.votesCount} أصوات)',
+                                style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                              ),
+                            ),
+                            if (opt.detailedVotes.isEmpty)
+                              Padding(
+                                padding: const EdgeInsets.all(12.0),
+                                child: Text('لم يقم أحد بالتصويت على هذا الخيار', style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary)),
+                              )
+                            else
+                              ...opt.detailedVotes.map<Widget>((vote) {
+                                return ListTile(
+                                  leading: CircleAvatar(
+                                    radius: 16,
+                                    backgroundColor: AppColors.primary.withAlpha(25),
+                                    child: const Icon(Icons.person, size: 16, color: AppColors.primary),
+                                  ),
+                                  title: Text(vote['resident_name'] ?? 'مجهول', style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.w600)),
+                                  subtitle: Text('شقة ${vote['apartment']} - عمارة ${vote['building']}', style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary)),
+                                  dense: true,
+                                );
+                              }).toList(),
+                            const SizedBox(height: 16),
+                          ],
+                        );
+                      }).toList(),
+                      
+                      if (poll.comments.isNotEmpty) ...[
+                        const Divider(),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Text(
-                            '${opt.optionText} (${opt.votesCount} أصوات)',
-                            style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                            'تعليقات السكان:',
+                            style: GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                           ),
                         ),
-                        if (opt.detailedVotes.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Text('لم يقم أحد بالتصويت على هذا الخيار', style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary)),
-                          )
-                        else
-                          ...opt.detailedVotes.map<Widget>((vote) {
-                            return ListTile(
-                              leading: CircleAvatar(
-                                radius: 16,
-                                backgroundColor: AppColors.primary.withAlpha(25),
-                                child: const Icon(Icons.person, size: 16, color: AppColors.primary),
-                              ),
-                              title: Text(vote['resident_name'] ?? 'مجهول', style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.w600)),
-                              subtitle: Text('شقة ${vote['apartment']} - عمارة ${vote['building']}', style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary)),
-                              dense: true,
-                            );
-                          }).toList(),
-                        const SizedBox(height: 16),
+                        ...poll.comments.map<Widget>((vote) {
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.background,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 14,
+                                      backgroundColor: AppColors.primary.withAlpha(25),
+                                      child: const Icon(Icons.person, size: 14, color: AppColors.primary),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(vote['resident_name'] ?? 'مجهول', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                                          Text('شقة ${vote['apartment']} - عمارة ${vote['building']}', style: GoogleFonts.cairo(fontSize: 10, color: AppColors.textSecondary)),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(vote['comment'] ?? '', style: GoogleFonts.cairo(fontSize: 13, color: AppColors.textPrimary)),
+                              ],
+                            ),
+                          );
+                        }).toList(),
                       ],
-                    );
-                  },
+                    ],
+                  ),
                 ),
               ),
             ],

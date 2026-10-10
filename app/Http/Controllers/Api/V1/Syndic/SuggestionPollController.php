@@ -109,6 +109,20 @@ class SuggestionPollController extends Controller
             });
             
             $poll->total_votes = $totalVotes;
+            
+            // Extract all comments from all votes in this poll
+            $poll->comments = $poll->votes
+                ->whereNotNull('comment')
+                ->map(function ($vote) {
+                    return [
+                        'resident_name' => $vote->user->full_name ?? 'غير معروف',
+                        'apartment'     => $vote->apartment->unit_number ?? 'غير معروف',
+                        'building'      => $vote->apartment->building->name ?? 'غير معروف',
+                        'comment'       => $vote->comment,
+                        'created_at'    => $vote->created_at,
+                    ];
+                })->values();
+
             unset($poll->votes);
             return $poll;
         });

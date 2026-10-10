@@ -127,7 +127,7 @@ class ResidentProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> castVote(String pollId, String optionId) async {
+  Future<bool> castVote(String pollId, String optionId, [String? comment]) async {
     try {
       final String? apartmentId = _balanceInfo?['apartment']?['id'];
       if (apartmentId == null) throw Exception("لا يمكن تحديد شقة الساكن.");
@@ -135,6 +135,7 @@ class ResidentProvider extends ChangeNotifier {
       await _api.post('${ApiConstants.residentPolls}/$pollId/vote', {
         'poll_option_id': optionId,
         'apartment_id': apartmentId,
+        if (comment != null && comment.trim().isNotEmpty) 'comment': comment.trim(),
       });
       await fetchPolls();
       return true;

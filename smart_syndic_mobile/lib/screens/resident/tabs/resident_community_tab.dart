@@ -16,6 +16,7 @@ class ResidentCommunityTab extends StatefulWidget {
 class _ResidentCommunityTabState extends State<ResidentCommunityTab> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final Map<String, String> _selectedOptions = {}; // pollId -> optionId
+  final Map<String, String> _voteComments = {}; // pollId -> comment text
   final Map<String, bool> _votingProgress = {};
 
   @override
@@ -248,13 +249,26 @@ class _ResidentCommunityTabState extends State<ResidentCommunityTab> with Single
                           );
                         }),
                         const SizedBox(height: 12),
+                        TextFormField(
+                          maxLines: 2,
+                          style: GoogleFonts.cairo(fontSize: 12),
+                          decoration: InputDecoration(
+                            labelText: 'تعليق إضافي (اختياري)',
+                            labelStyle: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          ),
+                          onChanged: (val) => _voteComments[poll.id] = val,
+                        ),
+                        const SizedBox(height: 12),
                         ElevatedButton(
                           onPressed: (_selectedOptions[poll.id] == null || isSubmitting)
                               ? null
                               : () async {
                                   setState(() => _votingProgress[poll.id] = true);
                                   final optionId = _selectedOptions[poll.id]!;
-                                  final ok = await resident.castVote(poll.id, optionId);
+                                  final comment = _voteComments[poll.id];
+                                  final ok = await resident.castVote(poll.id, optionId, comment);
                                   if (mounted) {
                                     setState(() => _votingProgress[poll.id] = false);
                                     if (ok) {
@@ -289,11 +303,94 @@ class _ResidentCommunityTabState extends State<ResidentCommunityTab> with Single
                           ),
                         ],
                       ),
+                      
+                      if (poll.comments.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: TextButton.icon(
+                            onPressed: () => _showPollDetailsDialog(context, poll),
+                            icon: const Icon(Icons.comment, size: 16),
+                            label: Text('عرض تعليقات السكان (${poll.comments.length})', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 );
               },
             ),
+    );
+  }
+
+  void _showPollDetailsDialog(BuildContext context, dynamic poll) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.7,
+          padding: const EdgeInsets.all(20),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'تعليقات السكان على التصويت',
+                style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary),
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: poll.comments.length,
+                  itemBuilder: (context, idx) {
+                    final vote = poll.comments[idx];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 14,
+                                backgroundColor: AppColors.primary.withAlpha(25),
+                                child: const Icon(Icons.person, size: 14, color: AppColors.primary),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(vote['resident_name'] ?? 'مجهول', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                                    Text('شقة ${vote['apartment']} - عمارة ${vote['building']}', style: GoogleFonts.cairo(fontSize: 10, color: AppColors.textSecondary)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(vote['comment'] ?? '', style: GoogleFonts.cairo(fontSize: 13, color: AppColors.textPrimary)),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

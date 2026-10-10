@@ -176,7 +176,7 @@ class ResidentController extends Controller
     {
         $polls = Poll::where('tenant_id', $request->user()->tenant_id)
             ->where('is_active', true)
-            ->with(['options.votes', 'votes'])
+            ->with(['options.votes', 'votes.user', 'votes.apartment.building'])
             ->orderByDesc('created_at')
             ->get();
 
@@ -196,6 +196,18 @@ class ResidentController extends Controller
                 unset($option->votes); // Don't leak individual voter data
                 return $option;
             });
+
+            $poll->comments = $poll->votes
+                ->whereNotNull('comment')
+                ->map(function ($vote) {
+                    return [
+                        'resident_name' => $vote->user->full_name ?? 'غير معروف',
+                        'apartment'     => $vote->apartment->unit_number ?? 'غير معروف',
+                        'building'      => $vote->apartment->building->name ?? 'غير معروف',
+                        'comment'       => $vote->comment,
+                        'created_at'    => $vote->created_at,
+                    ];
+                })->values();
 
             unset($poll->votes);
             return $poll;
@@ -233,6 +245,7 @@ class ResidentController extends Controller
             'poll_option_id' => $request->poll_option_id,
             'user_id'        => $request->user()->id,
             'apartment_id'   => $request->apartment_id,
+            'comment'        => $request->comment,
         ]);
 
         return response()->json(['message' => __('polls.vote_cast')]);

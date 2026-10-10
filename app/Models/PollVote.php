@@ -16,6 +16,7 @@ class PollVote extends Model
         'poll_option_id',
         'user_id',
         'apartment_id',
+        'comment',
     ];
 
     // ─── Relationships ────────────────────────────────────────────────
