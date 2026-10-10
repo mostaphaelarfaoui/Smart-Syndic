@@ -17,6 +17,10 @@ class ConvertToPollDialog extends StatefulWidget {
 
 class _ConvertToPollDialogState extends State<ConvertToPollDialog> {
   final _formKey = GlobalKey<FormState>();
+  late TextEditingController _titleController;
+  late TextEditingController _descController;
+  bool _showResidentInfo = false;
+  
   final List<TextEditingController> _optionControllers = [
     TextEditingController(text: 'نعم، أوافق'),
     TextEditingController(text: 'لا، أرفض'),
@@ -25,7 +29,16 @@ class _ConvertToPollDialogState extends State<ConvertToPollDialog> {
   bool _isSubmitting = false;
 
   @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.suggestion.title);
+    _descController = TextEditingController(text: widget.suggestion.description);
+  }
+
+  @override
   void dispose() {
+    _titleController.dispose();
+    _descController.dispose();
     for (var c in _optionControllers) {
       c.dispose();
     }
@@ -67,10 +80,19 @@ class _ConvertToPollDialogState extends State<ConvertToPollDialog> {
     final syndic = Provider.of<SyndicProvider>(context, listen: false);
     final formattedDate = DateFormat('yyyy-MM-dd').format(_expiresAt);
 
+    String finalDesc = _descController.text.trim();
+    if (_showResidentInfo) {
+      final unit = widget.suggestion.apartment?.unitNumber ?? 'غير معروف';
+      final name = widget.suggestion.user?.name ?? 'غير معروف';
+      finalDesc += '\n\n(مُقترح من طرف $name - شقة $unit)';
+    }
+
     final success = await syndic.convertSuggestionToPoll(
       widget.suggestion.id,
       options,
       formattedDate,
+      customTitle: _titleController.text.trim(),
+      customDescription: finalDesc,
     );
 
     if (mounted) {
@@ -156,21 +178,50 @@ class _ConvertToPollDialogState extends State<ConvertToPollDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        widget.suggestion.title,
+                      TextFormField(
+                        controller: _titleController,
                         style: GoogleFonts.cairo(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
                           color: AppColors.textPrimary,
                         ),
+                        decoration: InputDecoration(
+                          labelText: 'عنوان التصويت',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                        validator: (v) => (v == null || v.trim().isEmpty) ? 'مطلوب' : null,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        widget.suggestion.description,
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _descController,
+                        maxLines: 3,
                         style: GoogleFonts.cairo(
                           fontSize: 12,
                           color: AppColors.textSecondary,
                         ),
+                        decoration: InputDecoration(
+                          labelText: 'تفاصيل التصويت',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                        validator: (v) => (v == null || v.trim().isEmpty) ? 'مطلوب' : null,
+                      ),
+                      const SizedBox(height: 8),
+                      CheckboxListTile(
+                        title: Text(
+                          'إظهار رقم الشقة وصاحب الاقتراح؟',
+                          style: GoogleFonts.cairo(fontSize: 13, color: AppColors.textPrimary),
+                        ),
+                        value: _showResidentInfo,
+                        onChanged: (val) {
+                          setState(() {
+                            _showResidentInfo = val ?? false;
+                          });
+                        },
+                        controlAffinity: ListTileControlAffinity.leading,
+                        contentPadding: EdgeInsets.zero,
+                        activeColor: AppColors.primary,
                       ),
                     ],
                   ),

@@ -49,8 +49,8 @@ class SuggestionPollController extends Controller
             $poll = Poll::create([
                 'tenant_id'   => $request->user()->tenant_id,
                 'created_by'  => $request->user()->id,
-                'title'       => $suggestion->title,
-                'description' => $suggestion->description,
+                'title'       => $request->input('title', $suggestion->title),
+                'description' => $request->input('description', $suggestion->description),
                 'expires_at'  => $request->expires_at,
                 'is_active'   => true,
             ]);
@@ -74,6 +74,36 @@ class SuggestionPollController extends Controller
     }
 
     // ─── Polls ────────────────────────────────────────────────────────
+
+    /**
+     * GET /api/v1/syndic/polls
+     */
+    public function polls(Request $request): JsonResponse
+    {
+        $polls = Poll::where('tenant_id', $request->user()->tenant_id)
+            ->with(['options.votes', 'votes'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        $polls->transform(function ($poll) {
+            $totalVotes = $poll->votes->count();
+            
+            $poll->options->transform(function ($option) use ($totalVotes) {
+                $option->vote_count = $option->votes->count();
+                $option->vote_percentage = $totalVotes > 0
+                    ? round(($option->vote_count / $totalVotes) * 100, 1)
+                    : 0;
+                unset($option->votes);
+                return $option;
+            });
+            
+            $poll->total_votes = $totalVotes;
+            unset($poll->votes);
+            return $poll;
+        });
+
+        return response()->json(['data' => $polls]);
+    }
 
     /**
      * POST /api/v1/syndic/polls

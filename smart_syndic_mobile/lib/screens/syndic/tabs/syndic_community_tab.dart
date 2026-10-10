@@ -5,6 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../providers/syndic_provider.dart';
 import '../../../widgets/empty_state.dart';
 import '../dialogs/convert_to_poll_dialog.dart';
+import '../dialogs/create_poll_dialog.dart';
 
 class SyndicCommunityTab extends StatefulWidget {
   const SyndicCommunityTab({super.key});
@@ -20,6 +21,9 @@ class _SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTick
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      setState(() {});
+    });
   }
 
   @override
@@ -88,6 +92,19 @@ class _SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTick
           _buildPollsView(context, syndic),
         ],
       ),
+      floatingActionButton: _tabController.index == 2
+          ? FloatingActionButton.extended(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => const CreatePollDialog(),
+                );
+              },
+              backgroundColor: AppColors.primary,
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: Text('تصويت جديد', style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.bold)),
+            )
+          : null,
     );
   }
 

@@ -97,6 +97,8 @@ Route::middleware(['auth:sanctum', 'tenant.scope', 'tenant.active'])->group(func
                 ->name('syndic.suggestions.index');
             Route::post('/suggestions/{id}/convert-to-poll', [SuggestionPollController::class, 'convertToPoll'])
                 ->name('syndic.suggestions.convert-to-poll');
+            Route::get('/polls', [SuggestionPollController::class, 'polls'])
+                ->name('syndic.polls.index');
             Route::post('/polls', [SuggestionPollController::class, 'createPoll'])
                 ->name('syndic.polls.store');
 

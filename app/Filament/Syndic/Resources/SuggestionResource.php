@@ -125,7 +125,29 @@ class SuggestionResource extends Resource
                     ->visible(fn (Suggestion $r) => in_array($r->status, ['PENDING', 'ACCEPTED']))
                     ->modalHeading('تحويل الاقتراح إلى تصويت مجتمعي')
                     ->modalDescription('سيتم إنشاء استطلاع رأي تلقائياً مبني على هذا الاقتراح لتمكين السكان من التصويت عليه.')
-                    ->form([
+                    ->form(fn (Suggestion $record) => [
+                        Forms\Components\TextInput::make('title')
+                            ->label('عنوان التصويت')
+                            ->default($record->title)
+                            ->required(),
+                        Forms\Components\Textarea::make('description')
+                            ->label('تفاصيل التصويت')
+                            ->default($record->description)
+                            ->required(),
+                        Forms\Components\Toggle::make('show_author')
+                            ->label('إظهار رقم الشقة وصاحب الاقتراح؟')
+                            ->default(false)
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set) use ($record) {
+                                $originalDesc = $record->description;
+                                if ($state) {
+                                    $unit = $record->apartment->unit_number ?? 'غير معروف';
+                                    $name = $record->user->full_name ?? 'غير معروف';
+                                    $set('description', $originalDesc . "\n\n(مُقترح من طرف $name - شقة $unit)");
+                                } else {
+                                    $set('description', $originalDesc);
+                                }
+                            }),
                         Forms\Components\TagsInput::make('options')
                             ->label('خيارات التصويت (على الأقل خيارين)')
                             ->placeholder('أدخل خياراً واضغط Enter')
@@ -143,8 +165,8 @@ class SuggestionResource extends Resource
                             $poll = Poll::create([
                                 'tenant_id'   => $record->tenant_id,
                                 'created_by'  => auth()->id(),
-                                'title'       => $record->title,
-                                'description' => $record->description,
+                                'title'       => $data['title'],
+                                'description' => $data['description'],
                                 'expires_at'  => $data['expires_at'],
                                 'is_active'   => true,
                             ]);

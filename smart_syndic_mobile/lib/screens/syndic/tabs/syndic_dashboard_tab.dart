@@ -397,12 +397,14 @@ class SyndicDashboardTab extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'حركة المداخيل والمصاريف (آخر الأشهر)',
-                        style: GoogleFonts.cairo(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                      Expanded(
+                        child: Text(
+                          'حركة المداخيل والمصاريف (آخر الأشهر)',
+                          style: GoogleFonts.cairo(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
                       ),
                       Row(

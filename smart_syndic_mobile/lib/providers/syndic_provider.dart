@@ -273,13 +273,37 @@ class SyndicProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> convertSuggestionToPoll(String suggestionId, List<String> options, String expiresAt) async {
+  Future<bool> convertSuggestionToPoll(String suggestionId, List<String> options, String expiresAt, {String? customTitle, String? customDescription}) async {
     try {
       await _api.post('${ApiConstants.syndicSuggestions}/$suggestionId/convert-to-poll', {
         'options': options,
         'expires_at': expiresAt,
+        if (customTitle != null) 'title': customTitle,
+        if (customDescription != null) 'description': customDescription,
       });
       await fetchSuggestions();
+      await fetchPolls();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> createPoll({
+    required String title,
+    required String description,
+    required List<String> options,
+    required String expiresAt,
+  }) async {
+    try {
+      await _api.post(ApiConstants.syndicPolls, {
+        'title': title,
+        'description': description,
+        'options': options,
+        'expires_at': expiresAt,
+      });
       await fetchPolls();
       return true;
     } catch (e) {
