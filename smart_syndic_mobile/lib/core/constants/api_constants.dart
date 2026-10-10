@@ -3,7 +3,7 @@ class ApiConstants {
   // - Android Emulator: 'http://10.0.2.2:8000/api/v1'
   // - Physical Phone: 'http://<YOUR_PC_IP>:8000/api/v1'
   // - Windows / Web: 'http://127.0.0.1:8000/api/v1'
-  static const String defaultBaseUrl = 'https://angry-maps-stop.loca.lt/api/v1';
+  static const String defaultBaseUrl = 'http://192.168.11.168:8000/api/v1'; // Fast local Wi-Fi connection
 
   // Auth endpoints
   static const String login = '/auth/login';
