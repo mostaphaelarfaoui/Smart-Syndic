@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/services/api_service.dart';
 import '../../../models/apartment_model.dart';
+import '../../../providers/syndic_provider.dart';
+import 'edit_apartment_dialog.dart';
 import 'record_payment_dialog.dart';
 
 class ApartmentDetailsDialog extends StatelessWidget {
@@ -94,7 +97,7 @@ class ApartmentDetailsDialog extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '${apartment.buildingName ?? "الإقامة"} • الطابق ${apartment.floor}',
+                          '${apartment.block != null ? "بلوك ${apartment.block} • " : ""}${apartment.buildingName ?? "الإقامة"} • الطابق ${apartment.floor}',
                           style: GoogleFonts.cairo(
                             fontSize: 12,
                             color: Colors.white.withAlpha(220),
@@ -448,7 +451,7 @@ class ApartmentDetailsDialog extends StatelessWidget {
               ),
             ),
 
-            // Bottom Action Bar: Record Payment for this apartment
+            // Bottom Action Bar: Edit, Delete, Record Payment
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -461,25 +464,107 @@ class ApartmentDetailsDialog extends StatelessWidget {
                   ),
                 ],
               ),
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 48),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                onPressed: () {
-                  Navigator.pop(context);
-                  showDialog(
-                    context: context,
-                    builder: (_) => const RecordPaymentDialog(),
-                  );
-                },
-                icon: const Icon(Icons.add_circle_outline, size: 20),
-                label: Text(
-                  'استخلاص واجب لهذه الشقة',
-                  style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 14),
-                ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.primary,
+                            side: const BorderSide(color: AppColors.primary),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          onPressed: () {
+                            Navigator.pop(context);
+                            showDialog(
+                              context: context,
+                              builder: (_) => EditApartmentDialog(apartment: apartment),
+                            );
+                          },
+                          icon: const Icon(Icons.edit_outlined, size: 16),
+                          label: Text('تعديل الشقة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12)),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.danger,
+                            side: const BorderSide(color: AppColors.danger),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          onPressed: () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: Text('تأكيد حذف الشقة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+                                content: Text('هل أنت متأكد من رغبتك في حذف ${apartment.unitNumber}؟', style: GoogleFonts.cairo()),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, false),
+                                    child: Text('إلغاء', style: GoogleFonts.cairo()),
+                                  ),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    child: Text('تأكيد الحذف', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: Colors.white)),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirm == true && context.mounted) {
+                              final syndic = context.read<SyndicProvider>();
+                              final success = await syndic.deleteApartment(apartment.id);
+                              if (context.mounted) {
+                                Navigator.pop(context);
+                                if (success) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      backgroundColor: AppColors.success,
+                                      content: Text('تم حذف الشقة بنجاح ✓'),
+                                    ),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      backgroundColor: AppColors.danger,
+                                      content: Text(syndic.errorMessage ?? 'تعذر حذف الشقة'),
+                                    ),
+                                  );
+                                }
+                              }
+                            }
+                          },
+                          icon: const Icon(Icons.delete_outline, size: 16),
+                          label: Text('حذف الشقة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12)),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 44),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      showDialog(
+                        context: context,
+                        builder: (_) => const RecordPaymentDialog(),
+                      );
+                    },
+                    icon: const Icon(Icons.add_circle_outline, size: 18),
+                    label: Text(
+                      'استخلاص واجب لهذه الشقة',
+                      style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

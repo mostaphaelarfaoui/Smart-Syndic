@@ -8,6 +8,7 @@ import '../../../providers/syndic_provider.dart';
 import '../../../widgets/empty_state.dart';
 import '../dialogs/add_apartment_dialog.dart';
 import '../dialogs/apartment_details_dialog.dart';
+import '../dialogs/bulk_generate_apartments_dialog.dart';
 
 class SyndicApartmentsTab extends StatefulWidget {
   const SyndicApartmentsTab({super.key});
@@ -76,16 +77,39 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (_) => const AddApartmentDialog(),
-          );
-        },
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add_home_work_outlined),
-        label: Text('إضافة شقة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+      floatingActionButton: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton.extended(
+            heroTag: 'fab_single_apt',
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (_) => const AddApartmentDialog(),
+              );
+            },
+            backgroundColor: Colors.white,
+            foregroundColor: AppColors.primary,
+            elevation: 2,
+            icon: const Icon(Icons.add, size: 18),
+            label: Text('شقة مفردة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12)),
+          ),
+          const SizedBox(width: 8),
+          FloatingActionButton.extended(
+            heroTag: 'fab_bulk_apt',
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (_) => const BulkGenerateApartmentsDialog(),
+              );
+            },
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+            elevation: 3,
+            icon: const Icon(Icons.flash_on, size: 18),
+            label: Text('⚡ توليد شقق دفعة واحدة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13)),
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: () => syndic.fetchApartments(),
@@ -267,7 +291,7 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
-                                          'الطابق: ${apt.floor} • الواجب: ${apt.monthlyFee.toStringAsFixed(0)} درهم',
+                                          '${apt.block != null ? "بلوك ${apt.block} • " : ""}${apt.buildingName ?? ""} • الطابق ${apt.floor} • ${apt.monthlyFee.toStringAsFixed(0)} درهم',
                                           style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary),
                                         ),
                                         const SizedBox(height: 4),
