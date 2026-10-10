@@ -17,6 +17,7 @@ class _ResidentCommunityTabState extends State<ResidentCommunityTab> with Single
   late TabController _tabController;
   final Map<String, String> _selectedOptions = {}; // pollId -> optionId
   final Map<String, String> _voteComments = {}; // pollId -> comment text
+  final Map<String, bool> _voteIsAnonymous = {}; // pollId -> isAnonymous
   final Map<String, bool> _votingProgress = {};
 
   @override
@@ -261,6 +262,19 @@ class _ResidentCommunityTabState extends State<ResidentCommunityTab> with Single
                           onChanged: (val) => _voteComments[poll.id] = val,
                         ),
                         const SizedBox(height: 12),
+                        CheckboxListTile(
+                          title: Text('إخفاء هويتي (تعليق مجهول)', style: GoogleFonts.cairo(fontSize: 12)),
+                          value: _voteIsAnonymous[poll.id] ?? false,
+                          onChanged: (val) {
+                            setState(() {
+                              _voteIsAnonymous[poll.id] = val ?? false;
+                            });
+                          },
+                          controlAffinity: ListTileControlAffinity.leading,
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                        ),
+                        const SizedBox(height: 12),
                         ElevatedButton(
                           onPressed: (_selectedOptions[poll.id] == null || isSubmitting)
                               ? null
@@ -268,7 +282,8 @@ class _ResidentCommunityTabState extends State<ResidentCommunityTab> with Single
                                   setState(() => _votingProgress[poll.id] = true);
                                   final optionId = _selectedOptions[poll.id]!;
                                   final comment = _voteComments[poll.id];
-                                  final ok = await resident.castVote(poll.id, optionId, comment);
+                                  final isAnonymous = _voteIsAnonymous[poll.id] ?? false;
+                                  final ok = await resident.castVote(poll.id, optionId, comment: comment, isAnonymous: isAnonymous);
                                   if (mounted) {
                                     setState(() => _votingProgress[poll.id] = false);
                                     if (ok) {
@@ -372,8 +387,10 @@ class _ResidentCommunityTabState extends State<ResidentCommunityTab> with Single
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(vote['resident_name'] ?? 'مجهول', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                                    Text('شقة ${vote['apartment']} - عمارة ${vote['building']}', style: GoogleFonts.cairo(fontSize: 10, color: AppColors.textSecondary)),
+                                    if (vote['is_anonymous'] == true)
+                                      Text('مجهول', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary))
+                                    else
+                                      Text('شقة ${vote['apartment']} - عمارة ${vote['building']}', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                                   ],
                                 ),
                               ),

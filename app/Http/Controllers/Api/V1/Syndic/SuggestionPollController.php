@@ -97,7 +97,6 @@ class SuggestionPollController extends Controller
                 // Format votes for the frontend
                 $option->detailed_votes = $option->votes->map(function ($vote) {
                     return [
-                        'resident_name' => $vote->user->full_name ?? 'غير معروف',
                         'apartment'     => $vote->apartment->unit_number ?? 'غير معروف',
                         'building'      => $vote->apartment->building->name ?? 'غير معروف',
                         'created_at'    => $vote->created_at,
@@ -115,11 +114,11 @@ class SuggestionPollController extends Controller
                 ->whereNotNull('comment')
                 ->map(function ($vote) {
                     return [
-                        'resident_name' => $vote->user->full_name ?? 'غير معروف',
                         'apartment'     => $vote->apartment->unit_number ?? 'غير معروف',
                         'building'      => $vote->apartment->building->name ?? 'غير معروف',
                         'comment'       => $vote->comment,
                         'created_at'    => $vote->created_at,
+                        'is_anonymous'  => $vote->is_anonymous_comment,
                     ];
                 })->values();
 

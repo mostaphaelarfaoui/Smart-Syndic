@@ -17,6 +17,7 @@ class PollVote extends Model
         'user_id',
         'apartment_id',
         'comment',
+        'is_anonymous_comment',
     ];
 
     // ─── Relationships ────────────────────────────────────────────────

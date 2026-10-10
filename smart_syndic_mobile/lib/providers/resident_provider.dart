@@ -138,7 +138,7 @@ class ResidentProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> castVote(String pollId, String optionId, [String? comment]) async {
+  Future<bool> castVote(String pollId, String optionId, {String? comment, bool isAnonymous = false}) async {
     try {
       final String? apartmentId = _balanceInfo?['apartment']?['id'];
       if (apartmentId == null) throw Exception("لا يمكن تحديد شقة الساكن.");
@@ -147,6 +147,7 @@ class ResidentProvider extends ChangeNotifier {
         'poll_option_id': optionId,
         'apartment_id': apartmentId,
         if (comment != null && comment.trim().isNotEmpty) 'comment': comment.trim(),
+        'is_anonymous_comment': isAnonymous,
       });
       await fetchPolls();
       return true;

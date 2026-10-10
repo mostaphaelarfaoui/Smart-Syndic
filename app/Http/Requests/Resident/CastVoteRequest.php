@@ -14,9 +14,10 @@ class CastVoteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'poll_option_id' => ['required', 'uuid', 'exists:poll_options,id'],
-            'apartment_id'   => ['required', 'uuid', 'exists:apartments,id'],
-            'comment'        => ['nullable', 'string', 'max:1000'],
+            'poll_option_id'       => ['required', 'uuid', 'exists:poll_options,id'],
+            'apartment_id'         => ['required', 'uuid', 'exists:apartments,id'],
+            'comment'              => ['nullable', 'string', 'max:1000'],
+            'is_anonymous_comment' => ['nullable', 'boolean'],
         ];
     }
 }

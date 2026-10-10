@@ -548,8 +548,8 @@ class _SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTick
                                     backgroundColor: AppColors.primary.withAlpha(25),
                                     child: const Icon(Icons.person, size: 16, color: AppColors.primary),
                                   ),
-                                  title: Text(vote['resident_name'] ?? 'مجهول', style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.w600)),
-                                  subtitle: Text('شقة ${vote['apartment']} - عمارة ${vote['building']}', style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary)),
+                                  title: Text('شقة ${vote['apartment']} - عمارة ${vote['building']}', style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.w600)),
+                                  subtitle: Text(vote['created_at']?.split('T')[0] ?? '', style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary)),
                                   dense: true,
                                 );
                               }).toList(),
@@ -591,8 +591,24 @@ class _SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTick
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Text(vote['resident_name'] ?? 'مجهول', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                                          Text('شقة ${vote['apartment']} - عمارة ${vote['building']}', style: GoogleFonts.cairo(fontSize: 10, color: AppColors.textSecondary)),
+                                          Row(
+                                            children: [
+                                              Text('شقة ${vote['apartment']} - عمارة ${vote['building']}', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                                              if (vote['is_anonymous'] == true)
+                                                Padding(
+                                                  padding: const EdgeInsets.only(right: 6),
+                                                  child: Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                    decoration: BoxDecoration(
+                                                      color: AppColors.textSecondary.withAlpha(20),
+                                                      borderRadius: BorderRadius.circular(4),
+                                                    ),
+                                                    child: Text('(مجهول)', style: GoogleFonts.cairo(fontSize: 10, color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                          Text(vote['created_at']?.split('T')[0] ?? '', style: GoogleFonts.cairo(fontSize: 10, color: AppColors.textSecondary)),
                                         ],
                                       ),
                                     ),

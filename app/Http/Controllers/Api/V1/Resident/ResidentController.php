@@ -200,12 +200,13 @@ class ResidentController extends Controller
             $poll->comments = $poll->votes
                 ->whereNotNull('comment')
                 ->map(function ($vote) {
+                    $isAnonymous = $vote->is_anonymous_comment;
                     return [
-                        'resident_name' => $vote->user->full_name ?? 'غير معروف',
-                        'apartment'     => $vote->apartment->unit_number ?? 'غير معروف',
-                        'building'      => $vote->apartment->building->name ?? 'غير معروف',
+                        'apartment'     => $isAnonymous ? 'مجهول' : ($vote->apartment->unit_number ?? 'غير معروف'),
+                        'building'      => $isAnonymous ? '' : ($vote->apartment->building->name ?? 'غير معروف'),
                         'comment'       => $vote->comment,
                         'created_at'    => $vote->created_at,
+                        'is_anonymous'  => $isAnonymous,
                     ];
                 })->values();
 
@@ -241,11 +242,12 @@ class ResidentController extends Controller
         }
 
         PollVote::create([
-            'poll_id'        => $poll->id,
-            'poll_option_id' => $request->poll_option_id,
-            'user_id'        => $request->user()->id,
-            'apartment_id'   => $request->apartment_id,
-            'comment'        => $request->comment,
+            'poll_id'              => $poll->id,
+            'poll_option_id'       => $request->poll_option_id,
+            'user_id'              => $request->user()->id,
+            'apartment_id'         => $request->apartment_id,
+            'comment'              => $request->comment,
+            'is_anonymous_comment' => $request->boolean('is_anonymous_comment'),
         ]);
 
         return response()->json(['message' => __('polls.vote_cast')]);
