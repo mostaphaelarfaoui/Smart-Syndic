@@ -130,14 +130,27 @@ class _RegisterResidentScreenState extends State<RegisterResidentScreen> {
       return;
     }
 
+    final rawPhone = _phoneController.text.trim().replaceAll(RegExp(r'[\s\-\.\(\)]'), '');
+    final cleanPhone = rawPhone.startsWith('212') && !rawPhone.startsWith('+') ? '+$rawPhone' : rawPhone;
+    final phoneRegExp = RegExp(r'^(?:(?:\+|00)212|0)[5-7]\d{8}$');
+    if (!phoneRegExp.hasMatch(cleanPhone)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('رقم هاتف مغربي غير صحيح (مثال: 0612345678 أو +212612345678)', style: GoogleFonts.cairo()),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+      return;
+    }
+
     final auth = context.read<AuthProvider>();
     final success = await auth.registerResident(
       inviteCode: _inviteCodeController.text.trim(),
       apartmentId: _selectedApartmentId!,
       firstName: _firstNameController.text.trim(),
       lastName: _lastNameController.text.trim(),
-      email: _emailController.text.trim(),
-      phone: _phoneController.text.trim(),
+      email: _emailController.text.trim().toLowerCase(),
+      phone: cleanPhone,
       password: _passwordController.text,
       occupancyType: _occupancyType,
     );

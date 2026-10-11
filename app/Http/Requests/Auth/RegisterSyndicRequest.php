@@ -39,4 +39,38 @@ class RegisterSyndicRequest extends FormRequest
             'numbering_scheme'            => ['nullable', 'string', 'in:sequential,floor_based,floor_unit'],
         ];
     }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('phone')) {
+            $phone = preg_replace('/[\s\-\.\(\)]+/', '', (string) $this->phone);
+            // If entered 212... without leading plus
+            if (preg_match('/^212[5-7]\d{8}$/', $phone)) {
+                $phone = '+' . $phone;
+            }
+            $this->merge(['phone' => $phone]);
+        }
+
+        if ($this->has('email')) {
+            $this->merge(['email' => strtolower(trim((string) $this->email))]);
+        }
+    }
+
+    public function messages(): array
+    {
+        return [
+            'first_name.required'        => 'الاسم الشخصي مطلوب.',
+            'last_name.required'         => 'الاسم العائلي مطلوب.',
+            'email.required'             => 'البريد الإلكتروني مطلوب.',
+            'email.email'                => 'صيغة البريد الإلكتروني غير صالحة.',
+            'email.unique'               => 'البريد الإلكتروني مسجل مسبقاً، يرجى تسجيل الدخول أو استخدام بريد آخر.',
+            'phone.required'             => 'رقم الهاتف مطلوب.',
+            'phone.regex'                => 'صيغة رقم الهاتف غير صحيحة. يرجى إدخال رقم مغربي صحيح (مثال: 0612345678 أو +212612345678).',
+            'phone.unique'               => 'رقم الهاتف مسجل مسبقاً لحساب آخر.',
+            'password.required'          => 'كلمة المرور مطلوبة.',
+            'password.min'               => 'يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.',
+            'organization_name.required' => 'اسم الإقامة أو العمارة مطلوب.',
+            'property_type.required'     => 'نوع العقار مطلوب.',
+        ];
+    }
 }

@@ -122,11 +122,14 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
       defaultFee = double.tryParse(_complexBuildings.first.feeController.text.trim()) ?? 200.0;
     }
 
+    final rawPhone = _phoneController.text.trim().replaceAll(RegExp(r'[\s\-\.\(\)]'), '');
+    final cleanPhone = rawPhone.startsWith('212') && !rawPhone.startsWith('+') ? '+$rawPhone' : rawPhone;
+
     final success = await auth.registerSyndic(
       firstName: _firstNameController.text.trim(),
       lastName: _lastNameController.text.trim(),
       email: _emailController.text.trim().toLowerCase(),
-      phone: _phoneController.text.trim().replaceAll(' ', ''),
+      phone: cleanPhone,
       password: _passwordController.text,
       organizationName: _orgNameController.text.trim(),
       propertyType: _propertyType,
@@ -521,7 +524,16 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
                   hintText: 'مثلاً: +212661000000',
                   prefixIcon: Icon(Icons.phone_outlined),
                 ),
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'رقم الهاتف مطلوب' : null,
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'رقم الهاتف مطلوب';
+                  final cleaned = v.trim().replaceAll(RegExp(r'[\s\-\.\(\)]'), '');
+                  final normalized = cleaned.startsWith('212') && !cleaned.startsWith('+') ? '+$cleaned' : cleaned;
+                  final regExp = RegExp(r'^(?:(?:\+|00)212|0)[5-7]\d{8}$');
+                  if (!regExp.hasMatch(normalized)) {
+                    return 'رقم مغربي غير صحيح (مثال: 0612345678 أو +212612345678)';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 14),
 

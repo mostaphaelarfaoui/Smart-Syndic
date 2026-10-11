@@ -1,0 +1,151 @@
+<?php
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Validation Language Lines (Arabic)
+    |--------------------------------------------------------------------------
+    */
+
+    'accepted'             => 'يجب قبول :attribute.',
+    'accepted_if'          => 'يجب قبول :attribute عندما يكون :other هو :value.',
+    'active_url'           => ':attribute لا يمثل رابطاً صالحاً.',
+    'after'                => 'يجب أن يكون :attribute تاريخاً بعد :date.',
+    'after_or_equal'       => 'يجب أن يكون :attribute تاريخاً بعد أو يساوي :date.',
+    'alpha'                => 'يجب أن يحتوي :attribute على أحرف فقط.',
+    'alpha_dash'           => 'يجب أن يحتوي :attribute على أحرف وأرقام وشرطات فقط.',
+    'alpha_num'            => 'يجب أن يحتوي :attribute على أحرف وأرقام فقط.',
+    'array'                => 'يجب أن يكون :attribute مصفوفة.',
+    'before'               => 'يجب أن يكون :attribute تاريخاً قبل :date.',
+    'before_or_equal'      => 'يجب أن يكون :attribute تاريخاً قبل أو يساوي :date.',
+    'between'              => [
+        'numeric' => 'يجب أن تكون قيمة :attribute بين :min و :max.',
+        'file'    => 'يجب أن يكون حجم ملف :attribute بين :min و :max كيلوبايت.',
+        'string'  => 'يجب أن يكون طول نص :attribute بين :min و :max حروف.',
+        'array'   => 'يجب أن يحتوي :attribute على عدد من العناصر بين :min و :max.',
+    ],
+    'boolean'              => 'يجب أن تكون قيمة :attribute إما صحيحاً أو خطأ.',
+    'confirmed'            => 'تأكيد :attribute غير متطابق.',
+    'current_password'     => 'كلمة المرور الحالية غير صحيحة.',
+    'date'                 => ':attribute ليس تاريخاً صحيحاً.',
+    'date_equals'          => 'يجب أن يكون :attribute تاريخاً مطابقاً لـ :date.',
+    'date_format'          => ':attribute لا يتطابق مع الصيغة :format.',
+    'declined'             => 'يجب رفض :attribute.',
+    'declined_if'          => 'يجب رفض :attribute عندما يكون :other هو :value.',
+    'different'            => 'يجب أن يكون :attribute و :other مختلفين.',
+    'digits'               => 'يجب أن يحتوي :attribute على :digits رقم/أرقام.',
+    'digits_between'       => 'يجب أن يحتوي :attribute على بين :min و :max أرقام.',
+    'email'                => 'يجب أن يكون :attribute عنوان بريد إلكتروني صحيح.',
+    'ends_with'            => 'يجب أن ينتهي :attribute بأحد القيم التالية: :values.',
+    'enum'                 => 'القيمة المحددة لـ :attribute غير صالحة.',
+    'exists'               => 'القيمة المحددة لـ :attribute غير موجودة.',
+    'file'                 => 'يجب أن يكون :attribute ملفاً.',
+    'filled'               => 'حقل :attribute إجباري.',
+    'gt'                   => [
+        'numeric' => 'يجب أن تكون قيمة :attribute أكبر من :value.',
+        'file'    => 'يجب أن يكون حجم ملف :attribute أكبر من :value كيلوبايت.',
+        'string'  => 'يجب أن يحتوي نص :attribute على أكثر من :value حروف.',
+        'array'   => 'يجب أن يحتوي :attribute على أكثر من :value عناصر.',
+    ],
+    'gte'                  => [
+        'numeric' => 'يجب أن تكون قيمة :attribute أكبر من أو مساوية لـ :value.',
+        'file'    => 'يجب أن يكون حجم ملف :attribute أكبر من أو مساوي لـ :value كيلوبايت.',
+        'string'  => 'يجب أن يحتوي نص :attribute على :value حروف على الأقل.',
+        'array'   => 'يجب أن يحتوي :attribute على :value عناصر على الأقل.',
+    ],
+    'image'                => 'يجب أن يكون :attribute صورة.',
+    'in'                   => 'القيمة المحددة لـ :attribute غير صالحة.',
+    'in_array'             => 'حقل :attribute غير موجود في :other.',
+    'integer'              => 'يجب أن يكون :attribute عدداً صحيحاً.',
+    'ip'                   => 'يجب أن يكون :attribute عنوان IP صحيحاً.',
+    'ipv4'                 => 'يجب أن يكون :attribute عنوان IPv4 صحيحاً.',
+    'ipv6'                 => 'يجب أن يكون :attribute عنوان IPv6 صحيحاً.',
+    'json'                 => 'يجب أن يكون :attribute نصاً من نوع JSON.',
+    'lt'                   => [
+        'numeric' => 'يجب أن تكون قيمة :attribute أصغر من :value.',
+        'file'    => 'يجب أن يكون حجم ملف :attribute أصغر من :value كيلوبايت.',
+        'string'  => 'يجب أن يحتوي نص :attribute على أقل من :value حروف.',
+        'array'   => 'يجب أن يحتوي :attribute على أقل من :value عناصر.',
+    ],
+    'lte'                  => [
+        'numeric' => 'يجب أن تكون قيمة :attribute أصغر من أو مساوية لـ :value.',
+        'file'    => 'يجب أن يكون حجم ملف :attribute أصغر من أو مساوي لـ :value كيلوبايت.',
+        'string'  => 'يجب أن يحتوي نص :attribute على :value حروف أو أقل.',
+        'array'   => 'يجب ألا يحتوي :attribute على أكثر من :value عناصر.',
+    ],
+    'max'                  => [
+        'numeric' => 'يجب ألا تكون قيمة :attribute أكبر من :max.',
+        'file'    => 'يجب ألا يتعدى حجم ملف :attribute :max كيلوبايت.',
+        'string'  => 'يجب ألا يتجاوز طول نص :attribute :max حروف.',
+        'array'   => 'يجب ألا يحتوي :attribute على أكثر من :max عناصر.',
+    ],
+    'mimes'                => 'يجب أن يكون ملفاً من نوع: :values.',
+    'mimetypes'            => 'يجب أن يكون ملفاً من نوع: :values.',
+    'min'                  => [
+        'numeric' => 'يجب أن تكون قيمة :attribute :min على الأقل.',
+        'file'    => 'يجب أن يكون حجم ملف :attribute :min كيلوبايت على الأقل.',
+        'string'  => 'يجب أن يتكون :attribute من :min أحرف على الأقل.',
+        'array'   => 'يجب أن يحتوي :attribute على :min عناصر على الأقل.',
+    ],
+    'not_in'               => 'القيمة المحددة لـ :attribute غير صالحة.',
+    'numeric'              => 'يجب أن تكون قيمة :attribute رقماً.',
+    'password'             => [
+        'letters'       => 'يجب أن تحتوي :attribute على حرف واحد على الأقل.',
+        'mixed'         => 'يجب أن تحتوي :attribute على حرف كبير وآخر صغير على الأقل.',
+        'numbers'       => 'يجب أن تحتوي :attribute على رقم واحد على الأقل.',
+        'symbols'       => 'يجب أن تحتوي :attribute على رمز واحد على الأقل.',
+        'uncompromised' => ':attribute المعطى ظهر في تسريب بيانات. يرجى اختيار قيمة أخرى.',
+    ],
+    'present'              => 'يجب تقديم حقل :attribute.',
+    'prohibited'           => 'حقل :attribute محظور.',
+    'regex'                => 'صيغة :attribute غير صحيحة.',
+    'required'             => 'حقل :attribute مطلوب.',
+    'required_if'          => 'حقل :attribute مطلوب عندما يكون :other هو :value.',
+    'required_unless'      => 'حقل :attribute مطلوب إلا إذا كان :other في :values.',
+    'required_with'        => 'حقل :attribute مطلوب عند توفر :values.',
+    'required_with_all'    => 'حقل :attribute مطلوب عند توفر :values.',
+    'required_without'     => 'حقل :attribute مطلوب عند عدم توفر :values.',
+    'required_without_all' => 'حقل :attribute مطلوب عند عدم توفر أي من :values.',
+    'same'                 => 'يجب أن يتطابق :attribute مع :other.',
+    'size'                 => [
+        'numeric' => 'يجب أن تكون قيمة :attribute مساوية لـ :size.',
+        'file'    => 'يجب أن يكون حجم ملف :attribute :size كيلوبايت.',
+        'string'  => 'يجب أن يحتوي نص :attribute على :size حروف.',
+        'array'   => 'يجب أن يحتوي :attribute على :size عناصر.',
+    ],
+    'string'               => 'يجب أن يكون :attribute نصاً.',
+    'timezone'             => 'يجب أن يكون :attribute منطقة زمنية صالحة.',
+    'unique'               => 'قيمة :attribute مسجلة مسبقاً، يرجى اختيار قيمة أخرى.',
+    'uploaded'             => 'فشل في تحميل :attribute.',
+    'url'                  => 'صيغة رابط :attribute غير صحيحة.',
+    'uuid'                 => 'يجب أن يكون :attribute رمز UUID صحيحاً.',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Custom Validation Attributes
+    |--------------------------------------------------------------------------
+    */
+
+    'attributes' => [
+        'first_name'        => 'الاسم الشخصي',
+        'last_name'         => 'الاسم العائلي',
+        'email'             => 'البريد الإلكتروني',
+        'phone'             => 'رقم الهاتف',
+        'password'          => 'كلمة المرور',
+        'organization_name' => 'اسم الإقامة أو العمارة',
+        'property_type'     => 'نوع العقار',
+        'total_units'       => 'عدد الشقق',
+        'total_floors'      => 'عدد الطوابق',
+        'units_per_floor'   => 'عدد الشقق في كل طابق',
+        'default_monthly_fee' => 'الواجب الشهري',
+        'invite_code'       => 'رمز الدعوة',
+        'apartment_id'      => 'الشقة',
+        'occupancy_type'    => 'الصفة القانونية',
+        'amount'            => 'المبلغ',
+        'category'          => 'الفئة',
+        'description'       => 'الوصف',
+        'expense_date'      => 'تاريخ المصروف',
+    ],
+
+];
