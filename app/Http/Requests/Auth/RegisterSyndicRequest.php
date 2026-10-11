@@ -35,6 +35,8 @@ class RegisterSyndicRequest extends FormRequest
             'buildings.*.units_per_floor' => ['nullable', 'integer', 'min:1', 'max:20'],
             'buildings.*.total_units'     => ['nullable', 'integer', 'min:1', 'max:500'],
             'buildings.*.monthly_fee'     => ['nullable', 'numeric', 'min:0'],
+            'buildings.*.numbering_scheme'=> ['nullable', 'string', 'in:sequential,floor_based,floor_unit'],
+            'numbering_scheme'            => ['nullable', 'string', 'in:sequential,floor_based,floor_unit'],
         ];
     }
 }

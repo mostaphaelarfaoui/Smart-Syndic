@@ -26,6 +26,7 @@ class _BulkGenerateApartmentsDialogState extends State<BulkGenerateApartmentsDia
   final _prefixController = TextEditingController(text: 'شقة ');
 
   bool _useFloorsCalculation = true;
+  String _numberingScheme = 'sequential';
   bool _isSubmitting = false;
 
   @override
@@ -77,6 +78,7 @@ class _BulkGenerateApartmentsDialogState extends State<BulkGenerateApartmentsDia
       totalUnits: totalUnits,
       monthlyFee: fee,
       unitPrefix: prefix,
+      numberingScheme: _numberingScheme,
     );
 
     if (mounted) {
@@ -360,24 +362,65 @@ class _BulkGenerateApartmentsDialogState extends State<BulkGenerateApartmentsDia
                     ),
                   ],
                 ),
+                const SizedBox(height: 14),
+
+                // Numbering Scheme Dropdown (Requirement 5)
+                DropdownButtonFormField<String>(
+                  value: _numberingScheme,
+                  decoration: const InputDecoration(
+                    labelText: 'نمط ترقيم الشقق',
+                    prefixIcon: Icon(Icons.pin_outlined),
+                  ),
+                  items: [
+                    DropdownMenuItem(
+                      value: 'sequential',
+                      child: Text('تسلسلي (شقة 1، شقة 2، شقة 3...)', style: GoogleFonts.cairo(fontSize: 12)),
+                    ),
+                    DropdownMenuItem(
+                      value: 'floor_based',
+                      child: Text('حسب الطابق (شقة 101، شقة 102، شقة 201...)', style: GoogleFonts.cairo(fontSize: 12)),
+                    ),
+                    DropdownMenuItem(
+                      value: 'floor_unit',
+                      child: Text('طابق ورمز (شقة 1-1، شقة 1-2، شقة 2-1...)', style: GoogleFonts.cairo(fontSize: 12)),
+                    ),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) setState(() => _numberingScheme = val);
+                  },
+                ),
                 const SizedBox(height: 16),
 
                 // Calculation Result Preview
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withAlpha(15),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.info_outline, size: 20, color: AppColors.primary),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'سيتم توليد $estimatedUnits شقة فوراً مع تحديد الطابق والواجب الشهري لكل شقة ✓',
-                          style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary),
-                        ),
+                      Row(
+                        children: [
+                          const Icon(Icons.info_outline, size: 20, color: AppColors.primary),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'سيتم توليد $estimatedUnits شقة فوراً مع تحديد الطابق والواجب الشهري لكل شقة ✓',
+                              style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        _numberingScheme == 'floor_based'
+                            ? 'نموذج الترقيم: ${_prefixController.text}101، ${_prefixController.text}102، ${_prefixController.text}201...'
+                            : (_numberingScheme == 'floor_unit'
+                                ? 'نموذج الترقيم: ${_prefixController.text}1-1، ${_prefixController.text}1-2، ${_prefixController.text}2-1...'
+                                : 'نموذج الترقيم: ${_prefixController.text}1، ${_prefixController.text}2، ${_prefixController.text}3...'),
+                        style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary),
                       ),
                     ],
                   ),

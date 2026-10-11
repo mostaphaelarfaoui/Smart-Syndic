@@ -65,6 +65,7 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
     _BuildingConfig(block: 'A', name: 'عمارة 2', floors: '4', unitsPerFloor: '2', fee: '200'),
   ];
 
+  String _numberingScheme = 'sequential';
   bool _obscurePassword = true;
 
   @override
@@ -151,6 +152,7 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
       totalFloors: totalFloors,
       unitsPerFloor: unitsPerFloor,
       defaultMonthlyFee: defaultFee,
+      numberingScheme: _numberingScheme,
       buildings: buildingsPayload,
     );
 
@@ -341,6 +343,31 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
                           prefixIcon: Icon(Icons.payments_outlined),
                         ),
                         validator: (v) => (double.tryParse(v ?? '') ?? 0) < 0 ? 'الواجب غير صحيح' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        value: _numberingScheme,
+                        decoration: const InputDecoration(
+                          labelText: 'نمط ترقيم الشقق',
+                          prefixIcon: Icon(Icons.pin_outlined),
+                        ),
+                        items: [
+                          DropdownMenuItem(
+                            value: 'sequential',
+                            child: Text('تسلسلي (شقة 1، شقة 2، شقة 3...)', style: GoogleFonts.cairo(fontSize: 12)),
+                          ),
+                          DropdownMenuItem(
+                            value: 'floor_based',
+                            child: Text('حسب الطابق (شقة 101، شقة 102...)', style: GoogleFonts.cairo(fontSize: 12)),
+                          ),
+                          DropdownMenuItem(
+                            value: 'floor_unit',
+                            child: Text('طابق ورمز (شقة 1-1، شقة 1-2...)', style: GoogleFonts.cairo(fontSize: 12)),
+                          ),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) setState(() => _numberingScheme = val);
+                        },
                       ),
                       const SizedBox(height: 12),
                       Builder(builder: (_) {

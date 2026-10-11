@@ -149,6 +149,7 @@ class AuthProvider extends ChangeNotifier {
     int? totalFloors,
     int? unitsPerFloor,
     double? defaultMonthlyFee,
+    String? numberingScheme,
     List<Map<String, dynamic>>? buildings,
   }) async {
     _isLoading = true;
@@ -168,6 +169,7 @@ class AuthProvider extends ChangeNotifier {
         if (totalFloors != null) 'total_floors': totalFloors,
         if (unitsPerFloor != null) 'units_per_floor': unitsPerFloor,
         if (defaultMonthlyFee != null) 'default_monthly_fee': defaultMonthlyFee,
+        if (numberingScheme != null) 'numbering_scheme': numberingScheme,
         if (buildings != null && buildings.isNotEmpty) 'buildings': buildings,
       };
 

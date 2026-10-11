@@ -258,6 +258,7 @@ class SyndicProvider extends ChangeNotifier {
     int? totalUnits,
     required double monthlyFee,
     String? unitPrefix,
+    String? numberingScheme,
   }) async {
     _isLoading = true;
     notifyListeners();
@@ -273,6 +274,7 @@ class SyndicProvider extends ChangeNotifier {
       if (unitsPerFloor != null) data['units_per_floor'] = unitsPerFloor;
       if (totalUnits != null) data['total_units'] = totalUnits;
       if (unitPrefix != null && unitPrefix.isNotEmpty) data['unit_prefix'] = unitPrefix;
+      if (numberingScheme != null && numberingScheme.isNotEmpty) data['numbering_scheme'] = numberingScheme;
 
       await _api.post(ApiConstants.syndicBulkApartments, data);
       await fetchApartments();

@@ -150,14 +150,15 @@ class ApartmentController extends Controller
     public function bulkGenerate(Request $request): JsonResponse
     {
         $request->validate([
-            'building_id'     => ['nullable', 'uuid', 'exists:buildings,id'],
-            'building_name'   => ['nullable', 'string', 'max:100'],
-            'block'           => ['nullable', 'string', 'max:100'],
-            'total_floors'    => ['nullable', 'integer', 'min:1', 'max:50'],
-            'units_per_floor' => ['nullable', 'integer', 'min:1', 'max:20'],
-            'total_units'     => ['nullable', 'integer', 'min:1', 'max:500'],
-            'monthly_fee'     => ['required', 'numeric', 'min:0'],
-            'unit_prefix'     => ['nullable', 'string', 'max:20'],
+            'building_id'      => ['nullable', 'uuid', 'exists:buildings,id'],
+            'building_name'    => ['nullable', 'string', 'max:100'],
+            'block'            => ['nullable', 'string', 'max:100'],
+            'total_floors'     => ['nullable', 'integer', 'min:1', 'max:50'],
+            'units_per_floor'  => ['nullable', 'integer', 'min:1', 'max:20'],
+            'total_units'      => ['nullable', 'integer', 'min:1', 'max:500'],
+            'monthly_fee'      => ['required', 'numeric', 'min:0'],
+            'unit_prefix'      => ['nullable', 'string', 'max:20'],
+            'numbering_scheme' => ['nullable', 'string', 'in:sequential,floor_based,floor_unit'],
         ]);
 
         $tenantId = $request->user()->tenant_id;
@@ -191,6 +192,7 @@ class ApartmentController extends Controller
         $totalUnits = (int) ($request->total_units ?? ($floors * ($unitsPerFloor ?: 1)));
         $fee = (float) $request->monthly_fee;
         $prefix = $request->unit_prefix ?? 'شقة ';
+        $numberingScheme = $request->numbering_scheme ?? 'sequential';
 
         $existingCount = $building->apartments()->count();
         $createdApartments = [];
@@ -199,7 +201,16 @@ class ApartmentController extends Controller
             $unitCounter = $existingCount + 1;
             for ($f = 1; $f <= $floors; $f++) {
                 for ($u = 1; $u <= $unitsPerFloor; $u++) {
-                    $unitNumber = $prefix ? "{$prefix}{$unitCounter}" : (string) $unitCounter;
+                    if ($numberingScheme === 'floor_based') {
+                        $num = ($f * 100) + $u;
+                        $unitNumber = $prefix ? "{$prefix}{$num}" : (string) $num;
+                    } elseif ($numberingScheme === 'floor_unit') {
+                        $num = "{$f}-{$u}";
+                        $unitNumber = $prefix ? "{$prefix}{$num}" : $num;
+                    } else {
+                        $unitNumber = $prefix ? "{$prefix}{$unitCounter}" : (string) $unitCounter;
+                    }
+
                     $apt = Apartment::firstOrCreate(
                         [
                             'building_id' => $building->id,

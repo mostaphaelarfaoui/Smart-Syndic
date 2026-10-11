@@ -59,13 +59,21 @@ class RegisterSyndicController extends Controller
                     'total_floors' => max(1, $floors),
                 ]);
 
+                $scheme = $request->numbering_scheme ?? 'sequential';
                 if ($unitsPerFloor > 0 && $floors > 0) {
                     $unitCounter = 1;
                     for ($f = 1; $f <= $floors; $f++) {
                         for ($u = 1; $u <= $unitsPerFloor; $u++) {
+                            if ($scheme === 'floor_based') {
+                                $uName = 'شقة ' . (($f * 100) + $u);
+                            } elseif ($scheme === 'floor_unit') {
+                                $uName = "شقة {$f}-{$u}";
+                            } else {
+                                $uName = "شقة $unitCounter";
+                            }
                             Apartment::create([
                                 'building_id' => $building->id,
-                                'unit_number' => "شقة $unitCounter",
+                                'unit_number' => $uName,
                                 'floor'       => $f,
                                 'monthly_fee' => $fee,
                             ]);
@@ -92,6 +100,7 @@ class RegisterSyndicController extends Controller
                     $bUnitsPerFloor = (int) ($bData['units_per_floor'] ?? 0);
                     $bTotalUnits = (int) ($bData['total_units'] ?? ($bFloors * ($bUnitsPerFloor ?: 1)));
                     $bFee = (float) ($bData['monthly_fee'] ?? $fee);
+                    $bScheme = $bData['numbering_scheme'] ?? $request->numbering_scheme ?? 'sequential';
 
                     $building = Building::create([
                         'tenant_id'    => $tenant->id,
@@ -104,9 +113,16 @@ class RegisterSyndicController extends Controller
                         $unitCounter = 1;
                         for ($f = 1; $f <= $bFloors; $f++) {
                             for ($u = 1; $u <= $bUnitsPerFloor; $u++) {
+                                if ($bScheme === 'floor_based') {
+                                    $uName = 'شقة ' . (($f * 100) + $u);
+                                } elseif ($bScheme === 'floor_unit') {
+                                    $uName = "شقة {$f}-{$u}";
+                                } else {
+                                    $uName = "شقة $unitCounter";
+                                }
                                 Apartment::create([
                                     'building_id' => $building->id,
-                                    'unit_number' => "شقة $unitCounter",
+                                    'unit_number' => $uName,
                                     'floor'       => $f,
                                     'monthly_fee' => $bFee,
                                 ]);
