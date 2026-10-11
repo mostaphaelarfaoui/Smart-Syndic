@@ -14,27 +14,23 @@ class RegisterSyndicScreen extends StatefulWidget {
 class _BuildingConfig {
   final TextEditingController blockController;
   final TextEditingController nameController;
-  final TextEditingController floorsController;
-  final TextEditingController unitsPerFloorController;
+  final TextEditingController unitsController;
   final TextEditingController feeController;
 
   _BuildingConfig({
-    String block = 'A',
-    String name = 'عمارة 1',
-    String floors = '4',
-    String unitsPerFloor = '2',
-    String fee = '200',
+    String? block,
+    String? name,
+    String? units,
+    String? fee,
   })  : blockController = TextEditingController(text: block),
         nameController = TextEditingController(text: name),
-        floorsController = TextEditingController(text: floors),
-        unitsPerFloorController = TextEditingController(text: unitsPerFloor),
+        unitsController = TextEditingController(text: units),
         feeController = TextEditingController(text: fee);
 
   void dispose() {
     blockController.dispose();
     nameController.dispose();
-    floorsController.dispose();
-    unitsPerFloorController.dispose();
+    unitsController.dispose();
     feeController.dispose();
   }
 }
@@ -45,7 +41,7 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
   // Property Type: SINGLE_BUILDING or MULTI_BUILDING_COMPLEX
   String _propertyType = 'SINGLE_BUILDING';
 
-  // Personal Info Controllers
+  // Personal Info Controllers (clean without default values)
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -53,19 +49,16 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  // Single Building Controllers
+  // Single Building Controllers (clean without default values)
   final _orgNameController = TextEditingController();
-  final _singleFloorsController = TextEditingController(text: '4');
-  final _singleUnitsPerFloorController = TextEditingController(text: '2');
-  final _singleFeeController = TextEditingController(text: '200');
+  final _singleTotalUnitsController = TextEditingController();
+  final _singleFeeController = TextEditingController();
 
-  // Multi Building Complex List
+  // Multi Building Complex List (starts with 1 empty building)
   final List<_BuildingConfig> _complexBuildings = [
-    _BuildingConfig(block: 'A', name: 'عمارة 1', floors: '4', unitsPerFloor: '2', fee: '200'),
-    _BuildingConfig(block: 'A', name: 'عمارة 2', floors: '4', unitsPerFloor: '2', fee: '200'),
+    _BuildingConfig(),
   ];
 
-  String _numberingScheme = 'sequential';
   bool _obscurePassword = true;
 
   @override
@@ -77,8 +70,7 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _orgNameController.dispose();
-    _singleFloorsController.dispose();
-    _singleUnitsPerFloorController.dispose();
+    _singleTotalUnitsController.dispose();
     _singleFeeController.dispose();
     for (var b in _complexBuildings) {
       b.dispose();
@@ -88,16 +80,7 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
 
   void _addComplexBuilding() {
     setState(() {
-      final nextNum = _complexBuildings.length + 1;
-      _complexBuildings.add(
-        _BuildingConfig(
-          block: 'B',
-          name: 'عمارة $nextNum',
-          floors: '4',
-          unitsPerFloor: '2',
-          fee: '200',
-        ),
-      );
+      _complexBuildings.add(_BuildingConfig());
     });
   }
 
@@ -120,21 +103,18 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
     final auth = context.read<AuthProvider>();
 
     List<Map<String, dynamic>>? buildingsPayload;
-    int? totalFloors;
-    int? unitsPerFloor;
+    int? totalUnits;
     double? defaultFee;
 
     if (_propertyType == 'SINGLE_BUILDING') {
-      totalFloors = int.tryParse(_singleFloorsController.text.trim()) ?? 1;
-      unitsPerFloor = int.tryParse(_singleUnitsPerFloorController.text.trim()) ?? 1;
+      totalUnits = int.tryParse(_singleTotalUnitsController.text.trim()) ?? 0;
       defaultFee = double.tryParse(_singleFeeController.text.trim()) ?? 200.0;
     } else {
       buildingsPayload = _complexBuildings.map((b) {
         return {
           'block': b.blockController.text.trim(),
           'name': b.nameController.text.trim(),
-          'total_floors': int.tryParse(b.floorsController.text.trim()) ?? 1,
-          'units_per_floor': int.tryParse(b.unitsPerFloorController.text.trim()) ?? 1,
+          'total_units': int.tryParse(b.unitsController.text.trim()) ?? 0,
           'monthly_fee': double.tryParse(b.feeController.text.trim()) ?? 200.0,
         };
       }).toList();
@@ -149,10 +129,8 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
       password: _passwordController.text,
       organizationName: _orgNameController.text.trim(),
       propertyType: _propertyType,
-      totalFloors: totalFloors,
-      unitsPerFloor: unitsPerFloor,
+      totalUnits: totalUnits,
       defaultMonthlyFee: defaultFee,
-      numberingScheme: _numberingScheme,
       buildings: buildingsPayload,
     );
 
@@ -289,7 +267,7 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
 
               // Configuration based on Property Type
               if (_propertyType == 'SINGLE_BUILDING') ...[
-                // Single Building Floor & Unit Settings
+                // Single Building Unit Settings
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -302,37 +280,25 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.layers, size: 20, color: AppColors.primary),
+                          const Icon(Icons.meeting_room_outlined, size: 20, color: AppColors.primary),
                           const SizedBox(width: 8),
                           Text(
-                            'توليد الشقق الذكي بالطوابق:',
+                            'بيانات شقق العمارة:',
                             style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
                       const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _singleFloorsController,
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(labelText: 'عدد الطوابق', prefixIcon: Icon(Icons.stairs)),
-                              validator: (v) => (int.tryParse(v ?? '') ?? 0) <= 0 ? 'مطلوب' : null,
-                              onChanged: (_) => setState(() {}),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _singleUnitsPerFloorController,
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(labelText: 'شقق كل طابق', prefixIcon: Icon(Icons.meeting_room)),
-                              validator: (v) => (int.tryParse(v ?? '') ?? 0) <= 0 ? 'مطلوب' : null,
-                              onChanged: (_) => setState(() {}),
-                            ),
-                          ),
-                        ],
+                      TextFormField(
+                        controller: _singleTotalUnitsController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'عدد الشقق في العمارة',
+                          hintText: 'مثلاً: 12',
+                          prefixIcon: Icon(Icons.meeting_room_outlined),
+                        ),
+                        validator: (v) => (int.tryParse(v ?? '') ?? 0) <= 0 ? 'الرجاء إدخال عدد الشقق' : null,
+                        onChanged: (_) => setState(() {}),
                       ),
                       const SizedBox(height: 14),
                       TextFormField(
@@ -340,40 +306,15 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
                         keyboardType: TextInputType.number,
                         decoration: const InputDecoration(
                           labelText: 'الواجب الشهري للشقة (درهم)',
+                          hintText: 'مثلاً: 200',
                           prefixIcon: Icon(Icons.payments_outlined),
                         ),
                         validator: (v) => (double.tryParse(v ?? '') ?? 0) < 0 ? 'الواجب غير صحيح' : null,
                       ),
                       const SizedBox(height: 12),
-                      DropdownButtonFormField<String>(
-                        value: _numberingScheme,
-                        decoration: const InputDecoration(
-                          labelText: 'نمط ترقيم الشقق',
-                          prefixIcon: Icon(Icons.pin_outlined),
-                        ),
-                        items: [
-                          DropdownMenuItem(
-                            value: 'sequential',
-                            child: Text('تسلسلي (شقة 1، شقة 2، شقة 3...)', style: GoogleFonts.cairo(fontSize: 12)),
-                          ),
-                          DropdownMenuItem(
-                            value: 'floor_based',
-                            child: Text('حسب الطابق (شقة 101، شقة 102...)', style: GoogleFonts.cairo(fontSize: 12)),
-                          ),
-                          DropdownMenuItem(
-                            value: 'floor_unit',
-                            child: Text('طابق ورمز (شقة 1-1، شقة 1-2...)', style: GoogleFonts.cairo(fontSize: 12)),
-                          ),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) setState(() => _numberingScheme = val);
-                        },
-                      ),
-                      const SizedBox(height: 12),
                       Builder(builder: (_) {
-                        final floors = int.tryParse(_singleFloorsController.text) ?? 0;
-                        final perFloor = int.tryParse(_singleUnitsPerFloorController.text) ?? 0;
-                        final total = floors * perFloor;
+                        final total = int.tryParse(_singleTotalUnitsController.text) ?? 0;
+                        if (total <= 0) return const SizedBox.shrink();
                         return Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           decoration: BoxDecoration(
@@ -449,8 +390,11 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
                                   flex: 2,
                                   child: TextFormField(
                                     controller: b.blockController,
-                                    decoration: const InputDecoration(labelText: 'اسم البلوك (مثلاً A)'),
-                                    validator: (v) => v!.isEmpty ? 'مطلوب' : null,
+                                    decoration: const InputDecoration(
+                                      labelText: 'اسم البلوك',
+                                      hintText: 'مثلاً: A أو 1',
+                                    ),
+                                    validator: (v) => (v == null || v.trim().isEmpty) ? 'مطلوب' : null,
                                   ),
                                 ),
                                 const SizedBox(width: 8),
@@ -458,8 +402,11 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
                                   flex: 3,
                                   child: TextFormField(
                                     controller: b.nameController,
-                                    decoration: const InputDecoration(labelText: 'اسم العمارة'),
-                                    validator: (v) => v!.isEmpty ? 'مطلوب' : null,
+                                    decoration: const InputDecoration(
+                                      labelText: 'اسم العمارة',
+                                      hintText: 'مثلاً: عمارة الياسمين',
+                                    ),
+                                    validator: (v) => (v == null || v.trim().isEmpty) ? 'مطلوب' : null,
                                   ),
                                 ),
                               ],
@@ -468,28 +415,29 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
                             Row(
                               children: [
                                 Expanded(
+                                  flex: 3,
                                   child: TextFormField(
-                                    controller: b.floorsController,
+                                    controller: b.unitsController,
                                     keyboardType: TextInputType.number,
-                                    decoration: const InputDecoration(labelText: 'عدد الطوابق'),
+                                    decoration: const InputDecoration(
+                                      labelText: 'عدد الشقق في العمارة',
+                                      hintText: 'مثلاً: 10',
+                                      prefixIcon: Icon(Icons.meeting_room_outlined),
+                                    ),
                                     validator: (v) => (int.tryParse(v ?? '') ?? 0) <= 0 ? 'خطأ' : null,
                                   ),
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
-                                  child: TextFormField(
-                                    controller: b.unitsPerFloorController,
-                                    keyboardType: TextInputType.number,
-                                    decoration: const InputDecoration(labelText: 'شقق كل طابق'),
-                                    validator: (v) => (int.tryParse(v ?? '') ?? 0) <= 0 ? 'خطأ' : null,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
+                                  flex: 2,
                                   child: TextFormField(
                                     controller: b.feeController,
                                     keyboardType: TextInputType.number,
-                                    decoration: const InputDecoration(labelText: 'الواجب (د.م)'),
+                                    decoration: const InputDecoration(
+                                      labelText: 'الواجب (د.م)',
+                                      hintText: 'مثلاً: 200',
+                                      prefixIcon: Icon(Icons.payments_outlined),
+                                    ),
                                     validator: (v) => (double.tryParse(v ?? '') ?? 0) < 0 ? 'خطأ' : null,
                                   ),
                                 ),
@@ -516,7 +464,11 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
                   Expanded(
                     child: TextFormField(
                       controller: _firstNameController,
-                      decoration: const InputDecoration(labelText: 'الاسم الشخصي', prefixIcon: Icon(Icons.person_outline)),
+                      decoration: const InputDecoration(
+                        labelText: 'الاسم الشخصي',
+                        hintText: 'مثلاً: محمد',
+                        prefixIcon: Icon(Icons.person_outline),
+                      ),
                       validator: (v) => (v == null || v.trim().isEmpty) ? 'الاسم مطلوب' : null,
                     ),
                   ),
@@ -524,7 +476,10 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
                   Expanded(
                     child: TextFormField(
                       controller: _lastNameController,
-                      decoration: const InputDecoration(labelText: 'الاسم العائلي'),
+                      decoration: const InputDecoration(
+                        labelText: 'الاسم العائلي',
+                        hintText: 'مثلاً: الإدريسي',
+                      ),
                       validator: (v) => (v == null || v.trim().isEmpty) ? 'النسب مطلوب' : null,
                     ),
                   ),
@@ -536,7 +491,8 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
                 decoration: const InputDecoration(
-                  labelText: 'رقم الهاتف (مثال: +212661000000)',
+                  labelText: 'رقم الهاتف',
+                  hintText: 'مثلاً: +212661000000',
                   prefixIcon: Icon(Icons.phone_outlined),
                 ),
                 validator: (v) => (v == null || v.trim().isEmpty) ? 'رقم الهاتف مطلوب' : null,
@@ -548,6 +504,7 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
                 keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(
                   labelText: 'البريد الإلكتروني',
+                  hintText: 'مثلاً: syndic@example.com',
                   prefixIcon: Icon(Icons.email_outlined),
                 ),
                 validator: (v) {
@@ -563,6 +520,7 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
                   labelText: 'كلمة المرور',
+                  hintText: '8 أحرف على الأقل',
                   prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
                     icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
@@ -582,6 +540,7 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
                 obscureText: _obscurePassword,
                 decoration: const InputDecoration(
                   labelText: 'تأكيد كلمة المرور',
+                  hintText: 'أعد كتابة كلمة المرور',
                   prefixIcon: Icon(Icons.lock_outline),
                 ),
                 validator: (v) {
