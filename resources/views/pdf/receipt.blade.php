@@ -93,9 +93,20 @@
             margin-bottom: 10px;
             font-weight: 600;
         }
+        @media print {
+            .no-print { display: none !important; }
+            body { padding: 0; background: #fff; }
+            .receipt-container { border: 1.5px solid #16213e; }
+        }
     </style>
 </head>
 <body>
+    <div class="no-print" style="max-width: 600px; margin: 0 auto 12px auto; display: flex; justify-content: space-between; align-items: center;">
+        <button onclick="window.print()" style="padding: 8px 18px; background: #0f3460; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; font-family: inherit;">
+            🖨️ طباعة الوصل / Imprimer le reçu
+        </button>
+        <span style="font-size: 12px; color: #666;">وصل دفع رسمي معتمد</span>
+    </div>
     <div class="receipt-container">
         {{-- ─── Header ──────────────────────────────────────── --}}
         <div class="header">

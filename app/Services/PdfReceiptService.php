@@ -41,26 +41,36 @@ class PdfReceiptService
         // Render HTML from Blade template
         $html = view('pdf.receipt', $data)->render();
 
-        // Generate PDF using Snappy
-        $pdf = app('snappy.pdf.wrapper');
-        $pdf->loadHTML($html);
-        $pdf->setOptions([
-            'page-size'   => 'A5',
-            'orientation' => 'Landscape',
-            'margin-top'    => 5,
-            'margin-bottom' => 5,
-            'margin-left'   => 8,
-            'margin-right'  => 8,
-            'encoding'      => 'UTF-8',
-        ]);
+        $disk = config('smartsyndic.uploads.storage_disk', 'public');
 
-        // Store to S3
-        $filename = 'receipts/' . Str::uuid() . '.pdf';
-        $disk     = config('smartsyndic.uploads.storage_disk', 's3');
+        try {
+            // Generate PDF using Snappy if binary is available
+            $pdf = app('snappy.pdf.wrapper');
+            $pdf->loadHTML($html);
+            $pdf->setOptions([
+                'page-size'     => 'A5',
+                'orientation'   => 'Landscape',
+                'margin-top'    => 5,
+                'margin-bottom' => 5,
+                'margin-left'   => 8,
+                'margin-right'  => 8,
+                'encoding'      => 'UTF-8',
+            ]);
 
-        Storage::disk($disk)->put($filename, $pdf->output(), 'private');
+            $filename = 'receipts/' . Str::uuid() . '.pdf';
+            Storage::disk($disk)->put($filename, $pdf->output());
 
-        return $filename;
+            return $filename;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Snappy PDF receipt generation failed: ' . $e->getMessage() . '. Saving receipt as printable HTML.');
+
+            // Snappy / wkhtmltopdf binary not installed on host.
+            // Save as responsive printable HTML receipt document so users can still view/print the official receipt.
+            $htmlFilename = 'receipts/' . Str::uuid() . '.html';
+            Storage::disk($disk)->put($htmlFilename, $html);
+
+            return $htmlFilename;
+        }
     }
 
     /**
