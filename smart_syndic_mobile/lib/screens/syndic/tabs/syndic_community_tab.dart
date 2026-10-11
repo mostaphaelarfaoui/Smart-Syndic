@@ -85,6 +85,8 @@ class SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTicke
           color: Colors.white,
           child: TabBar(
             controller: _tabController,
+            isScrollable: true,
+            tabAlignment: TabAlignment.center,
             indicatorColor: AppColors.primary,
             labelColor: AppColors.primary,
             unselectedLabelColor: AppColors.textSecondary,
@@ -93,6 +95,7 @@ class SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTicke
             tabs: [
               Tab(
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text('طلبات الانضمام'),
