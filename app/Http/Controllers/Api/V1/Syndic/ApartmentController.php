@@ -20,7 +20,7 @@ class ApartmentController extends Controller
         $buildings = Building::where('tenant_id', $request->user()->tenant_id)
             ->with(['apartments' => function ($q) {
                 $q->with([
-                    'residents',
+                    'residents' => fn ($r) => $r->where('users.status', 'ACTIVE'),
                     'payments' => fn ($p) => $p->orderByDesc('payment_date'),
                 ])
                 ->orderBy('floor')

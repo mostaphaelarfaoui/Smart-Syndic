@@ -342,7 +342,9 @@ class SyndicProvider extends ChangeNotifier {
       final response = await _api.get(ApiConstants.syndicPendingResidents);
       if (response is List) {
         _pendingResidents = List<Map<String, dynamic>>.from(response);
-      } else if (response['data'] != null) {
+      } else if (response is Map && response['pending_residents'] != null) {
+        _pendingResidents = List<Map<String, dynamic>>.from(response['pending_residents']);
+      } else if (response is Map && response['data'] != null) {
         _pendingResidents = List<Map<String, dynamic>>.from(response['data']);
       }
       notifyListeners();

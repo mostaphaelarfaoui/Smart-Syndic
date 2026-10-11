@@ -22,6 +22,7 @@ class SyndicMainScreen extends StatefulWidget {
 
 class _SyndicMainScreenState extends State<SyndicMainScreen> {
   int _currentIndex = 0;
+  final GlobalKey<SyndicCommunityTabState> _communityKey = GlobalKey<SyndicCommunityTabState>();
 
   @override
   void initState() {
@@ -42,8 +43,13 @@ class _SyndicMainScreenState extends State<SyndicMainScreen> {
     syndic.fetchPolls();
   }
 
-  void _navigateTab(int index) {
+  void _navigateTab(int index, [int? subIndex]) {
     setState(() => _currentIndex = index);
+    if (index == 4 && subIndex != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _communityKey.currentState?.switchToSubTab(subIndex);
+      });
+    }
   }
 
   Future<void> _handleLogout() async {
@@ -150,7 +156,7 @@ class _SyndicMainScreenState extends State<SyndicMainScreen> {
           const SyndicApartmentsTab(),
           const SyndicPaymentsTab(),
           const SyndicExpensesTab(),
-          const SyndicCommunityTab(),
+          SyndicCommunityTab(key: _communityKey),
         ],
       ),
       bottomNavigationBar: NavigationBar(

@@ -39,6 +39,11 @@ class Apartment extends Model
             ->withTimestamps();
     }
 
+    public function activeResidents(): BelongsToMany
+    {
+        return $this->residents()->where('users.status', 'ACTIVE');
+    }
+
     public function residentApartments(): HasMany
     {
         return $this->hasMany(ResidentApartment::class);

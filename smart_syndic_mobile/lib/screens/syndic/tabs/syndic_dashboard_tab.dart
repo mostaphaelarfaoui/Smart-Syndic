@@ -12,7 +12,7 @@ import '../dialogs/record_expense_dialog.dart';
 import '../dialogs/generate_report_dialog.dart';
 
 class SyndicDashboardTab extends StatelessWidget {
-  final Function(int) onNavigateTab;
+  final void Function(int index, [int? subIndex]) onNavigateTab;
 
   const SyndicDashboardTab({super.key, required this.onNavigateTab});
 
@@ -151,7 +151,7 @@ class SyndicDashboardTab extends StatelessWidget {
           // Alerts if pending residents
           if ((kpis?.pendingResidents ?? 0) > 0)
             InkWell(
-              onTap: () => onNavigateTab(3), // Community & Residents tab
+              onTap: () => onNavigateTab(4, 0), // Community & Residents tab (index 4), sub-tab 0 (طلبات الانضمام)
               child: Container(
                 margin: const EdgeInsets.only(bottom: 16),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -195,7 +195,7 @@ class SyndicDashboardTab extends StatelessWidget {
                 subtitle: 'نسبة الاستخلاص: ${(kpis?.collectionRate ?? 0).toStringAsFixed(0)}%',
                 icon: Icons.trending_up,
                 iconColor: AppColors.success,
-                onTap: () => onNavigateTab(1), // Payments tab
+                onTap: () => onNavigateTab(2), // Payments tab (index 2)
               ),
               StatCard(
                 title: 'مصاريف الشهر',
@@ -203,7 +203,7 @@ class SyndicDashboardTab extends StatelessWidget {
                 subtitle: 'فواتير وصيانة وعمال',
                 icon: Icons.trending_down,
                 iconColor: AppColors.danger,
-                onTap: () => onNavigateTab(2), // Expenses tab
+                onTap: () => onNavigateTab(3), // Expenses tab (index 3)
               ),
               StatCard(
                 title: 'الرصيد الصافي المتبقي',
@@ -218,7 +218,7 @@ class SyndicDashboardTab extends StatelessWidget {
                 subtitle: 'واجبات غير مسددة',
                 icon: Icons.warning_amber_rounded,
                 iconColor: AppColors.warning,
-                onTap: () => onNavigateTab(1),
+                onTap: () => onNavigateTab(2), // Payments tab (index 2)
               ),
             ],
           ),

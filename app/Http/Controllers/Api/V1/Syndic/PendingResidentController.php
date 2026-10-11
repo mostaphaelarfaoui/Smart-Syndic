@@ -23,11 +23,14 @@ class PendingResidentController extends Controller
         $residents = User::where('tenant_id', $request->user()->tenant_id)
             ->where('role', 'RESIDENT')
             ->where('status', 'PENDING')
-            ->with('apartments')
+            ->with(['apartments.building'])
             ->orderByDesc('created_at')
             ->get();
 
-        return response()->json(['pending_residents' => $residents]);
+        return response()->json([
+            'data'              => $residents,
+            'pending_residents' => $residents,
+        ]);
     }
 
     /**
@@ -39,6 +42,14 @@ class PendingResidentController extends Controller
             ->where('id', $id)
             ->where('status', 'PENDING')
             ->firstOrFail();
+
+        // Safety check: verify apartment is not already occupied by another active resident
+        $apartment = $resident->apartments()->first();
+        if ($apartment && $apartment->residents()->where('users.status', 'ACTIVE')->where('users.id', '!=', $resident->id)->exists()) {
+            return response()->json([
+                'message' => 'تعذر قبول الطلب: هذه الشقة مشغولة ومسجل بها ساكن معتمد بالفعل.',
+            ], 422);
+        }
 
         $resident->update(['status' => 'ACTIVE']);
 

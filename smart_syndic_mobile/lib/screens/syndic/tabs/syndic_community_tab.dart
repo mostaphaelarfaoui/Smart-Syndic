@@ -11,11 +11,17 @@ class SyndicCommunityTab extends StatefulWidget {
   const SyndicCommunityTab({super.key});
 
   @override
-  State<SyndicCommunityTab> createState() => _SyndicCommunityTabState();
+  State<SyndicCommunityTab> createState() => SyndicCommunityTabState();
 }
 
-class _SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTickerProviderStateMixin {
+class SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+
+  void switchToSubTab(int index) {
+    if (mounted && index >= 0 && index < _tabController.length) {
+      _tabController.animateTo(index);
+    }
+  }
 
   @override
   void initState() {
@@ -23,6 +29,9 @@ class _SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTick
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
       setState(() {});
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SyndicProvider>().fetchPendingResidents();
     });
   }
 
@@ -159,8 +168,25 @@ class _SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTick
                 final name = '${item['first_name'] ?? ''} ${item['last_name'] ?? ''}'.trim();
                 final phone = item['phone'] ?? '';
                 final email = item['email'] ?? '';
-                final unit = item['apartment']?['unit_number'] ?? '-';
-                final occupancy = item['pivot']?['occupancy_type'] == 'TENANT' ? 'مكتري' : 'مالك';
+
+                final apartments = item['apartments'] as List?;
+                final firstApt = (apartments != null && apartments.isNotEmpty)
+                    ? (apartments.first as Map<String, dynamic>?)
+                    : (item['apartment'] is Map ? (item['apartment'] as Map<String, dynamic>?) : null);
+
+                final unit = firstApt?['unit_number']?.toString() ?? '-';
+                final building = firstApt?['building'] as Map<String, dynamic>?;
+                final buildingName = building?['name']?.toString() ?? '';
+                final blockName = building?['block_name']?.toString() ?? '';
+                final locationParts = <String>[];
+                if (blockName.isNotEmpty) locationParts.add('بلوك $blockName');
+                if (buildingName.isNotEmpty) locationParts.add('عمارة $buildingName');
+                locationParts.add('شقة $unit');
+                final locationLabel = locationParts.join(' • ');
+
+                final pivot = firstApt?['pivot'] as Map<String, dynamic>? ?? (item['pivot'] as Map<String, dynamic>?);
+                final occupancyType = pivot?['occupancy_type']?.toString() ?? '';
+                final occupancy = occupancyType == 'TENANT' ? 'مكتري' : (occupancyType == 'OWNER' ? 'مالك' : 'ساكن');
 
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
@@ -176,30 +202,36 @@ class _SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTick
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            children: [
-                              CircleAvatar(
-                                backgroundColor: AppColors.primary.withAlpha(25),
-                                child: Text(
-                                  name.isNotEmpty ? name[0] : 'س',
-                                  style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: AppColors.primary),
+                          Expanded(
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: AppColors.primary.withAlpha(25),
+                                  child: Text(
+                                    name.isNotEmpty ? name[0] : 'س',
+                                    style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: AppColors.primary),
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 12),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    name,
-                                    style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 15),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        name,
+                                        style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 15),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      Text(
+                                        '$locationLabel ($occupancy)',
+                                        style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
                                   ),
-                                  Text(
-                                    'شقة $unit ($occupancy)',
-                                    style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary),
-                                  ),
-                                ],
-                              ),
-                            ],
+                                ),
+                              ],
+                            ),
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -217,19 +249,23 @@ class _SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTick
                       const SizedBox(height: 12),
                       Row(
                         children: [
-                          const Icon(Icons.phone, size: 14, color: AppColors.textLight),
-                          const SizedBox(width: 6),
-                          Text(phone, style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary)),
-                          const SizedBox(width: 16),
-                          const Icon(Icons.email, size: 14, color: AppColors.textLight),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              email,
-                              style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary),
-                              overflow: TextOverflow.ellipsis,
+                          if (phone.isNotEmpty) ...[
+                            const Icon(Icons.phone, size: 14, color: AppColors.textLight),
+                            const SizedBox(width: 6),
+                            Text(phone, style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary)),
+                            const SizedBox(width: 16),
+                          ],
+                          if (email.isNotEmpty) ...[
+                            const Icon(Icons.email, size: 14, color: AppColors.textLight),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                email,
+                                style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
+                          ],
                         ],
                       ),
                       const Divider(height: 20),
@@ -242,14 +278,32 @@ class _SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTick
                                 padding: const EdgeInsets.symmetric(vertical: 10),
                               ),
                               onPressed: () async {
+                                final confirm = await _showConfirmDialog(
+                                  context,
+                                  title: 'تأكيد قبول الساكن',
+                                  message: 'هل أنت متأكد من قبول $name وتعيينه كـ $occupancy في $locationLabel؟',
+                                  confirmText: 'قبول وتفعيل',
+                                  confirmColor: AppColors.success,
+                                );
+                                if (confirm != true) return;
+
                                 final ok = await syndic.approveResident(residentId);
-                                if (context.mounted && ok) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      backgroundColor: AppColors.success,
-                                      content: Text('تمت الموافقة على الساكن وتفعيل حسابه ✓'),
-                                    ),
-                                  );
+                                if (context.mounted) {
+                                  if (ok) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        backgroundColor: AppColors.success,
+                                        content: Text('تمت الموافقة على الساكن وتفعيل حسابه ✓'),
+                                      ),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        backgroundColor: AppColors.danger,
+                                        content: Text(syndic.errorMessage ?? 'تعذر قبول الطلب'),
+                                      ),
+                                    );
+                                  }
                                 }
                               },
                               icon: const Icon(Icons.check, size: 16),
@@ -265,11 +319,29 @@ class _SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTick
                                 padding: const EdgeInsets.symmetric(vertical: 10),
                               ),
                               onPressed: () async {
+                                final confirm = await _showConfirmDialog(
+                                  context,
+                                  title: 'تأكيد رفض الطلب',
+                                  message: 'هل أنت متأكد من رفض طلب $name لـ $locationLabel؟ سيتم إلغاء الطلب نهائياً.',
+                                  confirmText: 'رفض الطلب',
+                                  confirmColor: AppColors.danger,
+                                );
+                                if (confirm != true) return;
+
                                 final ok = await syndic.rejectResident(residentId);
-                                if (context.mounted && ok) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('تم رفض الطلب')),
-                                  );
+                                if (context.mounted) {
+                                  if (ok) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('تم رفض الطلب بنجاح')),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        backgroundColor: AppColors.danger,
+                                        content: Text(syndic.errorMessage ?? 'تعذر رفض الطلب'),
+                                      ),
+                                    );
+                                  }
                                 }
                               },
                               icon: const Icon(Icons.close, size: 16),

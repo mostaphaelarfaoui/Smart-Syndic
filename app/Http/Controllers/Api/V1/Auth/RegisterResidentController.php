@@ -26,11 +26,11 @@ class RegisterResidentController extends Controller
             ->where('status', 'ACTIVE')
             ->firstOrFail();
 
-        // Check if apartment already has a resident (Requirement 4)
+        // Check if apartment already has an active resident (Requirement 4)
         $apartment = \App\Models\Apartment::findOrFail($request->apartment_id);
-        if ($apartment->residents()->exists()) {
+        if ($apartment->residents()->where('users.status', 'ACTIVE')->exists()) {
             return response()->json([
-                'message' => 'هذه الشقة مشغولة ومسجل بها ساكن مسبقاً، يرجى اختيار شقة أخرى أو التواصل مع السانديك.',
+                'message' => 'هذه الشقة مشغولة ومسجل بها ساكن معتمد مسبقاً، يرجى اختيار شقة أخرى أو التواصل مع السانديك.',
             ], 422);
         }
 

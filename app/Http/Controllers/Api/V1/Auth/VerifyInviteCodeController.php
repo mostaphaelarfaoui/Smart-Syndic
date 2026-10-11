@@ -30,7 +30,7 @@ class VerifyInviteCodeController extends Controller
 
         // Return condominium topology for dynamic form rendering
         $buildings = $tenant->buildings()
-            ->with(['apartments' => fn ($q) => $q->with('residents')->orderBy('floor')->orderBy('unit_number')])
+            ->with(['apartments' => fn ($q) => $q->with(['residents' => fn ($rq) => $rq->where('users.status', 'ACTIVE')])->orderBy('floor')->orderBy('unit_number')])
             ->get()
             ->map(fn ($building) => [
                 'id'           => $building->id,
