@@ -79,64 +79,68 @@ class ApiService {
   Future<dynamic> get(String endpoint) async {
     final url = Uri.parse('$_baseUrl$endpoint');
     _startRequest();
+    http.Response response;
     try {
-      final response = await http.get(url, headers: _headers);
-      return _handleResponse(response);
+      response = await http.get(url, headers: _headers).timeout(const Duration(seconds: 15));
     } catch (e) {
-      throw Exception('تعذر الاتصال بالخادم: $e');
+      throw Exception('تعذر الاتصال بالخادم ($_baseUrl): يرجى التأكد من تشغيل السيرفر وعنوان الـ IP.');
     } finally {
       _endRequest();
     }
+    return _handleResponse(response);
   }
 
   Future<dynamic> post(String endpoint, Map<String, dynamic> data) async {
     final url = Uri.parse('$_baseUrl$endpoint');
     _startRequest();
+    http.Response response;
     try {
-      final response = await http.post(
+      response = await http.post(
         url,
         headers: _headers,
         body: jsonEncode(data),
-      );
-      return _handleResponse(response);
+      ).timeout(const Duration(seconds: 15));
     } catch (e) {
-      throw Exception('تعذر الاتصال بالخادم: $e');
+      throw Exception('تعذر الاتصال بالخادم ($_baseUrl): يرجى التأكد من تشغيل السيرفر وعنوان الـ IP.');
     } finally {
       _endRequest();
     }
+    return _handleResponse(response);
   }
 
   Future<dynamic> put(String endpoint, Map<String, dynamic> data) async {
     final url = Uri.parse('$_baseUrl$endpoint');
     _startRequest();
+    http.Response response;
     try {
-      final response = await http.put(
+      response = await http.put(
         url,
         headers: _headers,
         body: jsonEncode(data),
-      );
-      return _handleResponse(response);
+      ).timeout(const Duration(seconds: 15));
     } catch (e) {
-      throw Exception('تعذر الاتصال بالخادم: $e');
+      throw Exception('تعذر الاتصال بالخادم ($_baseUrl): يرجى التأكد من تشغيل السيرفر وعنوان الـ IP.');
     } finally {
       _endRequest();
     }
+    return _handleResponse(response);
   }
 
   Future<dynamic> delete(String endpoint) async {
     final url = Uri.parse('$_baseUrl$endpoint');
     _startRequest();
+    http.Response response;
     try {
-      final response = await http.delete(
+      response = await http.delete(
         url,
         headers: _headers,
-      );
-      return _handleResponse(response);
+      ).timeout(const Duration(seconds: 15));
     } catch (e) {
-      throw Exception('تعذر الاتصال بالخادم: $e');
+      throw Exception('تعذر الاتصال بالخادم ($_baseUrl): يرجى التأكد من تشغيل السيرفر وعنوان الـ IP.');
     } finally {
       _endRequest();
     }
+    return _handleResponse(response);
   }
 
   Future<dynamic> postMultipart(
@@ -147,6 +151,7 @@ class ApiService {
   }) async {
     final url = Uri.parse('$_baseUrl$endpoint');
     _startRequest();
+    http.Response response;
     try {
       final request = http.MultipartRequest('POST', url);
       request.headers.addAll({
@@ -162,14 +167,14 @@ class ApiService {
         request.files.add(await http.MultipartFile.fromPath(fileField, filePath));
       }
 
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
-      return _handleResponse(response);
+      final streamedResponse = await request.send().timeout(const Duration(seconds: 25));
+      response = await http.Response.fromStream(streamedResponse);
     } catch (e) {
-      throw Exception('تعذر الاتصال بالخادم: $e');
+      throw Exception('تعذر الاتصال بالخادم ($_baseUrl): يرجى التأكد من تشغيل السيرفر وعنوان الـ IP.');
     } finally {
       _endRequest();
     }
+    return _handleResponse(response);
   }
 
   dynamic _handleResponse(http.Response response) {
@@ -185,8 +190,24 @@ class ApiService {
     } else if (response.statusCode == 401) {
       throw Exception('انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً.');
     } else if (response.statusCode == 422) {
-      if (body is Map && body['message'] != null) {
-        throw Exception(body['message']);
+      if (body is Map) {
+        if (body['errors'] is Map) {
+          final errMap = body['errors'] as Map;
+          final List<String> errorList = [];
+          errMap.forEach((_, val) {
+            if (val is List) {
+              errorList.addAll(val.map((e) => e.toString()));
+            } else if (val != null) {
+              errorList.add(val.toString());
+            }
+          });
+          if (errorList.isNotEmpty) {
+            throw Exception(errorList.join('\n'));
+          }
+        }
+        if (body['message'] != null) {
+          throw Exception(body['message']);
+        }
       }
       throw Exception('بيانات غير صحيحة، يرجى مراجعة المدخلات.');
     } else {

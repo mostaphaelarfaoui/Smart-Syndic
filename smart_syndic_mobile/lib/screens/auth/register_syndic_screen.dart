@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../settings/server_settings_dialog.dart';
 
 class RegisterSyndicScreen extends StatefulWidget {
   const RegisterSyndicScreen({super.key});
@@ -124,8 +125,8 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
     final success = await auth.registerSyndic(
       firstName: _firstNameController.text.trim(),
       lastName: _lastNameController.text.trim(),
-      email: _emailController.text.trim(),
-      phone: _phoneController.text.trim(),
+      email: _emailController.text.trim().toLowerCase(),
+      phone: _phoneController.text.trim().replaceAll(' ', ''),
       password: _passwordController.text,
       organizationName: _orgNameController.text.trim(),
       propertyType: _propertyType,
@@ -171,8 +172,13 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(auth.errorMessage ?? 'حدث خطأ أثناء التسجيل'),
+            content: Text(
+              auth.errorMessage ?? 'حدث خطأ أثناء التسجيل',
+              style: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+            ),
             backgroundColor: AppColors.danger,
+            duration: const Duration(seconds: 6),
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -187,6 +193,16 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text('تسجيل سانديك جديد', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings, color: AppColors.primary),
+            tooltip: 'إعدادات السيرفر',
+            onPressed: () => showDialog(
+              context: context,
+              builder: (_) => const ServerSettingsDialog(),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
