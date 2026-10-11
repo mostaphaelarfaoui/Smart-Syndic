@@ -1,181 +1,257 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>{{ $receipt_number }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Cairo', 'Segoe UI', sans-serif;
+            font-family: 'xbriyaz', 'dejavusans', 'cairo', sans-serif;
             font-size: 11px;
-            color: #1a1a2e;
-            background: #fff;
-            padding: 12px;
+            color: #1e293b;
+            background: #ffffff;
+            direction: rtl;
+            text-align: right;
+            padding: 8px;
         }
-        .receipt-container {
-            border: 2px solid #16213e;
+        .receipt-card {
+            border: 2px solid #0f3460;
             border-radius: 8px;
-            padding: 16px;
-            max-width: 100%;
+            padding: 14px;
+            background: #ffffff;
         }
-        /* ─── Header ───────────────────────────────── */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #0f3460;
-            padding-bottom: 10px;
-            margin-bottom: 12px;
-        }
-        .header-left { text-align: right; }
-        .header-right { text-align: left; }
-        .org-name { font-size: 16px; font-weight: 700; color: #0f3460; }
-        .receipt-ref { font-size: 13px; font-weight: 600; color: #e94560; }
-        .receipt-date { font-size: 10px; color: #555; }
-
-        /* ─── Main Grid ────────────────────────────── */
-        .info-grid {
+        /* ─── Header Table ────────────────────────── */
+        .header-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 12px;
+            border-bottom: 2px solid #0f3460;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
         }
-        .info-grid td {
-            padding: 5px 8px;
-            border: 1px solid #ddd;
-            vertical-align: top;
-        }
-        .info-grid .label {
-            background: #f0f4ff;
-            font-weight: 600;
-            width: 35%;
+        .header-title {
+            font-size: 16px;
+            font-weight: bold;
             color: #0f3460;
         }
+        .header-sub {
+            font-size: 11px;
+            color: #475569;
+            margin-top: 2px;
+        }
+        .receipt-badge {
+            text-align: left;
+            direction: ltr;
+        }
+        .receipt-number {
+            font-size: 14px;
+            font-weight: bold;
+            color: #e11d48;
+        }
+        .receipt-date {
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 2px;
+        }
 
-        /* ─── Amount Section ───────────────────────── */
-        .amount-section {
-            background: linear-gradient(135deg, #0f3460, #16213e);
-            color: #fff;
-            padding: 10px 14px;
+        /* ─── Info Table ─────────────────────────── */
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+        }
+        .info-table td {
+            padding: 6px 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 11px;
+            vertical-align: middle;
+        }
+        .label-cell {
+            background-color: #f1f5f9;
+            font-weight: bold;
+            color: #0f3460;
+            width: 22%;
+        }
+        .value-cell {
+            color: #0f172a;
+            width: 28%;
+        }
+
+        /* ─── Amount Box ─────────────────────────── */
+        .amount-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+            background-color: #0f3460;
+            color: #ffffff;
             border-radius: 6px;
-            margin-bottom: 12px;
             text-align: center;
         }
-        .amount-numeric { font-size: 22px; font-weight: 700; }
-        .amount-words { font-size: 10px; margin-top: 4px; font-style: italic; }
+        .amount-table td {
+            padding: 8px 12px;
+            text-align: center;
+        }
+        .amount-label {
+            font-size: 11px;
+            color: #e2e8f0;
+            margin-bottom: 2px;
+        }
+        .amount-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 2px;
+        }
+        .amount-words-ar {
+            font-size: 11px;
+            color: #f8fafc;
+            font-weight: bold;
+        }
+        .amount-words-fr {
+            font-size: 10px;
+            color: #cbd5e1;
+            font-style: italic;
+            direction: ltr;
+        }
 
-        /* ─── Footer ───────────────────────────────── */
-        .footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            margin-top: 12px;
-            padding-top: 8px;
-            border-top: 1px dashed #ccc;
-        }
-        .qr-code { text-align: center; }
-        .signature-block {
-            text-align: center;
-            min-width: 150px;
-        }
-        .signature-line {
-            border-top: 1px solid #333;
-            margin-top: 30px;
-            padding-top: 4px;
-            font-size: 9px;
-            color: #666;
-        }
-        .partial-notice {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            color: #856404;
+        /* ─── Partial Notice ─────────────────────── */
+        .partial-box {
+            background-color: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
             padding: 6px 10px;
             border-radius: 4px;
-            margin-bottom: 10px;
-            font-weight: 600;
+            font-size: 10px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-align: center;
         }
-        @media print {
-            .no-print { display: none !important; }
-            body { padding: 0; background: #fff; }
-            .receipt-container { border: 1.5px solid #16213e; }
+
+        /* ─── Footer Table ───────────────────────── */
+        .footer-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-top: 1px dashed #cbd5e1;
+            padding-top: 6px;
+            margin-top: 6px;
+        }
+        .footer-table td {
+            vertical-align: middle;
+        }
+        .footer-notice {
+            font-size: 9px;
+            color: #64748b;
+            text-align: center;
+            line-height: 1.4;
+        }
+        .signature-box {
+            text-align: left;
+            direction: ltr;
+            width: 180px;
+        }
+        .signature-title {
+            font-size: 9px;
+            font-weight: bold;
+            color: #0f3460;
+            text-align: center;
+        }
+        .signature-line {
+            margin-top: 25px;
+            border-top: 1px solid #475569;
+            text-align: center;
+            font-size: 8px;
+            color: #64748b;
+            padding-top: 2px;
         }
     </style>
 </head>
 <body>
-    <div class="no-print" style="max-width: 600px; margin: 0 auto 12px auto; display: flex; justify-content: space-between; align-items: center;">
-        <button onclick="window.print()" style="padding: 8px 18px; background: #0f3460; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; font-family: inherit;">
-            🖨️ طباعة الوصل / Imprimer le reçu
-        </button>
-        <span style="font-size: 12px; color: #666;">وصل دفع رسمي معتمد</span>
-    </div>
-    <div class="receipt-container">
+    <div class="receipt-card">
         {{-- ─── Header ──────────────────────────────────────── --}}
-        <div class="header">
-            <div class="header-left">
-                <div class="org-name">{{ $tenant->name }}</div>
-                <div class="receipt-date">{{ now()->format('d/m/Y H:i') }}</div>
-            </div>
-            <div class="header-right">
-                <div class="receipt-ref">{{ $receipt_number }}</div>
-                <div style="font-size: 10px; color: #666;">Reçu de Paiement / إيصال دفع</div>
-            </div>
-        </div>
-
-        {{-- ─── Info Grid ───────────────────────────────────── --}}
-        <table class="info-grid">
+        <table class="header-table">
             <tr>
-                <td class="label">Résident / المقيم</td>
-                <td>{{ $resident?->full_name ?? '—' }}</td>
-                <td class="label">Statut / الصفة</td>
-                <td>{{ $resident?->apartments?->first()?->pivot?->occupancy_type === 'OWNER' ? 'Propriétaire / مالك' : 'Locataire / مستأجر' }}</td>
-            </tr>
-            <tr>
-                <td class="label">Immeuble / المبنى</td>
-                <td>{{ $building->name }}</td>
-                <td class="label">Appartement / الشقة</td>
-                <td>Étage {{ $apartment->floor }} — {{ $apartment->unit_number }}</td>
-            </tr>
-            <tr>
-                <td class="label">Mois couverts / الأشهر</td>
-                <td colspan="3">{{ implode(', ', $payment->covered_months ?? []) }}</td>
-            </tr>
-            <tr>
-                <td class="label">Mode de paiement / طريقة الدفع</td>
-                <td>
-                    @switch($payment->payment_method)
-                        @case('CASH') Espèces / نقداً @break
-                        @case('BANK_TRANSFER') Virement bancaire / تحويل بنكي @break
-                        @case('CHEQUE') Chèque N° {{ $payment->cheque_reference }} / شيك @break
-                    @endswitch
+                <td style="text-align: right; vertical-align: top;">
+                    <div class="header-title">{{ $tenant->name }}</div>
+                    <div class="header-sub">وصل أداء واجب السانديك / Reçu de Cotisation Syndic</div>
                 </td>
-                <td class="label">Date / التاريخ</td>
-                <td>{{ $payment->payment_date->format('d/m/Y') }}</td>
+                <td style="text-align: left; vertical-align: top;" class="receipt-badge">
+                    <div class="receipt-number">{{ $receipt_number }}</div>
+                    <div class="receipt-date">{{ now()->format('d/m/Y H:i') }}</div>
+                </td>
             </tr>
         </table>
 
-        {{-- ─── Amount ──────────────────────────────────────── --}}
-        <div class="amount-section">
-            <div class="amount-numeric">{{ number_format($payment->amount_paid, 2) }} DH</div>
-            <div class="amount-words">{{ $amount_words['fr'] ?? '' }}</div>
-            <div class="amount-words">{{ $amount_words['ar'] ?? '' }}</div>
-        </div>
+        {{-- ─── Info Grid ───────────────────────────────────── --}}
+        <table class="info-table">
+            <tr>
+                <td class="label-cell">الساكن / Résident</td>
+                <td class="value-cell"><strong>{{ $resident?->full_name ?? '—' }}</strong></td>
+                <td class="label-cell">الصفة / Statut</td>
+                <td class="value-cell">{{ $resident?->apartments?->first()?->pivot?->occupancy_type === 'OWNER' ? 'مالك (Propriétaire)' : 'مكترٍ (Locataire)' }}</td>
+            </tr>
+            <tr>
+                <td class="label-cell">العمارة / Immeuble</td>
+                <td class="value-cell">{{ $building->name }}</td>
+                <td class="label-cell">الشقة / Appartement</td>
+                <td class="value-cell"><strong>شقة {{ $apartment->unit_number }} (الطابق {{ $apartment->floor }})</strong></td>
+            </tr>
+            <tr>
+                <td class="label-cell">الشهور المستخلصة / Mois</td>
+                <td class="value-cell" colspan="3"><strong>{{ implode(', ', $payment->covered_months ?? []) }}</strong></td>
+            </tr>
+            <tr>
+                <td class="label-cell">طريقة الأداء / Règlement</td>
+                <td class="value-cell">
+                    @switch($payment->payment_method)
+                        @case('CASH') نقداً (Espèces) @break
+                        @case('BANK_TRANSFER') تحويل بنكي (Virement) @break
+                        @case('CHEQUE') شيك بنكي (Chèque N° {{ $payment->cheque_reference }}) @break
+                        @default {{ $payment->payment_method }}
+                    @endswitch
+                </td>
+                <td class="label-cell">تاريخ الأداء / Date</td>
+                <td class="value-cell">{{ $payment->payment_date->format('d/m/Y') }}</td>
+            </tr>
+        </table>
 
-        {{-- ─── Partial Payment Notice ──────────────────────── --}}
+        {{-- ─── Amount Section ──────────────────────────────── --}}
+        <table class="amount-table">
+            <tr>
+                <td>
+                    <div class="amount-label">المبلغ المستخلص المؤدى / Montant Réglé</div>
+                    <div class="amount-value">{{ number_format($payment->amount_paid, 2) }} DH</div>
+                    @if(!empty($amount_words['ar']))
+                        <div class="amount-words-ar">{{ $amount_words['ar'] }}</div>
+                    @endif
+                    @if(!empty($amount_words['fr']))
+                        <div class="amount-words-fr">{{ $amount_words['fr'] }}</div>
+                    @endif
+                </td>
+            </tr>
+        </table>
+
+        {{-- ─── Partial Payment Alert (if applicable) ───────── --}}
         @if($payment->is_partial)
-            <div class="partial-notice">
-                ⚠️ Paiement partiel — Solde restant / رصيد متبقي: {{ number_format($payment->remaining_balance, 2) }} DH
+            <div class="partial-box">
+                ⚠️ أداء جزئي — الرصيد المتبقي بذمة الشقة: {{ number_format($payment->remaining_balance, 2) }} درهم (Solde restant)
             </div>
         @endif
 
         {{-- ─── Footer ──────────────────────────────────────── --}}
-        <div class="footer">
-            <div class="qr-code">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data={{ urlencode($qr_data) }}" alt="QR" width="80" height="80">
-                <div style="font-size: 8px; color: #999; margin-top: 2px;">Code de vérification</div>
-            </div>
-            <div class="signature-block">
-                <div class="signature-line">Cachet et Signature du Syndic<br>ختم وتوقيع المسير</div>
-            </div>
-        </div>
+        <table class="footer-table">
+            <tr>
+                <td style="width: 70px; text-align: right;">
+                    <barcode code="{{ $qr_data }}" type="QR" class="barcode" size="0.75" error="M" disableborder="1" />
+                </td>
+                <td class="footer-notice">
+                    <strong>وصل رسمي إلكتروني مؤمن صادرة عن منصة Smart Syndic</strong><br>
+                    تم التحصيل والتسجيل في سجلات الإقامة بتاريخ {{ $payment->payment_date->format('d/m/Y') }}
+                </td>
+                <td class="signature-box">
+                    <div class="signature-title">Cachet et Signature du Syndic<br>ختم وتوقيع السانديك</div>
+                    <div class="signature-line">إدارة الإقامة</div>
+                </td>
+            </tr>
+        </table>
     </div>
 </body>
 </html>

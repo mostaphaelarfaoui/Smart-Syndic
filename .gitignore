@@ -33,3 +33,6 @@ google-services.json
 storage/app/firebase-credentials.json
 TEST_ACCOUNTS.md
 scratch/
+composer.phar
+/storage/app/private/*
+!/storage/app/private/.gitignore

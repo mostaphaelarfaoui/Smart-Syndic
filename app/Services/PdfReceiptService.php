@@ -44,38 +44,41 @@ class PdfReceiptService
         $disk = config('smartsyndic.uploads.storage_disk', 'public');
 
         try {
-            // Primary PDF engine: DomPDF (Pure PHP, vectorized, cross-platform)
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html);
-            $pdf->setPaper('a5', 'landscape');
-            $pdf->setWarnings(false);
+            // Primary PDF engine: mPDF (Native UTF-8, proper Arabic ligatures & RTL shaping)
+            $mpdf = new \Mpdf\Mpdf([
+                'mode'              => 'utf-8',
+                'format'            => 'A5-L',
+                'margin_left'       => 8,
+                'margin_right'      => 8,
+                'margin_top'        => 6,
+                'margin_bottom'     => 6,
+                'autoArabic'        => true,
+                'autoLangToFont'    => true,
+                'useSubstitutions'  => true,
+            ]);
+
+            $mpdf->SetDirectionality('rtl');
+            $mpdf->WriteHTML($html);
 
             $filename = 'receipts/' . Str::uuid() . '.pdf';
-            Storage::disk($disk)->put($filename, $pdf->output());
+            Storage::disk($disk)->put($filename, $mpdf->Output('', 'S'));
 
             return $filename;
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('DomPDF receipt generation failed: ' . $e->getMessage() . '. Trying Snappy fallback.');
+            \Illuminate\Support\Facades\Log::warning('mPDF receipt generation failed: ' . $e->getMessage() . '. Trying DomPDF fallback.');
 
             try {
-                // Secondary fallback: Snappy if wkhtmltopdf binary is available
-                $snappy = app('snappy.pdf.wrapper');
-                $snappy->loadHTML($html);
-                $snappy->setOptions([
-                    'page-size'     => 'A5',
-                    'orientation'   => 'Landscape',
-                    'margin-top'    => 5,
-                    'margin-bottom' => 5,
-                    'margin-left'   => 8,
-                    'margin-right'  => 8,
-                    'encoding'      => 'UTF-8',
-                ]);
+                // Secondary fallback: DomPDF
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html);
+                $pdf->setPaper('a5', 'landscape');
+                $pdf->setWarnings(false);
 
                 $filename = 'receipts/' . Str::uuid() . '.pdf';
-                Storage::disk($disk)->put($filename, $snappy->output());
+                Storage::disk($disk)->put($filename, $pdf->output());
 
                 return $filename;
             } catch (\Throwable $e2) {
-                \Illuminate\Support\Facades\Log::warning('Snappy fallback failed: ' . $e2->getMessage() . '. Saving as printable HTML.');
+                \Illuminate\Support\Facades\Log::warning('DomPDF fallback failed: ' . $e2->getMessage() . '. Saving as printable HTML.');
 
                 $htmlFilename = 'receipts/' . Str::uuid() . '.html';
                 Storage::disk($disk)->put($htmlFilename, $html);
