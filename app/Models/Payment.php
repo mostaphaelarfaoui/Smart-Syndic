@@ -61,17 +61,11 @@ class Payment extends Model
      */
     public function getReceiptUrlAttribute(): ?string
     {
-        if (! $this->receipt_pdf_path) {
+        if (! $this->id) {
             return null;
         }
 
-        $disk = config('smartsyndic.uploads.storage_disk', 'public');
-        if ($disk === 's3') {
-            $ttl = config('smartsyndic.uploads.signed_url_ttl', 15);
-            return Storage::disk('s3')->temporaryUrl($this->receipt_pdf_path, now()->addMinutes($ttl));
-        }
-
-        return url('storage/' . $this->receipt_pdf_path);
+        return url('/receipts/' . $this->id . '/download');
     }
 
     /**
