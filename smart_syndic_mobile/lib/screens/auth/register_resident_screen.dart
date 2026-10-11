@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../settings/server_settings_dialog.dart';
 
 class RegisterResidentScreen extends StatefulWidget {
   const RegisterResidentScreen({super.key});
@@ -82,10 +83,13 @@ class _RegisterResidentScreenState extends State<RegisterResidentScreen> {
 
   List<dynamic> _getCurrentApartments() {
     if (_selectedBuildingId == null) return [];
-    final currentB = _buildings.firstWhere(
-      (b) => b['id'] == _selectedBuildingId,
-      orElse: () => null,
-    );
+    dynamic currentB;
+    for (final b in _buildings) {
+      if (b['id'] == _selectedBuildingId) {
+        currentB = b;
+        break;
+      }
+    }
     if (currentB == null) return [];
     return (currentB['apartments'] as List?) ?? [];
   }
@@ -216,6 +220,16 @@ class _RegisterResidentScreenState extends State<RegisterResidentScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text('تسجيل ساكن جديد', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings, color: AppColors.primary),
+            tooltip: 'إعدادات السيرفر',
+            onPressed: () => showDialog(
+              context: context,
+              builder: (_) => const ServerSettingsDialog(),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -359,12 +373,13 @@ class _RegisterResidentScreenState extends State<RegisterResidentScreen> {
                 Text('اختر العمارة:', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 14)),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                  value: _selectedBuildingId,
+                  isExpanded: true,
+                  value: filteredBuildings.any((b) => b['id'] == _selectedBuildingId) ? _selectedBuildingId : null,
                   decoration: const InputDecoration(prefixIcon: Icon(Icons.business_outlined)),
                   items: filteredBuildings.map<DropdownMenuItem<String>>((b) {
-                    final blockLabel = b['block'] != null ? '(${b['block']}) ' : '';
+                    final blockLabel = (b['block'] != null && b['block'].toString().isNotEmpty) ? '(${b['block']}) ' : '';
                     return DropdownMenuItem<String>(
-                      value: b['id'],
+                      value: b['id']?.toString(),
                       child: Text('$blockLabel${b['name']}', style: GoogleFonts.cairo()),
                     );
                   }).toList(),
@@ -396,7 +411,8 @@ class _RegisterResidentScreenState extends State<RegisterResidentScreen> {
                 )
               else
                 DropdownButtonFormField<String>(
-                  value: _selectedApartmentId,
+                  isExpanded: true,
+                  value: currentApartments.any((a) => a['id'] == _selectedApartmentId) ? _selectedApartmentId : null,
                   decoration: const InputDecoration(
                     labelText: 'قائمة الشقق المتوفرة',
                     prefixIcon: Icon(Icons.meeting_room_outlined),
@@ -404,14 +420,18 @@ class _RegisterResidentScreenState extends State<RegisterResidentScreen> {
                   items: currentApartments.map<DropdownMenuItem<String>>((apt) {
                     final isOccupied = apt['is_occupied'] == true;
                     return DropdownMenuItem<String>(
-                      value: apt['id'],
+                      value: apt['id']?.toString(),
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            '${apt['unit_number']} (الطابق ${apt['floor']})',
-                            style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.bold),
+                          Expanded(
+                            child: Text(
+                              '${apt['unit_number']}',
+                              style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.bold),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                          const Spacer(),
+                          const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
@@ -434,10 +454,14 @@ class _RegisterResidentScreenState extends State<RegisterResidentScreen> {
                   onChanged: (val) {
                     setState(() {
                       _selectedApartmentId = val;
-                      _selectedApartmentData = currentApartments.firstWhere(
-                        (a) => a['id'] == val,
-                        orElse: () => null,
-                      );
+                      dynamic aptData;
+                      for (final a in currentApartments) {
+                        if (a['id'] == val) {
+                          aptData = a;
+                          break;
+                        }
+                      }
+                      _selectedApartmentData = aptData;
                     });
                   },
                 ),
