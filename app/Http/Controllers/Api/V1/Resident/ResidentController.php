@@ -44,7 +44,7 @@ class ResidentController extends Controller
         if ($apartment) {
             $balance = $this->paymentService->getApartmentBalance($apartment);
             $payments = Payment::where('apartment_id', $apartment->id);
-            $totalPaid = (float) $payments->sum('amount');
+            $totalPaid = (float) $payments->sum('amount_paid');
             $paymentsCount = (int) $payments->count();
         }
 
@@ -128,6 +128,7 @@ class ResidentController extends Controller
         $apartmentIds = $user->apartments()->pluck('apartments.id');
 
         $payments = Payment::whereIn('apartment_id', $apartmentIds)
+            ->with('apartment.building')
             ->orderByDesc('payment_date')
             ->paginate(20);
 

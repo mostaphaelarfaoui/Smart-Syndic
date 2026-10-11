@@ -37,6 +37,11 @@ class Payment extends Model
         'is_partial'        => 'boolean',
     ];
 
+    protected $appends = [
+        'receipt_url',
+        'bank_proof_url',
+    ];
+
     // ─── Relationships ────────────────────────────────────────────────
 
     public function apartment(): BelongsTo

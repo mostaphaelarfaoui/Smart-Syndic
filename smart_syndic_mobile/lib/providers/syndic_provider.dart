@@ -84,7 +84,7 @@ class SyndicProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> recordPayment({
+  Future<Map<String, dynamic>?> recordPayment({
     required String apartmentId,
     required double amountPaid,
     required String paymentMethod,
@@ -98,7 +98,7 @@ class SyndicProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _api.post(ApiConstants.syndicPayments, {
+      final response = await _api.post(ApiConstants.syndicPayments, {
         'apartment_id': apartmentId,
         'amount_paid': amountPaid,
         'payment_method': paymentMethod,
@@ -109,16 +109,23 @@ class SyndicProvider extends ChangeNotifier {
         'remaining_balance': remainingBalance,
       });
 
+      // Refresh payments, apartments (deducts arrears immediately in local state), and KPIs
       await fetchPayments();
+      await fetchApartments();
       await fetchDashboardKpis();
+
       _isLoading = false;
       notifyListeners();
-      return true;
+
+      if (response is Map<String, dynamic>) {
+        return (response['payment'] as Map<String, dynamic>?) ?? response;
+      }
+      return {'success': true};
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
       _isLoading = false;
       notifyListeners();
-      return false;
+      return null;
     }
   }
 

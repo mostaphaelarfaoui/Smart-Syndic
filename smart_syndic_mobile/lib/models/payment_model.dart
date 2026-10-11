@@ -73,7 +73,7 @@ class PaymentModel {
       isPartial: json['is_partial'] == true || json['is_partial'] == 1,
       remainingBalance: (json['remaining_balance'] as num?)?.toDouble() ?? 0.0,
       coveredMonths: months,
-      receiptUrl: json['receipt_url'],
+      receiptUrl: json['receipt_url'] ?? json['receipt_download_url'],
       apartmentUnit: unit,
       residentName: resName,
       residentPhone: resPhone,

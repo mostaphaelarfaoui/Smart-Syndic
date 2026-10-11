@@ -7,6 +7,7 @@ import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/resident_provider.dart';
 import '../settings/server_settings_dialog.dart';
+import 'tabs/resident_payments_tab.dart';
 
 class ResidentProfileScreen extends StatefulWidget {
   const ResidentProfileScreen({super.key});
@@ -535,6 +536,114 @@ class _ResidentProfileScreenState extends State<ResidentProfileScreen> {
                                 ),
                               ),
                             ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Dedicated Receipts Card for the Resident's Apartment
+                    Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppColors.border),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(8),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary.withAlpha(20),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: const Icon(Icons.receipt_long, color: AppColors.primary, size: 20),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    'إيصالات الدفع الخاصة بالشقة',
+                                    style: GoogleFonts.cairo(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withAlpha(15),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.lock, size: 12, color: AppColors.primary),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'خاصة بك فقط',
+                                      style: GoogleFonts.cairo(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'جميع وصولات أداء واجب السانديك محتفظ بها في حسابك الخاص ومتاحة للتحميل في أي وقت بصيغة PDF. لا تظهر هذه الوصولات لأي شقة أخرى ضماناً لخصوصيتك التامة.',
+                            style: GoogleFonts.cairo(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                              height: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              minimumSize: const Size(double.infinity, 44),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              elevation: 0,
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => Scaffold(
+                                    appBar: AppBar(
+                                      title: Text('إيصالات الدفع الرسمية', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+                                    ),
+                                    body: const ResidentPaymentsTab(),
+                                  ),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.download_rounded, size: 18),
+                            label: Text(
+                              'عرض وتحميل جميع إيصالاتي ($paymentsCount وصل)',
+                              style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.bold),
+                            ),
                           ),
                         ],
                       ),

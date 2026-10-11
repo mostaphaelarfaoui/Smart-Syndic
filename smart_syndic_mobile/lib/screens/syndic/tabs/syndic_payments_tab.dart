@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/services/api_service.dart';
 import '../../../providers/syndic_provider.dart';
 import '../../../widgets/empty_state.dart';
 import '../dialogs/record_payment_dialog.dart';
@@ -24,19 +25,24 @@ class _SyndicPaymentsTabState extends State<SyndicPaymentsTab> {
     super.dispose();
   }
 
-  Future<void> _shareViaWhatsApp(String? phone, String receiptNumber, double amount, String unit) async {
+  Future<void> _shareViaWhatsApp(String? phone, String receiptNumber, double amount, String unit, {String? receiptUrl}) async {
     final cleanPhone = (phone ?? '').replaceAll(RegExp(r'[^0-9]'), '');
+    final resolvedUrl = receiptUrl != null ? ApiService().resolveMediaUrl(receiptUrl) : '';
+    final linkText = resolvedUrl.isNotEmpty ? '\nرابط تحميل الوصل:\n$resolvedUrl\n' : '';
+
     final message = Uri.encodeComponent(
       'السلام عليكم ورحمة الله وبركاته،\n'
       'نؤكد لكم استلام واجب السانديك للشقة $unit بمبلغ ${amount.toStringAsFixed(0)} درهم.\n'
       'رقم الوصل: $receiptNumber\n'
+      '$linkText'
       'شكراً لالتزامكم وحسن تعاونكم 🙏\n'
       'إدارة السانديك',
     );
 
     Uri uri;
     if (cleanPhone.isNotEmpty) {
-      uri = Uri.parse('https://wa.me/$cleanPhone?text=$message');
+      final phoneFormatted = cleanPhone.startsWith('0') ? '212${cleanPhone.substring(1)}' : cleanPhone;
+      uri = Uri.parse('https://wa.me/$phoneFormatted?text=$message');
     } else {
       uri = Uri.parse('https://wa.me/?text=$message');
     }
@@ -285,6 +291,7 @@ class _SyndicPaymentsTabState extends State<SyndicPaymentsTab> {
                                       payment.receiptNumber,
                                       payment.amountPaid,
                                       payment.apartmentUnit ?? '',
+                                      receiptUrl: payment.receiptUrl,
                                     ),
                                     icon: const Icon(Icons.chat, size: 16, color: Color(0xFF25D366)),
                                     label: Text(
@@ -294,18 +301,32 @@ class _SyndicPaymentsTabState extends State<SyndicPaymentsTab> {
                                   ),
 
                                   // Receipt download/view
-                                  if (payment.receiptUrl != null)
-                                    TextButton.icon(
+                                  if (payment.receiptUrl != null && payment.receiptUrl!.isNotEmpty)
+                                    ElevatedButton.icon(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppColors.primary,
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                        elevation: 0,
+                                      ),
                                       onPressed: () async {
-                                        final uri = Uri.parse(payment.receiptUrl!);
-                                        if (await canLaunchUrl(uri)) {
-                                          await launchUrl(uri);
+                                        final resolved = ApiService().resolveMediaUrl(payment.receiptUrl!);
+                                        final uri = Uri.parse(resolved);
+                                        try {
+                                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                        } catch (e) {
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text('تعذر فتح الوصل: $e')),
+                                            );
+                                          }
                                         }
                                       },
-                                      icon: const Icon(Icons.picture_as_pdf, size: 16, color: AppColors.danger),
+                                      icon: const Icon(Icons.download_rounded, size: 16, color: Colors.white),
                                       label: Text(
-                                        'تحميل الوصل PDF',
-                                        style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textPrimary),
+                                        'تحميل الوصل',
+                                        style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold),
                                       ),
                                     )
                                   else
