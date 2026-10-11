@@ -325,9 +325,11 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
                             children: [
                               const Icon(Icons.check_circle_outline, size: 16, color: AppColors.success),
                               const SizedBox(width: 6),
-                              Text(
-                                'سيتم إنشاء $total شقة تلقائياً عند اكتمال التسجيل ✓',
-                                style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.success),
+                              Expanded(
+                                child: Text(
+                                  'سيتم إنشاء $total شقة تلقائياً عند اكتمال التسجيل ✓',
+                                  style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.success),
+                                ),
                               ),
                             ],
                           ),
@@ -344,14 +346,22 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'عمارات وبلوكات المجمع السكني:',
-                          style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold),
+                        Expanded(
+                          child: Text(
+                            'عمارات وبلوكات المجمع السكني:',
+                            style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold),
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         TextButton.icon(
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
                           onPressed: _addComplexBuilding,
-                          icon: const Icon(Icons.add, size: 18),
-                          label: Text('+ إضافة عمارة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+                          icon: const Icon(Icons.add, size: 16),
+                          label: Text('+ إضافة عمارة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12)),
                         ),
                       ],
                     ),
