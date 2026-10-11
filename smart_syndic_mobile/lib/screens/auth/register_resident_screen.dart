@@ -374,13 +374,13 @@ class _RegisterResidentScreenState extends State<RegisterResidentScreen> {
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
                   isExpanded: true,
-                  value: filteredBuildings.any((b) => b['id'] == _selectedBuildingId) ? _selectedBuildingId : null,
+                  initialValue: filteredBuildings.any((b) => b['id'] == _selectedBuildingId) ? _selectedBuildingId : null,
                   decoration: const InputDecoration(prefixIcon: Icon(Icons.business_outlined)),
                   items: filteredBuildings.map<DropdownMenuItem<String>>((b) {
                     final blockLabel = (b['block'] != null && b['block'].toString().isNotEmpty) ? '(${b['block']}) ' : '';
                     return DropdownMenuItem<String>(
                       value: b['id']?.toString(),
-                      child: Text('$blockLabel${b['name']}', style: GoogleFonts.cairo()),
+                      child: Text('$blockLabel${b['name']}', style: GoogleFonts.cairo(), overflow: TextOverflow.ellipsis),
                     );
                   }).toList(),
                   onChanged: (val) {
@@ -412,7 +412,7 @@ class _RegisterResidentScreenState extends State<RegisterResidentScreen> {
               else
                 DropdownButtonFormField<String>(
                   isExpanded: true,
-                  value: currentApartments.any((a) => a['id'] == _selectedApartmentId) ? _selectedApartmentId : null,
+                  initialValue: currentApartments.any((a) => a['id'] == _selectedApartmentId) ? _selectedApartmentId : null,
                   decoration: const InputDecoration(
                     labelText: 'قائمة الشقق المتوفرة',
                     prefixIcon: Icon(Icons.meeting_room_outlined),

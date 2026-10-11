@@ -173,6 +173,7 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
 
                 // Apartment dropdown
                 DropdownButtonFormField<String>(
+                  isExpanded: true,
                   initialValue: _selectedApartmentId,
                   decoration: const InputDecoration(
                     labelText: 'رقم الشقة / الساكن',
@@ -182,7 +183,10 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
                     final resident = apt.resident != null ? apt.resident!['name'] : 'شاغرة';
                     return DropdownMenuItem<String>(
                       value: apt.id,
-                      child: Text('شقة ${apt.unitNumber} - $resident (${apt.monthlyFee.toStringAsFixed(0)} درهم)'),
+                      child: Text(
+                        'شقة ${apt.unitNumber} - $resident (${apt.monthlyFee.toStringAsFixed(0)} درهم)',
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     );
                   }).toList(),
                   onChanged: _onApartmentChanged,
@@ -208,15 +212,16 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
 
                 // Payment Method
                 DropdownButtonFormField<String>(
+                  isExpanded: true,
                   initialValue: _paymentMethod,
                   decoration: const InputDecoration(
                     labelText: 'طريقة الأداء',
                     prefixIcon: Icon(Icons.account_balance_wallet_outlined),
                   ),
                   items: const [
-                    DropdownMenuItem(value: 'CASH', child: Text('نقداً (Cash)')),
-                    DropdownMenuItem(value: 'BANK_TRANSFER', child: Text('تحويل بنكي (Virement)')),
-                    DropdownMenuItem(value: 'CHEQUE', child: Text('شيك بنكي (Chèque)')),
+                    DropdownMenuItem(value: 'CASH', child: Text('نقداً (Cash)', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: 'BANK_TRANSFER', child: Text('تحويل بنكي (Virement)', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: 'CHEQUE', child: Text('شيك بنكي (Chèque)', overflow: TextOverflow.ellipsis)),
                   ],
                   onChanged: (val) {
                     if (val != null) setState(() => _paymentMethod = val);

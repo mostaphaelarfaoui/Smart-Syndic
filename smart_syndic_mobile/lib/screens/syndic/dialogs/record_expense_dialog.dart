@@ -205,7 +205,8 @@ class _RecordExpenseDialogState extends State<RecordExpenseDialog> {
 
                 // Category Dropdown
                 DropdownButtonFormField<String>(
-                  value: _selectedCategory,
+                  isExpanded: true,
+                  initialValue: _selectedCategory,
                   decoration: const InputDecoration(
                     labelText: 'صنف المصروف',
                     prefixIcon: Icon(Icons.category_outlined, color: AppColors.textSecondary),
@@ -213,7 +214,7 @@ class _RecordExpenseDialogState extends State<RecordExpenseDialog> {
                   items: _categories.map((c) {
                     return DropdownMenuItem(
                       value: c['value'],
-                      child: Text(c['label']!, style: GoogleFonts.cairo()),
+                      child: Text(c['label']!, style: GoogleFonts.cairo(), overflow: TextOverflow.ellipsis),
                     );
                   }).toList(),
                   onChanged: (val) => setState(() => _selectedCategory = val!),

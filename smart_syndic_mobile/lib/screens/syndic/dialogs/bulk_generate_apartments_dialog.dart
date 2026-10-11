@@ -221,7 +221,8 @@ class _BulkGenerateApartmentsDialogState extends State<BulkGenerateApartmentsDia
                   ),
                 ] else ...[
                   DropdownButtonFormField<String>(
-                    value: _selectedBuildingId,
+                    isExpanded: true,
+                    initialValue: _selectedBuildingId,
                     decoration: const InputDecoration(
                       labelText: 'اختر العمارة',
                       prefixIcon: Icon(Icons.apartment),
@@ -230,7 +231,7 @@ class _BulkGenerateApartmentsDialogState extends State<BulkGenerateApartmentsDia
                       final blockPrefix = b['block'] != null ? '(${b['block']}) ' : '';
                       return DropdownMenuItem(
                         value: b['id'],
-                        child: Text('$blockPrefix${b['name']}', style: GoogleFonts.cairo()),
+                        child: Text('$blockPrefix${b['name']}', style: GoogleFonts.cairo(), overflow: TextOverflow.ellipsis),
                       );
                     }).toList(),
                     onChanged: (val) => setState(() => _selectedBuildingId = val),
@@ -366,7 +367,8 @@ class _BulkGenerateApartmentsDialogState extends State<BulkGenerateApartmentsDia
 
                 // Numbering Scheme Dropdown (Requirement 5)
                 DropdownButtonFormField<String>(
-                  value: _numberingScheme,
+                  isExpanded: true,
+                  initialValue: _numberingScheme,
                   decoration: const InputDecoration(
                     labelText: 'نمط ترقيم الشقق',
                     prefixIcon: Icon(Icons.pin_outlined),
@@ -374,15 +376,15 @@ class _BulkGenerateApartmentsDialogState extends State<BulkGenerateApartmentsDia
                   items: [
                     DropdownMenuItem(
                       value: 'sequential',
-                      child: Text('تسلسلي (شقة 1، شقة 2، شقة 3...)', style: GoogleFonts.cairo(fontSize: 12)),
+                      child: Text('تسلسلي (شقة 1، شقة 2، شقة 3...)', style: GoogleFonts.cairo(fontSize: 12), overflow: TextOverflow.ellipsis),
                     ),
                     DropdownMenuItem(
                       value: 'floor_based',
-                      child: Text('حسب الطابق (شقة 101، شقة 102، شقة 201...)', style: GoogleFonts.cairo(fontSize: 12)),
+                      child: Text('حسب الطابق (شقة 101، شقة 102، شقة 201...)', style: GoogleFonts.cairo(fontSize: 12), overflow: TextOverflow.ellipsis),
                     ),
                     DropdownMenuItem(
                       value: 'floor_unit',
-                      child: Text('طابق ورمز (شقة 1-1، شقة 1-2، شقة 2-1...)', style: GoogleFonts.cairo(fontSize: 12)),
+                      child: Text('طابق ورمز (شقة 1-1، شقة 1-2، شقة 2-1...)', style: GoogleFonts.cairo(fontSize: 12), overflow: TextOverflow.ellipsis),
                     ),
                   ],
                   onChanged: (val) {

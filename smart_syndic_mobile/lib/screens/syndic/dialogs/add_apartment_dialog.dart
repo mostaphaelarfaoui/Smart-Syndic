@@ -138,15 +138,16 @@ class _AddApartmentDialogState extends State<AddApartmentDialog> {
                   )
                 else
                   DropdownButtonFormField<String>(
+                    isExpanded: true,
                     decoration: InputDecoration(
                       labelText: 'العمارة',
                       labelStyle: GoogleFonts.cairo(),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       prefixIcon: const Icon(Icons.business),
                     ),
-                    value: _selectedBuildingId,
+                    initialValue: _selectedBuildingId,
                     items: buildings.map((b) {
-                      return DropdownMenuItem<String>(value: b['id'], child: Text(b['name'], style: GoogleFonts.cairo()));
+                      return DropdownMenuItem<String>(value: b['id'], child: Text(b['name'], style: GoogleFonts.cairo(), overflow: TextOverflow.ellipsis));
                     }).toList(),
                     onChanged: (val) => setState(() => _selectedBuildingId = val),
                     validator: (val) => val == null ? 'مطلوب' : null,
