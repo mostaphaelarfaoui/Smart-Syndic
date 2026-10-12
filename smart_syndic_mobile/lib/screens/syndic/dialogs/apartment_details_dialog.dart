@@ -52,6 +52,69 @@ class ApartmentDetailsDialog extends StatelessWidget {
     }
   }
 
+  Future<void> _toggleExemption(BuildContext context) async {
+    final isBillable = apartment.isBillable;
+    final title = isBillable ? 'تأكيد إعفاء الشقة من واجبات السانديك' : 'إلغاء إعفاء الشقة وإعادة الفوترة';
+    final message = isBillable
+        ? 'هل أنت متأكد من رغبتك في إعفاء الشقة ${apartment.unitNumber} من واجبات السانديك الشهرية؟\n\n• لن تُحسب عليها أي متأخرات.\n• سيتم استثناؤها من المداخيل الشهرية المتوقعة للإقامة.'
+        : 'هل تريد إلغاء إعفاء الشقة ${apartment.unitNumber} وإعادة إدراجها في حسابات واجبات السانديك الشهرية والمتأخرات؟';
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              isBillable ? Icons.money_off_rounded : Icons.restore_rounded,
+              color: isBillable ? AppColors.warning : AppColors.success,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(title, style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 16)),
+            ),
+          ],
+        ),
+        content: Text(message, style: GoogleFonts.cairo(fontSize: 13, height: 1.5)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('إلغاء', style: GoogleFonts.cairo(color: AppColors.textSecondary)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isBillable ? AppColors.warning : AppColors.success,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              isBillable ? 'تأكيد الإعفاء' : 'إعادة الفوترة',
+              style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && context.mounted) {
+      final syndic = context.read<SyndicProvider>();
+      final ok = await syndic.toggleApartmentBillable(apartment.id);
+      if (context.mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              ok
+                  ? (isBillable ? 'تم إعفاء الشقة من واجبات السانديك بنجاح ✓' : 'تم إلغاء الإعفاء وإعادة فوترة الشقة بنجاح ✓')
+                  : (syndic.errorMessage ?? 'تعذر تحديث حالة الإعفاء'),
+              style: GoogleFonts.cairo(),
+            ),
+            backgroundColor: ok ? AppColors.success : AppColors.danger,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final resident = apartment.resident;
@@ -122,28 +185,47 @@ class ApartmentDetailsDialog extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Feature 4 — Developer-owned apartment exemption banner
+                    // Exemption Banner
                     if (!apartment.isBillable) ...[
                       Container(
-                        padding: const EdgeInsets.all(12),
-                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(14),
+                        margin: const EdgeInsets.only(bottom: 14),
                         decoration: BoxDecoration(
                           color: Colors.orange.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.orange.shade200),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: Colors.orange.shade300, width: 1.2),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.domain_disabled, color: Colors.orange, size: 22),
-                            const SizedBox(width: 10),
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.shade100,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.shield_outlined, color: Colors.orange.shade900, size: 22),
+                            ),
+                            const SizedBox(width: 12),
                             Expanded(
-                              child: Text(
-                                'شقة معفاة من الحسابات المالية (باسم المنعش العقاري)',
-                                style: GoogleFonts.cairo(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.orange.shade900,
-                                ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'شقة معفاة من واجبات السانديك',
+                                    style: GoogleFonts.cairo(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.orange.shade900,
+                                    ),
+                                  ),
+                                  Text(
+                                    'هذه الشقة معفاة حالياً من المستحقات الشهرية ولا تترتب عليها أي متأخرات مالية للإقامة.',
+                                    style: GoogleFonts.cairo(
+                                      fontSize: 11,
+                                      color: Colors.orange.shade800,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -155,22 +237,30 @@ class ApartmentDetailsDialog extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: apartment.isSettled
-                            ? AppColors.success.withAlpha(20)
-                            : AppColors.danger.withAlpha(20),
+                        color: !apartment.isBillable
+                            ? Colors.orange.shade50
+                            : (apartment.isSettled
+                                ? AppColors.success.withAlpha(20)
+                                : AppColors.danger.withAlpha(20)),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: apartment.isSettled ? AppColors.success : AppColors.danger,
+                          color: !apartment.isBillable
+                              ? Colors.orange.shade400
+                              : (apartment.isSettled ? AppColors.success : AppColors.danger),
                           width: 1.2,
                         ),
                       ),
                       child: Row(
                         children: [
                           Icon(
-                            apartment.isSettled
-                                ? Icons.verified_user
-                                : Icons.warning_amber_rounded,
-                            color: apartment.isSettled ? AppColors.success : AppColors.danger,
+                            !apartment.isBillable
+                                ? Icons.money_off_rounded
+                                : (apartment.isSettled
+                                    ? Icons.verified_user
+                                    : Icons.warning_amber_rounded),
+                            color: !apartment.isBillable
+                                ? Colors.orange.shade800
+                                : (apartment.isSettled ? AppColors.success : AppColors.danger),
                             size: 32,
                           ),
                           const SizedBox(width: 14),
@@ -179,19 +269,25 @@ class ApartmentDetailsDialog extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  apartment.isSettled
-                                      ? 'الحالة: خالصة الذمة ✓'
-                                      : 'الحالة: توجد متأخرات غير مسددة',
+                                  !apartment.isBillable
+                                      ? 'الحالة: معفاة من أداء الواجبات ✓'
+                                      : (apartment.isSettled
+                                          ? 'الحالة: خالصة الذمة ✓'
+                                          : 'الحالة: توجد متأخرات غير مسددة'),
                                   style: GoogleFonts.cairo(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
-                                    color: apartment.isSettled ? AppColors.success : AppColors.danger,
+                                    color: !apartment.isBillable
+                                        ? Colors.orange.shade900
+                                        : (apartment.isSettled ? AppColors.success : AppColors.danger),
                                   ),
                                 ),
                                 Text(
-                                  apartment.isSettled
-                                      ? 'الواجب الشهري: ${apartment.monthlyFee.toStringAsFixed(0)} درهم'
-                                      : 'مجموع المتأخرات: ${apartment.arrears.toStringAsFixed(0)} درهم (الشهري: ${apartment.monthlyFee.toStringAsFixed(0)} درهم)',
+                                  !apartment.isBillable
+                                      ? 'الواجب الشهري المسجل: ${apartment.monthlyFee.toStringAsFixed(0)} درهم (معفى) • المتأخرات: 0 درهم'
+                                      : (apartment.isSettled
+                                          ? 'الواجب الشهري: ${apartment.monthlyFee.toStringAsFixed(0)} درهم'
+                                          : 'مجموع المتأخرات: ${apartment.arrears.toStringAsFixed(0)} درهم (الشهري: ${apartment.monthlyFee.toStringAsFixed(0)} درهم)'),
                                   style: GoogleFonts.cairo(
                                     fontSize: 12,
                                     color: AppColors.textSecondary,
@@ -572,6 +668,38 @@ class ApartmentDetailsDialog extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Dedicated Exemption Button (Admin can exempt or cancel exemption)
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: apartment.isBillable ? Colors.orange.shade900 : AppColors.success,
+                      side: BorderSide(
+                        color: apartment.isBillable ? Colors.orange.shade400 : AppColors.success,
+                        width: 1.2,
+                      ),
+                      backgroundColor: apartment.isBillable
+                          ? Colors.orange.shade50.withAlpha(120)
+                          : AppColors.success.withAlpha(20),
+                      minimumSize: const Size(double.infinity, 42),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    onPressed: () => _toggleExemption(context),
+                    icon: Icon(
+                      apartment.isBillable ? Icons.money_off_rounded : Icons.restore_rounded,
+                      size: 18,
+                      color: apartment.isBillable ? Colors.orange.shade900 : AppColors.success,
+                    ),
+                    label: Text(
+                      apartment.isBillable
+                          ? 'إعفاء الشقة من واجبات السانديك'
+                          : 'إلغاء الإعفاء وإعادة الفوترة',
+                      style: GoogleFonts.cairo(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: apartment.isBillable ? Colors.orange.shade900 : AppColors.success,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 8),
                   ElevatedButton.icon(

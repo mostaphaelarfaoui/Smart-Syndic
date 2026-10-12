@@ -19,6 +19,7 @@ class _EditApartmentDialogState extends State<EditApartmentDialog> {
   late final TextEditingController _unitNumberController;
   late final TextEditingController _floorController;
   late final TextEditingController _monthlyFeeController;
+  late bool _isBillable;
   bool _isSubmitting = false;
 
   @override
@@ -27,6 +28,7 @@ class _EditApartmentDialogState extends State<EditApartmentDialog> {
     _unitNumberController = TextEditingController(text: widget.apartment.unitNumber);
     _floorController = TextEditingController(text: widget.apartment.floor.toString());
     _monthlyFeeController = TextEditingController(text: widget.apartment.monthlyFee.toStringAsFixed(0));
+    _isBillable = widget.apartment.isBillable;
   }
 
   @override
@@ -48,6 +50,7 @@ class _EditApartmentDialogState extends State<EditApartmentDialog> {
       unitNumber: _unitNumberController.text.trim(),
       floor: int.tryParse(_floorController.text.trim()) ?? widget.apartment.floor,
       monthlyFee: double.tryParse(_monthlyFeeController.text.trim()) ?? widget.apartment.monthlyFee,
+      isBillable: _isBillable,
     );
 
     if (mounted) {
@@ -135,6 +138,44 @@ class _EditApartmentDialogState extends State<EditApartmentDialog> {
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(labelText: 'الواجب الشهري (درهم)', prefixIcon: Icon(Icons.payments_outlined)),
                   validator: (v) => (double.tryParse(v ?? '') ?? 0) < 0 ? 'الواجب غير صحيح' : null,
+                ),
+                const SizedBox(height: 16),
+
+                Container(
+                  decoration: BoxDecoration(
+                    color: !_isBillable ? Colors.orange.shade50 : AppColors.background,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: !_isBillable ? Colors.orange.shade300 : AppColors.border,
+                    ),
+                  ),
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    value: !_isBillable,
+                    onChanged: (isExempt) {
+                      setState(() => _isBillable = !isExempt);
+                    },
+                    title: Text(
+                      'إعفاء الشقة من واجبات السانديك',
+                      style: GoogleFonts.cairo(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: !_isBillable ? Colors.orange.shade900 : AppColors.textPrimary,
+                      ),
+                    ),
+                    subtitle: Text(
+                      !_isBillable
+                          ? 'الشقة معفاة: لن تُحسب عليها متأخرات ولن تُدرج في التوقعات'
+                          : 'الشقة خاضعة للفوترة الشهرية العادية',
+                      style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary),
+                    ),
+                    secondary: Icon(
+                      !_isBillable ? Icons.money_off_rounded : Icons.payments_outlined,
+                      color: !_isBillable ? Colors.orange.shade800 : AppColors.primary,
+                    ),
+                    activeThumbColor: Colors.orange.shade800,
+                    activeTrackColor: Colors.orange.shade200,
+                  ),
                 ),
                 const SizedBox(height: 24),
 

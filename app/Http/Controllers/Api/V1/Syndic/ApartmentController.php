@@ -5,11 +5,16 @@ namespace App\Http\Controllers\Api\V1\Syndic;
 use App\Http\Controllers\Controller;
 use App\Models\Apartment;
 use App\Models\Building;
+use App\Services\AuditService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ApartmentController extends Controller
 {
+    public function __construct(
+        private readonly AuditService $auditService,
+    ) {}
+
     /**
      * GET /api/v1/syndic/apartments
      *
@@ -275,17 +280,24 @@ class ApartmentController extends Controller
             'unit_number' => ['required', 'string', 'max:50'],
             'floor'       => ['required', 'integer', 'min:0'],
             'monthly_fee' => ['required', 'numeric', 'min:0.01', 'max:999999.99'],
+            'is_billable' => ['nullable', 'boolean'],
         ]);
 
         $tenantId = $request->user()->tenant_id;
         $apartment = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))
             ->findOrFail($id);
 
-        $apartment->update([
+        $updateData = [
             'unit_number' => $request->unit_number,
             'floor'       => $request->floor,
             'monthly_fee' => $request->monthly_fee,
-        ]);
+        ];
+
+        if ($request->has('is_billable')) {
+            $updateData['is_billable'] = $request->boolean('is_billable');
+        }
+
+        $apartment->update($updateData);
 
         return response()->json([
             'message'   => 'تم تحديث بيانات الشقة بنجاح',
@@ -322,10 +334,9 @@ class ApartmentController extends Controller
     /**
      * POST /api/v1/syndic/apartments/{id}/toggle-billable
      *
-     * Feature 4 — Toggle whether a vacant apartment is included in billing.
-     *
-     * is_billable = false → Developer-owned, no residents, EXCLUDED from all financial calculations.
-     * is_billable = true  → Should be billed (even if resident hasn't registered yet).
+     * Exemption toggle:
+     * is_billable = false → Exempt from syndic dues (0 arrears, excluded from expected income).
+     * is_billable = true  → Included in billing and dues.
      */
     public function toggleBillable(Request $request, string $id): JsonResponse
     {
@@ -335,12 +346,23 @@ class ApartmentController extends Controller
 
         $apartment->update(['is_billable' => ! $apartment->is_billable]);
 
-        $statusAr = $apartment->is_billable ? 'مدرجة في الحساب' : 'مستثناة من الحساب';
+        $statusAr = $apartment->is_billable ? 'إلغاء الإعفاء وإعادة إدراج الشقة في الواجبات' : 'إعفاء الشقة من واجبات السانديك';
+
+        $this->auditService->log(
+            $request->user()->id,
+            $apartment->is_billable ? 'APARTMENT_EXEMPTION_CANCELLED' : 'APARTMENT_EXEMPTED',
+            $tenantId,
+            [
+                'apartment_id' => $apartment->id,
+                'unit_number'  => $apartment->unit_number,
+                'is_billable'  => (bool) $apartment->is_billable,
+            ]
+        );
 
         return response()->json([
-            'message'     => "تم تغيير حالة الشقة: {$statusAr}.",
-            'apartment_id'=> $apartment->id,
-            'is_billable' => $apartment->is_billable,
+            'message'      => "تم بنجاح {$statusAr}.",
+            'apartment_id' => $apartment->id,
+            'is_billable'  => (bool) $apartment->is_billable,
         ]);
     }
 }

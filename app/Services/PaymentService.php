@@ -176,6 +176,24 @@ class PaymentService
      */
     public function getApartmentBalance(Apartment $apartment): array
     {
+        if (! $apartment->is_billable) {
+            $paidMonths = $this->getPaidMonths($apartment);
+            $totalPaid  = (float) $apartment->payments()->where('status', '!=', 'DRAFT')->sum('amount_paid');
+            return [
+                'monthly_fee'         => (float) $apartment->monthly_fee,
+                'total_due'           => 0.0,
+                'total_paid'          => $totalPaid,
+                'arrears'             => 0.0,
+                'paid_months'         => array_values($paidMonths),
+                'unpaid_months'       => [],
+                'advance_paid_months' => [],
+                'is_settled'          => true,
+                'current_month'       => now()->format('Y-m'),
+                'is_current_paid'     => true,
+                'is_exempt'           => true,
+            ];
+        }
+
         $totalDueMonths = $this->getExpectedMonths($apartment);
         $paidMonths     = $this->getPaidMonths($apartment);
         $unpaidMonths   = array_diff($totalDueMonths, $paidMonths);

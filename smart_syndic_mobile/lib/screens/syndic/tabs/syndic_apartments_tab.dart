@@ -13,23 +13,49 @@ import '../dialogs/bulk_generate_apartments_dialog.dart';
 // Feature 4 helper — toggle billable from apartment list
 extension _BillableToggle on _SyndicApartmentsTabState {
   Future<void> toggleBillable(BuildContext ctx, ApartmentModel apt) async {
-    final label = apt.isBillable ? 'إلغاء الاحتساب (شقة المنعش)' : 'إعادة الاحتساب في الحسابات';
+    final isCurrentlyBillable = apt.isBillable;
+    final actionTitle = isCurrentlyBillable ? 'إعفاء الشقة من واجبات السانديك' : 'إلغاء الإعفاء وإعادة الفوترة';
+    final actionMessage = isCurrentlyBillable
+        ? 'هل أنت متأكد من رغبتك في إعفاء الشقة ${apt.unitNumber} من واجبات السانديك الشهرية؟\n\n• لن تُحسب عليها أي متأخرات.\n• سيتم استثناؤها من المداخيل الشهرية المتوقعة للإقامة.'
+        : 'هل تريد إلغاء إعفاء الشقة ${apt.unitNumber} وإعادة إدراجها في حسابات واجبات السانديك الشهرية والمتأخرات؟';
+
     final confirm = await showDialog<bool>(
       context: ctx,
       builder: (c) => AlertDialog(
-        title: Text('تغيير حالة الشقة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+        title: Row(
+          children: [
+            Icon(
+              isCurrentlyBillable ? Icons.money_off_rounded : Icons.restore_rounded,
+              color: isCurrentlyBillable ? AppColors.warning : AppColors.success,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                actionTitle,
+                style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+            ),
+          ],
+        ),
         content: Text(
-          apt.isBillable
-              ? 'سيتم استثناء هذه الشقة من حسابات الإقامة (مخصصة للمنعش العقاري).'
-              : 'سيتم إدراج هذه الشقة في حسابات الإقامة.',
-          style: GoogleFonts.cairo(),
+          actionMessage,
+          style: GoogleFonts.cairo(fontSize: 13, height: 1.5),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: Text('إلغاء', style: GoogleFonts.cairo())),
+          TextButton(
+            onPressed: () => Navigator.pop(c, false),
+            child: Text('إلغاء', style: GoogleFonts.cairo(color: AppColors.textSecondary)),
+          ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: apt.isBillable ? AppColors.warning : AppColors.success),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isCurrentlyBillable ? AppColors.warning : AppColors.success,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
             onPressed: () => Navigator.pop(c, true),
-            child: Text(label, style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: Colors.white)),
+            child: Text(
+              isCurrentlyBillable ? 'تأكيد الإعفاء' : 'إعادة الفوترة',
+              style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -39,12 +65,18 @@ extension _BillableToggle on _SyndicApartmentsTabState {
     final ok = await syndic.toggleApartmentBillable(apt.id);
     if (ctx.mounted) {
       ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-        content: Text(ok ? 'تم تحديث حالة الشقة' : (syndic.errorMessage ?? 'حدث خطأ'), style: GoogleFonts.cairo()),
+        content: Text(
+          ok
+              ? (isCurrentlyBillable ? 'تم إعفاء الشقة من واجبات السانديك بنجاح ✓' : 'تم إلغاء الإعفاء وإعادة فوترة الشقة بنجاح ✓')
+              : (syndic.errorMessage ?? 'حدث خطأ'),
+          style: GoogleFonts.cairo(),
+        ),
         backgroundColor: ok ? AppColors.success : AppColors.danger,
       ));
     }
   }
 }
+
 
 class SyndicApartmentsTab extends StatefulWidget {
   const SyndicApartmentsTab({super.key});
@@ -90,10 +122,12 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
       if (!textMatches) return false;
 
       // Filter category match
-      if (_filter == 'SETTLED') {
-        return apt.resident != null && apt.isSettled;
+      if (_filter == 'EXEMPTED') {
+        return !apt.isBillable;
+      } else if (_filter == 'SETTLED') {
+        return apt.isBillable && apt.resident != null && apt.isSettled;
       } else if (_filter == 'ARREARS') {
-        return !apt.isSettled;
+        return apt.isBillable && !apt.isSettled;
       } else if (_filter == 'VACANT') {
         return apt.resident == null;
       }
@@ -109,7 +143,8 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
     final filteredApartments = _filterApartments(allApartments);
 
     final totalVacant = allApartments.where((a) => a.resident == null).length;
-    final totalArrears = allApartments.where((a) => !a.isSettled).length;
+    final totalArrears = allApartments.where((a) => a.isBillable && !a.isSettled).length;
+    final totalExempted = allApartments.where((a) => !a.isBillable).length;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -192,6 +227,8 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
                       children: [
                         _buildFilterChip('ALL', 'الكل (${allApartments.length})'),
                         const SizedBox(width: 8),
+                        _buildFilterChip('EXEMPTED', 'معفاة ($totalExempted)', color: Colors.orange.shade800),
+                        const SizedBox(width: 8),
                         _buildFilterChip('ARREARS', 'متأخرات ($totalArrears)', color: AppColors.danger),
                         const SizedBox(width: 8),
                         _buildFilterChip('SETTLED', 'خالصة الذمة', color: AppColors.success),
@@ -239,9 +276,11 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: apt.resident == null
-                                  ? AppColors.border
-                                  : (apt.isSettled ? AppColors.border : AppColors.danger.withAlpha(60)),
+                              color: !apt.isBillable
+                                  ? Colors.orange.shade300
+                                  : (apt.resident == null
+                                      ? AppColors.border
+                                      : (apt.isSettled ? AppColors.border : AppColors.danger.withAlpha(60))),
                             ),
                             boxShadow: [
                               BoxShadow(
@@ -268,23 +307,30 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
                                     width: 52,
                                     height: 52,
                                     decoration: BoxDecoration(
-                                      color: apt.resident == null
-                                          ? AppColors.textLight.withAlpha(20)
-                                          : (apt.isSettled
-                                              ? AppColors.primary.withAlpha(20)
-                                              : AppColors.danger.withAlpha(20)),
+                                      color: !apt.isBillable
+                                          ? Colors.orange.shade50
+                                          : (apt.resident == null
+                                              ? AppColors.textLight.withAlpha(20)
+                                              : (apt.isSettled
+                                                  ? AppColors.primary.withAlpha(20)
+                                                  : AppColors.danger.withAlpha(20))),
                                       borderRadius: BorderRadius.circular(14),
+                                      border: !apt.isBillable ? Border.all(color: Colors.orange.shade200) : null,
                                     ),
                                     child: Center(
                                       child: Column(
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
                                           Icon(
-                                            Icons.meeting_room,
+                                            !apt.isBillable
+                                                ? Icons.money_off_rounded
+                                                : Icons.meeting_room,
                                             size: 18,
-                                            color: apt.resident == null
-                                                ? AppColors.textLight
-                                                : (apt.isSettled ? AppColors.primary : AppColors.danger),
+                                            color: !apt.isBillable
+                                                ? Colors.orange.shade800
+                                                : (apt.resident == null
+                                                    ? AppColors.textLight
+                                                    : (apt.isSettled ? AppColors.primary : AppColors.danger)),
                                           ),
                                           Text(
                                             apt.unitNumber,
@@ -332,8 +378,36 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
                                         ),
                                         const SizedBox(height: 4),
 
-                                        // Balance tag
-                                        if (apt.resident != null)
+                                        // Status Tag: Exempted OR Settled/Arrears
+                                        if (!apt.isBillable)
+                                          Row(
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.orange.shade50,
+                                                  borderRadius: BorderRadius.circular(6),
+                                                  border: Border.all(color: Colors.orange.shade300),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    Icon(Icons.shield_outlined, size: 12, color: Colors.orange.shade900),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      'معفاة من واجبات السانديك',
+                                                      style: GoogleFonts.cairo(
+                                                        fontSize: 11,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: Colors.orange.shade900,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          )
+                                        else if (apt.resident != null)
                                           Row(
                                             children: [
                                               Container(
@@ -370,17 +444,16 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
                                     ),
                                   ],
 
-                                  // Feature 4 — Toggle is_billable (visible for vacant apts only)
-                                  if (apt.resident == null)
-                                    IconButton(
-                                      onPressed: () => toggleBillable(context, apt),
-                                      icon: Icon(
-                                        apt.isBillable ? Icons.calculate_outlined : Icons.block_outlined,
-                                        color: apt.isBillable ? AppColors.textSecondary : AppColors.warning,
-                                        size: 20,
-                                      ),
-                                      tooltip: apt.isBillable ? 'تعليم كشقة المنعش (استثناء)' : 'إعادة الاحتساب',
+                                  // Dedicated Exemption Toggle Button (For ALL apartments)
+                                  IconButton(
+                                    onPressed: () => toggleBillable(context, apt),
+                                    icon: Icon(
+                                      apt.isBillable ? Icons.money_off_outlined : Icons.restore_rounded,
+                                      color: apt.isBillable ? AppColors.textLight : Colors.orange.shade800,
+                                      size: 22,
                                     ),
+                                    tooltip: apt.isBillable ? 'إعفاء الشقة من واجبات السانديك' : 'إلغاء الإعفاء وإعادة الفوترة',
+                                  ),
 
                                   const Icon(Icons.chevron_left, color: AppColors.textLight, size: 20),
                                 ],

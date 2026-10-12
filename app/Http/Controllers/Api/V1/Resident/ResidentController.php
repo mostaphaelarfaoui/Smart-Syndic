@@ -65,6 +65,7 @@ class ResidentController extends Controller
                 'unit_number'        => $apartment->unit_number,
                 'floor'              => $apartment->floor,
                 'monthly_fee'        => (float) $apartment->monthly_fee,
+                'is_billable'        => (bool) $apartment->is_billable,
                 'building_name'      => $apartment->building?->name,
                 'occupancy_type'     => $apartment->pivot?->occupancy_type ?? 'OWNER',
                 'is_primary_contact' => (bool) ($apartment->pivot?->is_primary_contact ?? true),

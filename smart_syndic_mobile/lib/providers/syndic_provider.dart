@@ -307,6 +307,7 @@ class SyndicProvider extends ChangeNotifier {
     required String unitNumber,
     required int floor,
     required double monthlyFee,
+    bool? isBillable,
   }) async {
     _isLoading = true;
     notifyListeners();
@@ -316,9 +317,11 @@ class SyndicProvider extends ChangeNotifier {
         'unit_number': unitNumber,
         'floor': floor,
         'monthly_fee': monthlyFee,
+        if (isBillable != null) 'is_billable': isBillable,
       });
 
       await fetchApartments();
+      await fetchDashboardKpis();
       _isLoading = false;
       notifyListeners();
       return true;
