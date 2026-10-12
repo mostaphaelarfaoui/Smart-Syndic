@@ -387,56 +387,56 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
 
                                         // Status Tag: Exempted OR Settled/Arrears
                                         if (!apt.isBillable)
-                                          Row(
-                                            children: [
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.orange.shade50,
-                                                  borderRadius: BorderRadius.circular(6),
-                                                  border: Border.all(color: Colors.orange.shade300),
-                                                ),
-                                                child: Row(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    Icon(Icons.shield_outlined, size: 12, color: Colors.orange.shade900),
-                                                    const SizedBox(width: 4),
-                                                    Text(
-                                                      'معفاة من واجبات السانديك',
-                                                      style: GoogleFonts.cairo(
-                                                        fontSize: 11,
-                                                        fontWeight: FontWeight.bold,
-                                                        color: Colors.orange.shade900,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
+                                          FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            alignment: AlignmentDirectional.centerStart,
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: Colors.orange.shade50,
+                                                borderRadius: BorderRadius.circular(6),
+                                                border: Border.all(color: Colors.orange.shade300),
                                               ),
-                                            ],
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(Icons.shield_outlined, size: 12, color: Colors.orange.shade900),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    'معفاة من الواجبات',
+                                                    style: GoogleFonts.cairo(
+                                                      fontSize: 11,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: Colors.orange.shade900,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
                                           )
                                         else if (apt.resident != null)
-                                          Row(
-                                            children: [
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                                                decoration: BoxDecoration(
-                                                  color: apt.isSettled
-                                                      ? AppColors.success.withAlpha(20)
-                                                      : AppColors.danger.withAlpha(20),
-                                                  borderRadius: BorderRadius.circular(6),
-                                                ),
-                                                child: Text(
-                                                  apt.isSettled
-                                                      ? 'خالص ✓'
-                                                      : 'متأخرات: ${apt.arrears.toStringAsFixed(0)} د.م',
-                                                  style: GoogleFonts.cairo(
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: apt.isSettled ? AppColors.success : AppColors.danger,
-                                                  ),
+                                          FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            alignment: AlignmentDirectional.centerStart,
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                              decoration: BoxDecoration(
+                                                color: apt.isSettled
+                                                    ? AppColors.success.withAlpha(20)
+                                                    : AppColors.danger.withAlpha(20),
+                                                borderRadius: BorderRadius.circular(6),
+                                              ),
+                                              child: Text(
+                                                apt.isSettled
+                                                    ? 'خالص ✓'
+                                                    : 'متأخرات: ${apt.arrears.toStringAsFixed(0)} د.م',
+                                                style: GoogleFonts.cairo(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: apt.isSettled ? AppColors.success : AppColors.danger,
                                                 ),
                                               ),
-                                            ],
+                                            ),
                                           ),
                                       ],
                                     ),
@@ -445,19 +445,25 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
                                   // WhatsApp button if phone available
                                   if (phone != null && phone.isNotEmpty) ...[
                                     IconButton(
+                                      visualDensity: VisualDensity.compact,
+                                      padding: const EdgeInsets.all(6),
+                                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                                       onPressed: () => _openWhatsApp(phone, apt.unitNumber),
-                                      icon: const Icon(Icons.chat, color: AppColors.success, size: 22),
+                                      icon: const Icon(Icons.chat, color: AppColors.success, size: 20),
                                       tooltip: 'مراسلة واتساب',
                                     ),
                                   ],
 
                                   // Dedicated Exemption Toggle Button (For ALL apartments)
                                   IconButton(
+                                    visualDensity: VisualDensity.compact,
+                                    padding: const EdgeInsets.all(6),
+                                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                                     onPressed: () => toggleBillable(context, apt),
                                     icon: Icon(
                                       apt.isBillable ? Icons.money_off_outlined : Icons.restore_rounded,
                                       color: apt.isBillable ? AppColors.textLight : Colors.orange.shade800,
-                                      size: 22,
+                                      size: 20,
                                     ),
                                     tooltip: apt.isBillable ? 'إعفاء الشقة من واجبات السانديك' : 'إلغاء الإعفاء وإعادة الفوترة',
                                   ),
