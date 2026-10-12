@@ -8,7 +8,9 @@ class CreateExpense extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $data['recorded_by'] = auth()->id();
+        $data['tenant_id'] = auth()->user()?->tenant_id;
+        $data['payment_method'] = $data['payment_method'] ?? 'CASH';
+        unset($data['recorded_by']);
         return $data;
     }
 }

@@ -73,8 +73,17 @@ class ExpenseResource extends Resource
                             ->label('تاريخ الصرف')
                             ->required()
                             ->maxDate(now()),
+                        Forms\Components\Select::make('payment_method')
+                            ->label('طريقة الدفع ومصدر الخصم')
+                            ->options([
+                                'CASH'          => '💵 نقداً (يخصم من الصندوق)',
+                                'BANK_TRANSFER' => '🏦 تحويل بنكي (يخصم من البنك)',
+                                'CHEQUE'        => '🧾 شيك بنكي (يخصم من البنك)',
+                            ])
+                            ->default('CASH')
+                            ->required(),
                     ])->columns(2),
-                Forms\Components\Section::make('الفاتورة أو سند الصرف')
+                Forms\Components\Section::make('الفاتورة أو سند الصرف (اختياري)')
                     ->schema([
                         Forms\Components\FileUpload::make('invoice_proof_path')
                             ->label('الفاتورة أو إثبات الصرف')
@@ -82,7 +91,7 @@ class ExpenseResource extends Resource
                             ->maxSize(5120)
                             ->directory('expense-proofs')
                             ->visibility('private')
-                            ->required(),
+                            ->nullable(),
                     ]),
             ]);
     }

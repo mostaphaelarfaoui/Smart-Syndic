@@ -3,6 +3,7 @@ class ExpenseModel {
   final String title;
   final String category;
   final double amount;
+  final String paymentMethod;
   final String expenseDate;
   final String? buildingName;
   final String? invoiceProofUrl;
@@ -12,6 +13,7 @@ class ExpenseModel {
     required this.title,
     required this.category,
     required this.amount,
+    this.paymentMethod = 'CASH',
     required this.expenseDate,
     this.buildingName,
     this.invoiceProofUrl,
@@ -37,14 +39,30 @@ class ExpenseModel {
   }
 
   factory ExpenseModel.fromJson(Map<String, dynamic> json) {
+    double parsedAmount = 0.0;
+    final rawAmount = json['amount'];
+    if (rawAmount != null) {
+      if (rawAmount is num) {
+        parsedAmount = rawAmount.toDouble();
+      } else {
+        parsedAmount = double.tryParse(rawAmount.toString()) ?? 0.0;
+      }
+    }
+
+    String dateStr = json['expense_date']?.toString() ?? '';
+    if (dateStr.contains('T')) {
+      dateStr = dateStr.split('T').first;
+    }
+
     return ExpenseModel(
-      id: json['id'] ?? '',
-      title: json['title'] ?? '',
-      category: json['category'] ?? 'OTHER',
-      amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
-      expenseDate: json['expense_date'] ?? '',
-      buildingName: json['building']?['name'],
-      invoiceProofUrl: json['invoice_proof_url'],
+      id: json['id']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      category: json['category']?.toString() ?? 'OTHER',
+      amount: parsedAmount,
+      paymentMethod: json['payment_method']?.toString() ?? 'CASH',
+      expenseDate: dateStr,
+      buildingName: json['building']?['name']?.toString(),
+      invoiceProofUrl: json['invoice_proof_url']?.toString(),
     );
   }
 }

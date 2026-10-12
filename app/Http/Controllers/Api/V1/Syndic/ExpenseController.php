@@ -67,21 +67,26 @@ class ExpenseController extends Controller
             ->with('building');
 
         // Filter by category
-        if ($request->has('category')) {
+        if ($request->filled('category') && $request->category !== 'ALL') {
             $query->where('category', $request->category);
         }
 
         // Filter by building
-        if ($request->has('building_id')) {
+        if ($request->filled('building_id')) {
             $query->where('building_id', $request->building_id);
         }
 
         // Filter by date range
-        if ($request->has('from') && $request->has('to')) {
+        if ($request->filled('from') && $request->filled('to')) {
             $query->whereBetween('expense_date', [$request->from, $request->to]);
         }
 
-        $expenses = $query->orderByDesc('expense_date')->paginate(25);
+        $expenses = $query->orderByDesc('expense_date')->paginate(50);
+
+        $expenses->getCollection()->transform(function ($e) {
+            $e->amount = (float) $e->amount;
+            return $e;
+        });
 
         return response()->json($expenses);
     }

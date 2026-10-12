@@ -133,9 +133,11 @@ class SyndicProvider extends ChangeNotifier {
     try {
       final response = await _api.get(ApiConstants.syndicExpenses);
       if (response is List) {
-        _expenses = response.map((e) => ExpenseModel.fromJson(e)).toList();
-      } else if (response['data'] != null) {
-        _expenses = (response['data'] as List).map((e) => ExpenseModel.fromJson(e)).toList();
+        _expenses = response.map((e) => ExpenseModel.fromJson(Map<String, dynamic>.from(e))).toList();
+      } else if (response is Map && response['data'] != null) {
+        _expenses = (response['data'] as List)
+            .map((e) => ExpenseModel.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
       }
       notifyListeners();
     } catch (e) {

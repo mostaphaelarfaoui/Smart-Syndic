@@ -29,6 +29,14 @@ class _SyndicExpensesTabState extends State<SyndicExpensesTab> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SyndicProvider>().fetchExpenses();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final syndic = context.watch<SyndicProvider>();
     final allExpenses = syndic.expenses;
@@ -113,17 +121,25 @@ class _SyndicExpensesTabState extends State<SyndicExpensesTab> {
                 await syndic.fetchExpenses();
               },
               child: filteredExpenses.isEmpty
-                  ? EmptyStateWidget(
-                      icon: Icons.receipt_long,
-                      title: 'لا توجد مصاريف مسجلة في هذا الصنف',
-                      description: 'اضغط على زر تسجيل مصروف بالأسفل لتوثيق فاتورة جديدة',
-                      buttonText: 'تسجيل مصروف جديد',
-                      onButtonPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (_) => const RecordExpenseDialog(),
-                        );
-                      },
+                  ? LayoutBuilder(
+                      builder: (context, constraints) => SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                          child: EmptyStateWidget(
+                            icon: Icons.receipt_long,
+                            title: 'لا توجد مصاريف مسجلة في هذا الصنف',
+                            description: 'اضغط على زر تسجيل مصروف بالأسفل لتوثيق فاتورة جديدة أو اسحب للأسفل للتحديث',
+                            buttonText: 'تسجيل مصروف جديد',
+                            onButtonPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (_) => const RecordExpenseDialog(),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
                     )
                   : ListView.builder(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
