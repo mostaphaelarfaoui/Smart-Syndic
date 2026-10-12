@@ -545,6 +545,8 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
                       trailing: IconButton(
                         icon: const Icon(Icons.copy, size: 16, color: AppColors.primary),
                         tooltip: 'نسخ رقم الوصل',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                         onPressed: () => _copyReceiptNumber(context),
                       ),
                     ),
@@ -664,25 +666,41 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
     Widget? trailing,
   }) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(
-          label,
-          style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary),
+        Expanded(
+          flex: 4,
+          child: Text(
+            label,
+            style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary),
+          ),
         ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              value,
-              style: GoogleFonts.cairo(
-                fontSize: 13,
-                color: valueColor ?? AppColors.textPrimary,
-                fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 5,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text(
+                  value,
+                  textAlign: TextAlign.end,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                  style: GoogleFonts.cairo(
+                    fontSize: 13,
+                    color: valueColor ?? AppColors.textPrimary,
+                    fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
               ),
-            ),
-            ?trailing,
-          ],
+              if (trailing != null) ...[
+                const SizedBox(width: 4),
+                trailing,
+              ],
+            ],
+          ),
         ),
       ],
     );
