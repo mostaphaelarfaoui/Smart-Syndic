@@ -120,20 +120,26 @@ class ResidentPaymentsTab extends StatelessWidget {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Row(
-                                children: [
-                                  const Icon(Icons.receipt, size: 18, color: AppColors.primary),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'إجمالي الوصولات: ${payments.length}',
-                                    style: GoogleFonts.cairo(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.textPrimary,
+                              Expanded(
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.receipt, size: 18, color: AppColors.primary),
+                                    const SizedBox(width: 8),
+                                    Flexible(
+                                      child: Text(
+                                        'إجمالي الوصولات: ${payments.length}',
+                                        style: GoogleFonts.cairo(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
+                              const SizedBox(width: 8),
                               Text(
                                 'المجموع: ${totalAmount.toStringAsFixed(0)} درهم',
                                 style: GoogleFonts.cairo(
@@ -174,47 +180,58 @@ class ResidentPaymentsTab extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.success.withAlpha(20),
-                                    borderRadius: BorderRadius.circular(10),
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.success.withAlpha(20),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 20),
                                   ),
-                                  child: const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 20),
-                                ),
-                                const SizedBox(width: 10),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(
-                                          payment.receiptNumber,
-                                          style: GoogleFonts.cairo(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppColors.textPrimary,
-                                          ),
+                                        Row(
+                                          children: [
+                                            Flexible(
+                                              child: Text(
+                                                payment.receiptNumber,
+                                                style: GoogleFonts.cairo(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppColors.textPrimary,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            InkWell(
+                                              borderRadius: BorderRadius.circular(4),
+                                              onTap: () => _copyReceiptNumber(context, payment.receiptNumber),
+                                              child: const Padding(
+                                                padding: EdgeInsets.all(2.0),
+                                                child: Icon(Icons.copy, size: 14, color: AppColors.textLight),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                        IconButton(
-                                          icon: const Icon(Icons.copy, size: 14, color: AppColors.textLight),
-                                          padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(),
-                                          tooltip: 'نسخ رقم الوصل',
-                                          onPressed: () => _copyReceiptNumber(context, payment.receiptNumber),
+                                        Text(
+                                          'تاريخ الأداء: ${payment.paymentDate}',
+                                          style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textLight),
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ],
                                     ),
-                                    Text(
-                                      'تاريخ الأداء: ${payment.paymentDate}',
-                                      style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textLight),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                                  ),
+                                ],
+                              ),
                             ),
+                            const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
@@ -224,7 +241,7 @@ class ResidentPaymentsTab extends StatelessWidget {
                               child: Text(
                                 '${payment.amountPaid.toStringAsFixed(0)} درهم',
                                 style: GoogleFonts.cairo(
-                                  fontSize: 16,
+                                  fontSize: 15,
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.success,
                                 ),
@@ -235,9 +252,12 @@ class ResidentPaymentsTab extends StatelessWidget {
                         const SizedBox(height: 12),
 
                         // Tags row: Apartment unit, payment method
-                        Row(
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 6,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
-                            if (payment.apartmentUnit != null) ...[
+                            if (payment.apartmentUnit != null)
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
@@ -253,8 +273,6 @@ class ResidentPaymentsTab extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                            ],
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
@@ -267,13 +285,11 @@ class ResidentPaymentsTab extends StatelessWidget {
                                 style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary),
                               ),
                             ),
-                            if (payment.chequeReference != null) ...[
-                              const SizedBox(width: 8),
+                            if (payment.chequeReference != null)
                               Text(
                                 'مرجع: ${payment.chequeReference}',
                                 style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textLight),
                               ),
-                            ],
                           ],
                         ),
 
