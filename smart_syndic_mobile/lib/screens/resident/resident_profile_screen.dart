@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/utils/number_utils.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/resident_provider.dart';
 import '../settings/server_settings_dialog.dart';
@@ -296,13 +297,13 @@ class _ResidentProfileScreenState extends State<ResidentProfileScreen> {
     final unitNumber = apartment?['unit_number'] ?? '-';
     final floor = apartment?['floor']?.toString() ?? '-';
     final buildingName = apartment?['building_name'] ?? '-';
-    final monthlyFee = (apartment?['monthly_fee'] as num?)?.toDouble() ?? 0.0;
+    final monthlyFee = parseDouble(apartment?['monthly_fee']);
     final occupancyType = apartment?['occupancy_type'] == 'TENANT' ? 'مكترٍ' : 'مالك الشقة';
     final residenceName = residence?['name'] ?? 'الإقامة السكنية';
     final bankRib = residence?['bank_rib'] ?? '';
 
-    final totalDue = (financial?['total_due'] as num?)?.toDouble() ?? 0.0;
-    final totalPaid = (financial?['total_paid'] as num?)?.toDouble() ?? 0.0;
+    final totalDue = parseDouble(financial?['total_due']);
+    final totalPaid = parseDouble(financial?['total_paid']);
     final paymentsCount = financial?['payments_count'] ?? 0;
     final isUpToDate = financial?['is_up_to_date'] ?? (totalDue <= 0);
     final advancePaidMonths = (financial?['advance_paid_months'] as List?)?.cast<String>() ?? [];

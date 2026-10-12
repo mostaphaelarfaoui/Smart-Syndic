@@ -1,3 +1,5 @@
+import '../core/utils/number_utils.dart';
+
 class KpisModel {
   final int totalApartments;
   final double monthlyExpectedTotal;
@@ -47,17 +49,17 @@ class KpisModel {
 
     return KpisModel(
       totalApartments: json['total_apartments'] ?? 0,
-      monthlyExpectedTotal: (json['monthly_expected_total'] as num?)?.toDouble() ?? 0.0,
-      monthRevenue: (json['month_revenue'] as num?)?.toDouble() ?? 0.0,
-      monthExpenses: (json['month_expenses'] as num?)?.toDouble() ?? 0.0,
-      netBalance: (json['net_balance'] as num?)?.toDouble() ?? 0.0,
-      collectionRate: (json['collection_rate'] as num?)?.toDouble() ?? 0.0,
-      totalArrears: (json['total_arrears'] as num?)?.toDouble() ?? 0.0,
-      treasuryBalance: (json['treasury_balance'] as num?)?.toDouble() ?? 0.0,
-      cashBalance: (json['cash_balance'] as num?)?.toDouble() ?? 0.0,
-      bankBalance: (json['bank_balance'] as num?)?.toDouble() ?? 0.0,
-      initialTreasuryBalance: (json['initial_treasury_balance'] as num?)?.toDouble() ?? 0.0,
-      initialBankBalance: (json['initial_bank_balance'] as num?)?.toDouble() ?? 0.0,
+      monthlyExpectedTotal: parseDouble(json['monthly_expected_total']),
+      monthRevenue: parseDouble(json['month_revenue']),
+      monthExpenses: parseDouble(json['month_expenses']),
+      netBalance: parseDouble(json['net_balance']),
+      collectionRate: parseDouble(json['collection_rate']),
+      totalArrears: parseDouble(json['total_arrears']),
+      treasuryBalance: parseDouble(json['treasury_balance']),
+      cashBalance: parseDouble(json['cash_balance']),
+      bankBalance: parseDouble(json['bank_balance']),
+      initialTreasuryBalance: parseDouble(json['initial_treasury_balance']),
+      initialBankBalance: parseDouble(json['initial_bank_balance']),
       initialBalanceLocked: json['initial_balance_locked'] == true,
       pendingResidents: json['pending_residents'] ?? 0,
       pendingSuggestions: json['pending_suggestions'] ?? 0,
@@ -81,8 +83,8 @@ class ChartMonthData {
   factory ChartMonthData.fromJson(Map<String, dynamic> json) {
     return ChartMonthData(
       month: json['month'] ?? '',
-      inflow: (json['inflow'] as num?)?.toDouble() ?? 0.0,
-      outflow: (json['outflow'] as num?)?.toDouble() ?? 0.0,
+      inflow: parseDouble(json['inflow']),
+      outflow: parseDouble(json['outflow']),
     );
   }
 }

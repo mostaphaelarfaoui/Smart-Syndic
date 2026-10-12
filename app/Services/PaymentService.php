@@ -191,10 +191,10 @@ class PaymentService
         sort($advancePaidMonths);
 
         return [
-            'monthly_fee'         => $apartment->monthly_fee,
-            'total_due'           => $totalDue,
-            'total_paid'          => $totalPaid,
-            'arrears'             => $arrears,
+            'monthly_fee'         => (float) $apartment->monthly_fee,
+            'total_due'           => (float) $totalDue,
+            'total_paid'          => (float) $totalPaid,
+            'arrears'             => (float) $arrears,
             'paid_months'         => array_values($paidMonths),
             'unpaid_months'       => array_values($unpaidMonths),
             'advance_paid_months' => $advancePaidMonths, // Feature 7

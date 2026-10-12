@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/number_utils.dart';
 import '../../../providers/resident_provider.dart';
 import '../../../widgets/empty_state.dart';
 
@@ -14,9 +15,9 @@ class ResidentTransparencyTab extends StatelessWidget {
     final data = resident.transparencyData;
 
     final isEnabled = data?['transparency_enabled'] == true;
-    final totalInflow = (data?['total_inflow'] as num?)?.toDouble() ?? 0.0;
-    final totalOutflow = (data?['total_outflow'] as num?)?.toDouble() ?? 0.0;
-    final balance = (data?['balance'] as num?)?.toDouble() ?? 0.0;
+    final totalInflow = parseDouble(data?['total_inflow']);
+    final totalOutflow = parseDouble(data?['total_outflow']);
+    final balance = parseDouble(data?['balance']);
     final expensesList = data?['expenses'] != null ? List<Map<String, dynamic>>.from(data!['expenses']) : <Map<String, dynamic>>[];
 
     return Scaffold(
@@ -164,7 +165,7 @@ class ResidentTransparencyTab extends StatelessWidget {
                     )
                   else
                     ...expensesList.map((exp) {
-                      final amount = (exp['amount'] as num?)?.toDouble() ?? 0.0;
+                      final amount = parseDouble(exp['amount']);
                       final title = exp['title'] ?? '';
                       final cat = exp['category'] ?? '';
                       final date = exp['expense_date'] ?? '';

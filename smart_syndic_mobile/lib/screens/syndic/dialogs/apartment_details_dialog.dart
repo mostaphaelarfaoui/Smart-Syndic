@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/services/api_service.dart';
+import '../../../core/utils/number_utils.dart';
 import '../../../models/apartment_model.dart';
 import '../../../providers/syndic_provider.dart';
 import 'edit_apartment_dialog.dart';
@@ -419,7 +420,7 @@ class ApartmentDetailsDialog extends StatelessWidget {
                         separatorBuilder: (context, index) => const SizedBox(height: 8),
                         itemBuilder: (context, idx) {
                           final p = apartment.payments[idx];
-                          final amount = (p['amount_paid'] as num?)?.toDouble() ?? 0.0;
+                          final amount = parseDouble(p['amount_paid']);
                           final date = p['payment_date'] ?? '';
                           final receiptNo = p['receipt_number'] ?? '';
                           final receiptUrl = p['receipt_url'] as String?;

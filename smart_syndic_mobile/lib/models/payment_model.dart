@@ -1,3 +1,5 @@
+import '../core/utils/number_utils.dart';
+
 class PaymentModel {
   final String id;
   final String receiptNumber;
@@ -89,12 +91,12 @@ class PaymentModel {
     return PaymentModel(
       id: json['id'] ?? '',
       receiptNumber: json['receipt_number'] ?? '',
-      amountPaid: (json['amount_paid'] as num?)?.toDouble() ?? 0.0,
+      amountPaid: parseDouble(json['amount_paid']),
       paymentMethod: json['payment_method'] ?? 'CASH',
       chequeReference: json['cheque_reference'],
       paymentDate: json['payment_date'] ?? '',
       isPartial: json['is_partial'] == true || json['is_partial'] == 1,
-      remainingBalance: (json['remaining_balance'] as num?)?.toDouble() ?? 0.0,
+      remainingBalance: parseDouble(json['remaining_balance']),
       coveredMonths: months,
       receiptUrl: json['receipt_url'] ?? json['receipt_download_url'],
       apartmentUnit: unit,

@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/services/api_service.dart';
+import '../../../core/utils/number_utils.dart';
 import '../../../providers/syndic_provider.dart';
 
 class RecordPaymentDialog extends StatefulWidget {
@@ -108,7 +109,7 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
       if (result != null) {
         final receiptUrl = result['receipt_url'] as String?;
         final receiptNumber = result['receipt_number'] as String? ?? 'REC-';
-        final paidAmount = (result['amount_paid'] as num?)?.toDouble() ?? amount;
+        final paidAmount = parseDouble(result['amount_paid'], amount);
 
         // Find apartment data for unit number, resident info and remaining arrears
         final apt = syndic.apartments.where((a) => a.id == _selectedApartmentId).firstOrNull;

@@ -1,3 +1,5 @@
+import '../core/utils/number_utils.dart';
+
 class ApartmentModel {
   final String id;
   final String unitNumber;
@@ -47,13 +49,13 @@ class ApartmentModel {
       id: json['id'] ?? '',
       unitNumber: json['unit_number'] ?? '',
       floor: json['floor'] ?? 0,
-      monthlyFee: (json['monthly_fee'] as num?)?.toDouble() ?? 0.0,
+      monthlyFee: parseDouble(json['monthly_fee']),
       buildingName: bName ?? json['building_name'] ?? json['building']?['name'],
       buildingId: bId ?? json['building_id'],
       block: blockName ?? json['block'] ?? json['building']?['block'],
       resident: json['resident'],
-      totalPaid: (json['total_paid'] as num?)?.toDouble() ?? 0.0,
-      arrears: (json['arrears'] as num?)?.toDouble() ?? 0.0,
+      totalPaid: parseDouble(json['total_paid']),
+      arrears: parseDouble(json['arrears']),
       isSettled: isSettledBool,
       lastPayment: json['last_payment'],
       payments: parsedPayments,

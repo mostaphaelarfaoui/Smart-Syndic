@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/number_utils.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/resident_provider.dart';
 import '../resident_profile_screen.dart';
@@ -21,8 +22,8 @@ class ResidentHomeTab extends StatelessWidget {
 
     final unitNumber = balance?['apartment']?['unit_number'] ?? '-';
     final floor = balance?['apartment']?['floor']?.toString() ?? '-';
-    final monthlyFee = (balanceData?['monthly_fee'] as num?)?.toDouble() ?? (balance?['apartment']?['monthly_fee'] as num?)?.toDouble() ?? 0.0;
-    final arrears = (balanceData?['arrears'] as num?)?.toDouble() ?? 0.0;
+    final monthlyFee = parseDouble(balanceData?['monthly_fee'] ?? balance?['apartment']?['monthly_fee']);
+    final arrears = parseDouble(balanceData?['arrears']);
     final isUpToDate = (balanceData?['is_settled'] == true) || arrears <= 0;
     final advancePaidMonths = (balanceData?['advance_paid_months'] as List?)?.cast<String>() ?? [];
 
