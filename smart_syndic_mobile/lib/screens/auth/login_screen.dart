@@ -38,7 +38,9 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (!success && mounted) {
-      if (auth.pendingContactInfo != null) {
+      if (auth.pendingResidentData != null) {
+        _showPendingResidentDialog(auth.pendingResidentData!);
+      } else if (auth.pendingContactInfo != null) {
         _showPendingApprovalDialog(auth.pendingContactInfo!);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -49,6 +51,200 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     }
+  }
+
+  void _showPendingResidentDialog(Map<String, dynamic> data) {
+    final residentName = data['user']?['name'] as String? ?? 'الجار العزيز';
+    final residenceName = data['residence']?['name'] as String? ?? 'الإقامة';
+    final unitNumber = data['apartment']?['unit_number'] as String? ?? '';
+    final buildingName = data['apartment']?['building'] as String?;
+    final syndic = data['syndic'] as Map<String, dynamic>?;
+    final syndicName = syndic?['name'] as String? ?? 'سانديك الإقامة';
+    final syndicPhone = syndic?['phone'] as String?;
+
+    final aptLabel = buildingName != null && buildingName.isNotEmpty
+        ? 'شقة $unitNumber ($buildingName)'
+        : 'شقة $unitNumber';
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade50,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.hourglass_top_rounded, color: Colors.amber, size: 24),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'طلب الانضمام قيد المراجعة',
+                style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'مرحباً بك $residentName! 👋\nلقد تم تسجيل حسابك وإرسال طلب الانضمام إلى $residenceName بنجاح.',
+                style: GoogleFonts.cairo(fontSize: 13, height: 1.6, color: AppColors.textPrimary),
+              ),
+              const SizedBox(height: 12),
+
+              // Apartment badge
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.home_outlined, size: 20, color: AppColors.primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        aptLabel,
+                        style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.shade100,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        'في الانتظار',
+                        style: GoogleFonts.cairo(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.brown.shade800),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              Text(
+                'حسابك الآن بانتظار موافقة السانديك وتأكيد الشقة. بمجرد قبوله للطلب ستتمكن من تسجيل الدخول مباشرة للاطلاع على وضعية شقتك وإيصالاتك والمشاركة في القرارات.',
+                style: GoogleFonts.cairo(fontSize: 12, height: 1.5, color: AppColors.textSecondary),
+              ),
+
+              if (syndicPhone != null && syndicPhone.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withAlpha(12),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.primary.withAlpha(35)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'يمكنك التواصل مع السانديك لتسريع التفعيل:',
+                        style: GoogleFonts.cairo(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                          color: AppColors.primaryDark,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.person_outline, size: 16, color: AppColors.textSecondary),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              syndicName,
+                              style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.w600),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.green.shade700,
+                                side: BorderSide(color: Colors.green.shade600),
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              icon: const Icon(Icons.call, size: 16),
+                              label: Text('اتصال', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold)),
+                              onPressed: () async {
+                                final clean = syndicPhone.replaceAll(RegExp(r'\s+'), '');
+                                final uri = Uri.parse('tel:$clean');
+                                if (await canLaunchUrl(uri)) await launchUrl(uri);
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF25D366),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                elevation: 0,
+                              ),
+                              icon: const Icon(Icons.chat, size: 16),
+                              label: Text('واتساب', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold)),
+                              onPressed: () async {
+                                final clean = syndicPhone.replaceAll(RegExp(r'[^0-9]'), '');
+                                final msg = Uri.encodeComponent(
+                                  'السلام عليكم، أنا الساكن $residentName قمت بإنشاء حساب في تطبيق Smart Syndic لشقة $unitNumber. أرجو قبول طلب الانضمام لتفعيل الحساب، وشكراً.',
+                                );
+                                final uri = Uri.parse('https://wa.me/$clean?text=$msg');
+                                if (await canLaunchUrl(uri)) {
+                                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                }
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            ),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'حسناً، فهمت',
+              style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showPendingApprovalDialog(Map<String, dynamic> contact) {

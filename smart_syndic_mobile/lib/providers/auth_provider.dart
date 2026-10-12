@@ -14,12 +14,14 @@ class AuthProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   Map<String, dynamic>? _pendingContactInfo;
+  Map<String, dynamic>? _pendingResidentData;
 
   UserModel? get user => _user;
   TenantModel? get tenant => _tenant;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   Map<String, dynamic>? get pendingContactInfo => _pendingContactInfo;
+  Map<String, dynamic>? get pendingResidentData => _pendingResidentData;
   bool get isAuthenticated => _user != null && _api.token != null;
 
   Future<void> checkAuth() async {
@@ -50,6 +52,7 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     _errorMessage = null;
     _pendingContactInfo = null;
+    _pendingResidentData = null;
     notifyListeners();
 
     try {
@@ -76,8 +79,12 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } on ApiException catch (e) {
-      if (e.statusCode == 403 && e.data is Map && e.data['contact_info'] != null) {
-        _pendingContactInfo = Map<String, dynamic>.from(e.data['contact_info']);
+      if (e.statusCode == 403 && e.data is Map) {
+        if (e.data['role'] == 'RESIDENT' && e.data['status'] == 'PENDING') {
+          _pendingResidentData = Map<String, dynamic>.from(e.data);
+        } else if (e.data['contact_info'] != null) {
+          _pendingContactInfo = Map<String, dynamic>.from(e.data['contact_info']);
+        }
       }
       _errorMessage = e.message;
       _isLoading = false;

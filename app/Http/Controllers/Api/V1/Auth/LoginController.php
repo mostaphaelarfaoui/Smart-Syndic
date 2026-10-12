@@ -27,6 +27,40 @@ class LoginController extends Controller
 
         // Block inactive accounts (except Super Admins)
         if ($user->status !== 'ACTIVE' && ! $user->isSuperAdmin()) {
+            if ($user->isResident()) {
+                $apartment = $user->apartments()->with('building')->first();
+                $tenant = $user->tenant;
+                $syndic = $tenant ? User::where('tenant_id', $tenant->id)->where('role', 'ADMIN_SYNDIC')->first() : null;
+
+                $message = $user->status === 'PENDING'
+                    ? 'طلب انضمامك قيد المراجعة حالياً من طرف سانديك الإقامة.'
+                    : 'حسابك غير مفعّل. يرجى التواصل مع سانديك الإقامة.';
+
+                return response()->json([
+                    'message'       => $message,
+                    'status'        => $user->status,
+                    'role'          => 'RESIDENT',
+                    'user'          => [
+                        'name'  => $user->full_name,
+                        'email' => $user->email,
+                    ],
+                    'residence'     => $tenant ? [
+                        'id'   => $tenant->id,
+                        'name' => $tenant->name,
+                    ] : null,
+                    'apartment'     => $apartment ? [
+                        'id'          => $apartment->id,
+                        'unit_number' => $apartment->unit_number,
+                        'building'    => $apartment->building?->name,
+                    ] : null,
+                    'syndic'        => $syndic ? [
+                        'name'  => $syndic->full_name,
+                        'phone' => $syndic->phone,
+                        'email' => $syndic->email,
+                    ] : null,
+                ], 403);
+            }
+
             // Feature 14 — For syndics awaiting approval, return contact info
             $contactInfo = null;
             if ($user->isAdminSyndic() && $user->tenant) {
@@ -38,10 +72,11 @@ class LoginController extends Controller
             }
 
             return response()->json([
-                'message'      => __('auth.account_inactive'),
-                'status'       => $user->status,
-                'tenant_status'=> $user->tenant?->status,
-                'contact_info' => $contactInfo, // Feature 14
+                'message'       => __('auth.account_inactive'),
+                'status'        => $user->status,
+                'role'          => $user->role,
+                'tenant_status' => $user->tenant?->status,
+                'contact_info'  => $contactInfo, // Feature 14
             ], 403);
         }
 
