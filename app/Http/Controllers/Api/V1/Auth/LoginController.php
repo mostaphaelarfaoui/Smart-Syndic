@@ -19,24 +19,42 @@ class LoginController extends Controller
     {
         $user = User::where('email', $request->email)->first();
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => [__('auth.failed')],
-            ]);
+        // 1. Email not found
+        if (! $user) {
+            return response()->json([
+                'error_type' => 'EMAIL_NOT_FOUND',
+                'message'    => 'البريد الإلكتروني غير مسجل في النظام. يرجى التأكد من كتابة البريد بشكل صحيح أو إنشاء حساب جديد.',
+                'errors'     => [
+                    'email' => ['البريد الإلكتروني غير مسجل في النظام.'],
+                ],
+            ], 422);
         }
 
-        // Block inactive accounts (except Super Admins)
+        // 2. Wrong password
+        if (! Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'error_type' => 'INVALID_PASSWORD',
+                'message'    => 'كلمة المرور غير صحيحة. يرجى التأكد من كلمة المرور والمحاولة مرة أخرى.',
+                'errors'     => [
+                    'password' => ['كلمة المرور غير صحيحة.'],
+                ],
+            ], 422);
+        }
+
+        // 3. Block inactive or pending accounts (except Super Admins)
         if ($user->status !== 'ACTIVE' && ! $user->isSuperAdmin()) {
             if ($user->isResident()) {
                 $apartment = $user->apartments()->with('building')->first();
                 $tenant = $user->tenant;
                 $syndic = $tenant ? User::where('tenant_id', $tenant->id)->where('role', 'ADMIN_SYNDIC')->first() : null;
 
-                $message = $user->status === 'PENDING'
+                $isPending = $user->status === 'PENDING';
+                $message = $isPending
                     ? 'طلب انضمامك قيد المراجعة حالياً من طرف سانديك الإقامة.'
-                    : 'حسابك غير مفعّل. يرجى التواصل مع سانديك الإقامة.';
+                    : 'حسابك معطل أو موقوف حالياً. يرجى التواصل مع سانديك الإقامة لإعادة تفعيله.';
 
                 return response()->json([
+                    'error_type'    => $isPending ? 'RESIDENT_PENDING_APPROVAL' : 'RESIDENT_SUSPENDED',
                     'message'       => $message,
                     'status'        => $user->status,
                     'role'          => 'RESIDENT',
@@ -61,22 +79,28 @@ class LoginController extends Controller
                 ], 403);
             }
 
-            // Feature 14 — For syndics awaiting approval, return contact info
+            // For syndics awaiting approval or suspended
             $contactInfo = null;
-            if ($user->isAdminSyndic() && $user->tenant) {
-                $contactInfo = $user->tenant->contact_info ?? [
-                    'email' => config('smartsyndic.admin_contact.email', 'support@smartsyndic.com'),
-                    'phone' => config('smartsyndic.admin_contact.phone', '+212 600 000 000'),
-                    'whatsapp' => config('smartsyndic.admin_contact.whatsapp'),
+            if ($user->isAdminSyndic()) {
+                $contactInfo = $user->tenant?->contact_info ?? [
+                    'email'    => config('smartsyndic.admin_contact.email', 'support@smartsyndic.com'),
+                    'phone'    => config('smartsyndic.admin_contact.phone', '+212 600 000 000'),
+                    'whatsapp' => config('smartsyndic.admin_contact.whatsapp', '+212 600 000 000'),
                 ];
             }
 
+            $isPending = $user->status === 'PENDING';
+            $message = $isPending
+                ? 'حساب السانديك قيد التحقق والتفعيل من قبل إدارة المنصة.'
+                : 'تم إيقاف حسابك مؤقتاً. يرجى التواصل مع إدارة المنصة للاستفسار.';
+
             return response()->json([
-                'message'       => __('auth.account_inactive'),
+                'error_type'    => $isPending ? 'SYNDIC_PENDING_APPROVAL' : 'SYNDIC_SUSPENDED',
+                'message'       => $message,
                 'status'        => $user->status,
                 'role'          => $user->role,
                 'tenant_status' => $user->tenant?->status,
-                'contact_info'  => $contactInfo, // Feature 14
+                'contact_info'  => $contactInfo,
             ], 403);
         }
 

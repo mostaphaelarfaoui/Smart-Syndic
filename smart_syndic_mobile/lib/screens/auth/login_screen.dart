@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/services/api_service.dart';
 import '../../providers/auth_provider.dart';
 import '../settings/server_settings_dialog.dart';
 import 'register_resident_screen.dart';
@@ -42,7 +43,9 @@ class _LoginScreenState extends State<LoginScreen> {
         _showPendingResidentDialog(auth.pendingResidentData!);
       } else if (auth.pendingContactInfo != null) {
         _showPendingApprovalDialog(auth.pendingContactInfo!);
-      } else {
+      } else if (auth.suspendedAccountData != null) {
+        _showSuspendedAccountDialog(auth.suspendedAccountData!);
+      } else if (auth.loginErrorType == 'UNKNOWN_ERROR') {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(auth.errorMessage ?? 'فشل تسجيل الدخول', style: GoogleFonts.cairo()),
@@ -360,7 +363,414 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  void _showSuspendedAccountDialog(Map<String, dynamic> data) {
+    final role = data['role']?.toString();
+    final message = data['message']?.toString() ?? 'تم إيقاف هذا الحساب مؤقتاً.';
+    final syndic = data['syndic'] as Map<String, dynamic>?;
+    final syndicName = syndic?['name'] as String? ?? 'سانديك الإقامة';
+    final syndicPhone = syndic?['phone'] as String?;
+
+    final contact = data['contact_info'] as Map<String, dynamic>?;
+    final adminPhone = contact?['phone']?.toString();
+    final adminWhatsapp = contact?['whatsapp']?.toString() ?? adminPhone;
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.block_rounded, color: Colors.red, size: 24),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'الحساب موقوف أو معطل',
+                style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                message,
+                style: GoogleFonts.cairo(fontSize: 13, height: 1.5, color: AppColors.textPrimary),
+              ),
+              if (role == 'RESIDENT' && syndicPhone != null && syndicPhone.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withAlpha(12),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.primary.withAlpha(35)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'للاستفسار أو إعادة التفعيل، يرجى التواصل مع السانديك:',
+                        style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.primaryDark),
+                      ),
+                      const SizedBox(height: 8),
+                      Text('السانديك: $syndicName', style: GoogleFonts.cairo(fontSize: 12)),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.green.shade700,
+                                side: BorderSide(color: Colors.green.shade600),
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                              ),
+                              icon: const Icon(Icons.call, size: 16),
+                              label: Text('اتصال', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold)),
+                              onPressed: () async {
+                                final clean = syndicPhone.replaceAll(RegExp(r'\s+'), '');
+                                final uri = Uri.parse('tel:$clean');
+                                if (await canLaunchUrl(uri)) await launchUrl(uri);
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF25D366),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                              ),
+                              icon: const Icon(Icons.chat, size: 16),
+                              label: Text('واتساب', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold)),
+                              onPressed: () async {
+                                final clean = syndicPhone.replaceAll(RegExp(r'[^0-9]'), '');
+                                final msg = Uri.encodeComponent('السلام عليكم، حسابي في تطبيق Smart Syndic معطل، أرجو التحقق من الأمر وشكراً.');
+                                final uri = Uri.parse('https://wa.me/$clean?text=$msg');
+                                if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ] else if (adminWhatsapp != null && adminWhatsapp.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withAlpha(12),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.primary.withAlpha(35)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'التواصل مع إدارة المنصة للاستفسار:',
+                        style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.primaryDark),
+                      ),
+                      const SizedBox(height: 8),
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF25D366),
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(double.infinity, 38),
+                        ),
+                        icon: const Icon(Icons.chat, size: 16),
+                        label: Text('مراسلة إدارة المنصة عبر واتساب', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold)),
+                        onPressed: () async {
+                          final clean = adminWhatsapp.replaceAll(RegExp(r'[^0-9]'), '');
+                          final msg = Uri.encodeComponent('السلام عليكم، حسابي في Smart Syndic موقوف وأرغب في الاستفسار عن سبب الإيقاف.');
+                          final uri = Uri.parse('https://wa.me/$clean?text=$msg');
+                          if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('إغلاق', style: GoogleFonts.cairo(color: AppColors.textSecondary)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSmartFeedbackCard(AuthProvider auth) {
+    final errType = auth.loginErrorType;
+    if (errType == null) return const SizedBox.shrink();
+
+    Color bgColor;
+    Color borderColor;
+    Color iconColor;
+    IconData icon;
+    String title;
+    String description;
+    List<Widget> actions = [];
+
+    switch (errType) {
+      case 'EMAIL_NOT_FOUND':
+        bgColor = Colors.orange.shade50;
+        borderColor = Colors.orange.shade300;
+        iconColor = Colors.orange.shade900;
+        icon = Icons.person_search_outlined;
+        title = 'البريد الإلكتروني غير مسجل';
+        description = auth.fieldErrorEmail ?? 'لم نجد أي حساب مسجل بهذا البريد. هل ترغب في إنشاء حساب جديد؟';
+        actions = [
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: [
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  side: const BorderSide(color: AppColors.primary),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  visualDensity: VisualDensity.compact,
+                ),
+                icon: const Icon(Icons.person_add_outlined, size: 14),
+                label: Text('تسجيل ساكن جديد', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold)),
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterResidentScreen()));
+                },
+              ),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.secondary,
+                  side: const BorderSide(color: AppColors.secondary),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  visualDensity: VisualDensity.compact,
+                ),
+                icon: const Icon(Icons.business_center_outlined, size: 14),
+                label: Text('تسجيل سانديك جديد', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold)),
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterSyndicScreen()));
+                },
+              ),
+            ],
+          ),
+        ];
+        break;
+
+      case 'INVALID_PASSWORD':
+        bgColor = Colors.red.shade50;
+        borderColor = Colors.red.shade200;
+        iconColor = Colors.red.shade800;
+        icon = Icons.lock_reset_outlined;
+        title = 'كلمة المرور غير صحيحة';
+        description = 'كلمة المرور التي أدخلتها غير مطابقة. تأكد من لغة لوحة المفاتيح وحالة الأحرف (كبيرة/صغيرة).';
+        actions = [
+          Row(
+            children: [
+              TextButton.icon(
+                icon: Icon(_obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 16),
+                label: Text(
+                  _obscurePassword ? 'إظهار كلمة المرور للتأكد' : 'إخفاء كلمة المرور',
+                  style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold),
+                ),
+                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+              ),
+              const Spacer(),
+              TextButton(
+                child: Text('مسح وإعادة الكتابة', style: GoogleFonts.cairo(fontSize: 11, color: AppColors.danger)),
+                onPressed: () {
+                  _passwordController.clear();
+                  auth.clearLoginErrors();
+                },
+              ),
+            ],
+          ),
+        ];
+        break;
+
+      case 'NETWORK_ERROR':
+        bgColor = Colors.blue.shade50;
+        borderColor = Colors.blue.shade200;
+        iconColor = Colors.blue.shade800;
+        icon = Icons.wifi_off_rounded;
+        title = 'تعذر الاتصال بالخادم';
+        description = 'لم نتمكن من الوصول إلى السيرفر (${ApiService().baseUrl}). تأكد من تشغيل السيرفر وعنوان الـ IP.';
+        actions = [
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              visualDensity: VisualDensity.compact,
+            ),
+            icon: const Icon(Icons.settings, size: 14),
+            label: Text('تعديل عنوان السيرفر (IP)', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold)),
+            onPressed: () {
+              showDialog(context: context, builder: (_) => const ServerSettingsDialog());
+            },
+          ),
+        ];
+        break;
+
+      case 'RESIDENT_PENDING_APPROVAL':
+        bgColor = Colors.amber.shade50;
+        borderColor = Colors.amber.shade300;
+        iconColor = Colors.amber.shade900;
+        icon = Icons.hourglass_top_rounded;
+        title = 'طلب الانضمام قيد المراجعة';
+        description = 'حسابك مسجل وبانتظار موافقة سانديك الإقامة لتأكيد شقتك وتفعيل حسابك.';
+        actions = [
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber.shade800,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              visualDensity: VisualDensity.compact,
+            ),
+            icon: const Icon(Icons.info_outline, size: 14),
+            label: Text('عرض تفاصيل الطلب والتواصل مع السانديك', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold)),
+            onPressed: () {
+              if (auth.pendingResidentData != null) {
+                _showPendingResidentDialog(auth.pendingResidentData!);
+              }
+            },
+          ),
+        ];
+        break;
+
+      case 'SYNDIC_PENDING_APPROVAL':
+        bgColor = Colors.amber.shade50;
+        borderColor = Colors.amber.shade300;
+        iconColor = Colors.amber.shade900;
+        icon = Icons.verified_user_outlined;
+        title = 'حساب السانديك قيد المراجعة';
+        description = 'طلبك قيد المراجعة والتحقق من طرف إدارة المنصة.';
+        actions = [
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber.shade800,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              visualDensity: VisualDensity.compact,
+            ),
+            icon: const Icon(Icons.contact_phone_outlined, size: 14),
+            label: Text('معلومات التواصل مع إدارة المنصة', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold)),
+            onPressed: () {
+              if (auth.pendingContactInfo != null) {
+                _showPendingApprovalDialog(auth.pendingContactInfo!);
+              }
+            },
+          ),
+        ];
+        break;
+
+      case 'RESIDENT_SUSPENDED':
+      case 'SYNDIC_SUSPENDED':
+      case 'ACCOUNT_SUSPENDED':
+        bgColor = Colors.red.shade50;
+        borderColor = Colors.red.shade300;
+        iconColor = Colors.red.shade900;
+        icon = Icons.block_rounded;
+        title = 'الحساب موقوف أو معطل';
+        description = auth.errorMessage ?? 'تم إيقاف حسابك مؤقتاً. يرجى التواصل للإيضاح وإعادة التفعيل.';
+        actions = [
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade800,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              visualDensity: VisualDensity.compact,
+            ),
+            icon: const Icon(Icons.help_outline, size: 14),
+            label: Text('عرض تفاصيل التوقيف وطرق التواصل', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold)),
+            onPressed: () {
+              if (auth.suspendedAccountData != null) {
+                _showSuspendedAccountDialog(auth.suspendedAccountData!);
+              }
+            },
+          ),
+        ];
+        break;
+
+      default:
+        bgColor = Colors.red.shade50;
+        borderColor = Colors.red.shade200;
+        iconColor = Colors.red.shade800;
+        icon = Icons.error_outline_rounded;
+        title = 'فشل تسجيل الدخول';
+        description = auth.errorMessage ?? 'حدث خطأ أثناء محاولة تسجيل الدخول.';
+        break;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: borderColor, width: 1.2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: iconColor, size: 22),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13, color: iconColor),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      description,
+                      style: GoogleFonts.cairo(fontSize: 12, height: 1.4, color: AppColors.textPrimary),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close, size: 18),
+                color: iconColor.withAlpha(160),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                onPressed: () => auth.clearLoginErrors(),
+              ),
+            ],
+          ),
+          if (actions.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            const Divider(height: 1),
+            const SizedBox(height: 8),
+            ...actions,
+          ],
+        ],
+      ),
+    );
+  }
+
   void _quickFill(String email, String roleName) {
+    context.read<AuthProvider>().clearLoginErrors();
     setState(() {
       _emailController.text = email;
       _passwordController.text = 'password';
@@ -406,7 +816,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: 72,
                     height: 72,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: AppColors.primary.withAlpha(25),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -433,7 +843,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
+
+                  // Smart Feedback Card for structured login feedback
+                  _buildSmartFeedbackCard(auth),
 
                   // Email Input
                   Text(
@@ -445,9 +858,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     textDirection: TextDirection.ltr,
-                    decoration: const InputDecoration(
+                    onChanged: (_) {
+                      if (auth.fieldErrorEmail != null) {
+                        auth.clearLoginErrors();
+                      }
+                    },
+                    decoration: InputDecoration(
                       hintText: 'name@example.com',
-                      prefixIcon: Icon(Icons.email_outlined),
+                      prefixIcon: const Icon(Icons.email_outlined),
+                      errorText: auth.fieldErrorEmail,
                     ),
                     validator: (val) {
                       if (val == null || val.isEmpty) return 'يرجى إدخال البريد الإلكتروني';
@@ -466,9 +885,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     textDirection: TextDirection.ltr,
+                    onChanged: (_) {
+                      if (auth.fieldErrorPassword != null) {
+                        auth.clearLoginErrors();
+                      }
+                    },
                     decoration: InputDecoration(
                       hintText: '••••••••',
                       prefixIcon: const Icon(Icons.lock_outline),
+                      errorText: auth.fieldErrorPassword,
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword ? Icons.visibility_off : Icons.visibility,

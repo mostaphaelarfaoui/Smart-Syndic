@@ -13,16 +13,32 @@ class AuthProvider extends ChangeNotifier {
   TenantModel? _tenant;
   bool _isLoading = false;
   String? _errorMessage;
+  String? _loginErrorType;
+  String? _fieldErrorEmail;
+  String? _fieldErrorPassword;
   Map<String, dynamic>? _pendingContactInfo;
   Map<String, dynamic>? _pendingResidentData;
+  Map<String, dynamic>? _suspendedAccountData;
 
   UserModel? get user => _user;
   TenantModel? get tenant => _tenant;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  String? get loginErrorType => _loginErrorType;
+  String? get fieldErrorEmail => _fieldErrorEmail;
+  String? get fieldErrorPassword => _fieldErrorPassword;
   Map<String, dynamic>? get pendingContactInfo => _pendingContactInfo;
   Map<String, dynamic>? get pendingResidentData => _pendingResidentData;
+  Map<String, dynamic>? get suspendedAccountData => _suspendedAccountData;
   bool get isAuthenticated => _user != null && _api.token != null;
+
+  void clearLoginErrors() {
+    _loginErrorType = null;
+    _fieldErrorEmail = null;
+    _fieldErrorPassword = null;
+    _errorMessage = null;
+    notifyListeners();
+  }
 
   Future<void> checkAuth() async {
     _isLoading = true;
@@ -51,8 +67,12 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> login(String email, String password) async {
     _isLoading = true;
     _errorMessage = null;
+    _loginErrorType = null;
+    _fieldErrorEmail = null;
+    _fieldErrorPassword = null;
     _pendingContactInfo = null;
     _pendingResidentData = null;
+    _suspendedAccountData = null;
     notifyListeners();
 
     try {
@@ -79,19 +99,44 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } on ApiException catch (e) {
-      if (e.statusCode == 403 && e.data is Map) {
-        if (e.data['role'] == 'RESIDENT' && e.data['status'] == 'PENDING') {
+      _errorMessage = e.message;
+      if (e.data is Map) {
+        final errType = e.data['error_type']?.toString();
+        _loginErrorType = errType;
+
+        if (errType == 'EMAIL_NOT_FOUND') {
+          _fieldErrorEmail = e.data['message']?.toString() ?? 'البريد الإلكتروني غير مسجل في النظام.';
+        } else if (errType == 'INVALID_PASSWORD') {
+          _fieldErrorPassword = e.data['message']?.toString() ?? 'كلمة المرور غير صحيحة.';
+        } else if (errType == 'RESIDENT_PENDING_APPROVAL') {
           _pendingResidentData = Map<String, dynamic>.from(e.data);
-        } else if (e.data['contact_info'] != null) {
-          _pendingContactInfo = Map<String, dynamic>.from(e.data['contact_info']);
+        } else if (errType == 'SYNDIC_PENDING_APPROVAL') {
+          if (e.data['contact_info'] != null) {
+            _pendingContactInfo = Map<String, dynamic>.from(e.data['contact_info']);
+          }
+        } else if (errType == 'RESIDENT_SUSPENDED' || errType == 'SYNDIC_SUSPENDED' || errType == 'ACCOUNT_SUSPENDED') {
+          _suspendedAccountData = Map<String, dynamic>.from(e.data);
+        } else if (e.statusCode == 403) {
+          if (e.data['role'] == 'RESIDENT' && e.data['status'] == 'PENDING') {
+            _pendingResidentData = Map<String, dynamic>.from(e.data);
+          } else if (e.data['contact_info'] != null) {
+            _pendingContactInfo = Map<String, dynamic>.from(e.data['contact_info']);
+          } else {
+            _suspendedAccountData = Map<String, dynamic>.from(e.data);
+          }
         }
       }
-      _errorMessage = e.message;
       _isLoading = false;
       notifyListeners();
       return false;
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      final msg = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = msg;
+      if (msg.contains('تعذر الاتصال') || msg.contains('SocketException') || msg.contains('TimeoutException')) {
+        _loginErrorType = 'NETWORK_ERROR';
+      } else {
+        _loginErrorType = 'UNKNOWN_ERROR';
+      }
       _isLoading = false;
       notifyListeners();
       return false;
