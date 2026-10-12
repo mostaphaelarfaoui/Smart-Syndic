@@ -2,9 +2,12 @@
 
 namespace App\Filament\Syndic\Widgets;
 
+use App\Filament\Syndic\Pages\ResidenceSettings;
+use App\Filament\Syndic\Resources\ApartmentResource;
+use App\Filament\Syndic\Resources\ExpenseResource;
+use App\Filament\Syndic\Resources\PaymentResource;
 use App\Models\Apartment;
 use App\Models\Building;
-use App\Models\Tenant;
 use App\Models\User;
 use Filament\Widgets\Widget;
 
@@ -25,9 +28,9 @@ class ResidenceHeaderWidget extends Widget
             return [];
         }
 
-        $totalBuildings = Building::where('tenant_id', $tenant->id)->count();
+        $totalBuildings  = Building::where('tenant_id', $tenant->id)->count();
         $totalApartments = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenant->id))->count();
-        $totalResidents = User::where('tenant_id', $tenant->id)->where('role', 'RESIDENT')->where('status', 'ACTIVE')->count();
+        $totalResidents  = User::where('tenant_id', $tenant->id)->where('role', 'RESIDENT')->where('status', 'ACTIVE')->count();
 
         $propertyTypeLabel = match ($tenant->property_type) {
             'SINGLE_BUILDING'        => 'عمارة منفردة',
@@ -38,12 +41,16 @@ class ResidenceHeaderWidget extends Widget
         };
 
         return [
-            'tenant'            => $tenant,
-            'user'              => $user,
-            'propertyTypeLabel' => $propertyTypeLabel,
-            'totalBuildings'    => $totalBuildings,
-            'totalApartments'   => $totalApartments,
-            'totalResidents'    => $totalResidents,
+            'tenant'               => $tenant,
+            'user'                 => $user,
+            'propertyTypeLabel'    => $propertyTypeLabel,
+            'totalBuildings'       => $totalBuildings,
+            'totalApartments'      => $totalApartments,
+            'totalResidents'       => $totalResidents,
+            'paymentCreateUrl'     => PaymentResource::getUrl('create'),
+            'expenseCreateUrl'     => ExpenseResource::getUrl('create'),
+            'apartmentsIndexUrl'   => ApartmentResource::getUrl('index'),
+            'residenceSettingsUrl' => ResidenceSettings::getUrl(),
         ];
     }
 }
