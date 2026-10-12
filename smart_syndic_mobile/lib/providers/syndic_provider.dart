@@ -150,6 +150,7 @@ class SyndicProvider extends ChangeNotifier {
     required String title,
     required double amount,
     required String expenseDate,
+    String paymentMethod = 'CASH',
     String? invoiceFilePath,
   }) async {
     _isLoading = true;
@@ -162,6 +163,7 @@ class SyndicProvider extends ChangeNotifier {
         'title': title,
         'amount': amount.toString(),
         'expense_date': expenseDate,
+        'payment_method': paymentMethod,
       };
 
       if (invoiceFilePath != null && invoiceFilePath.isNotEmpty) {
@@ -178,6 +180,7 @@ class SyndicProvider extends ChangeNotifier {
           'title': title,
           'amount': amount,
           'expense_date': expenseDate,
+          'payment_method': paymentMethod,
         });
       }
 
@@ -344,6 +347,64 @@ class SyndicProvider extends ChangeNotifier {
     }
   }
 
+
+  /// Feature 4 — Toggle apartment is_billable flag.
+  Future<bool> toggleApartmentBillable(String apartmentId) async {
+    try {
+      await _api.put(ApiConstants.apartmentToggleBillable(apartmentId), {});
+      await fetchApartments();
+      await fetchDashboardKpis();
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Feature 12 — Confirm a DRAFT payment.
+  Future<bool> confirmPayment(String paymentId) async {
+    try {
+      await _api.post(ApiConstants.paymentConfirm(paymentId), {});
+      await fetchPayments();
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Feature 12 — Send a CONFIRMED payment to the resident.
+  Future<bool> sendPaymentToResident(String paymentId) async {
+    try {
+      await _api.post(ApiConstants.paymentSend(paymentId), {});
+      await fetchPayments();
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Feature 12 — Delete a DRAFT payment (locked once confirmed).
+  Future<bool> deletePayment(String paymentId) async {
+    try {
+      await _api.delete('${ApiConstants.syndicPayments}/$paymentId');
+      await fetchPayments();
+      await fetchDashboardKpis();
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
   Future<void> fetchPendingResidents() async {
     try {
       final response = await _api.get(ApiConstants.syndicPendingResidents);
@@ -530,3 +591,4 @@ class SyndicProvider extends ChangeNotifier {
     }
   }
 }
+

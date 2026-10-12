@@ -36,6 +36,7 @@ class PdfReceiptService
             'receipt_number' => $payment->receipt_number,
             'amount_words'   => $this->amountToWords($payment->amount_paid),
             'qr_data'        => $this->generateQrData($payment),
+            'stamp_base64'   => $this->getStampBase64($payment->tenant), // Feature 1
         ];
 
         // Render HTML from Blade template
@@ -119,5 +120,30 @@ class PdfReceiptService
     private function generateQrData(Payment $payment): string
     {
         return url("/api/v1/verify-receipt/{$payment->receipt_number}");
+    }
+
+    /**
+     * Feature 1 — Get tenant stamp image as base64 for embedding in mPDF.
+     * mPDF requires either absolute path or base64 data URIs for images.
+     */
+    private function getStampBase64(\App\Models\Tenant $tenant): ?string
+    {
+        if (empty($tenant->stamp_image_path)) {
+            return null;
+        }
+
+        $disk = config('smartsyndic.uploads.storage_disk', 'public');
+
+        try {
+            $contents = \Illuminate\Support\Facades\Storage::disk($disk)->get($tenant->stamp_image_path);
+            if (! $contents) {
+                return null;
+            }
+
+            $mime = \Illuminate\Support\Facades\Storage::disk($disk)->mimeType($tenant->stamp_image_path);
+            return 'data:' . $mime . ';base64,' . base64_encode($contents);
+        } catch (\Throwable) {
+            return null;
+        }
     }
 }

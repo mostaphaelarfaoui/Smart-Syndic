@@ -18,12 +18,25 @@ class Apartment extends Model
         'unit_number',
         'floor',
         'monthly_fee',
+        'is_billable',  // Feature 4 & 5: toggle billing for vacant/developer units
     ];
 
     protected $casts = [
         'floor'       => 'integer',
         'monthly_fee' => 'decimal:2',
+        'is_billable' => 'boolean',
     ];
+
+    // ─── Scopes ───────────────────────────────────────────────────
+
+    /**
+     * Feature 4 & 5: Only include apartments that should be billed.
+     * Excludes developer-owned vacant units (is_billable = false).
+     */
+    public function scopeBillable($query)
+    {
+        return $query->where('is_billable', true);
+    }
 
     // ─── Relationships ────────────────────────────────────────────────
 

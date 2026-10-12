@@ -38,11 +38,18 @@ class ApartmentController extends Controller
                 'total_floors' => $building->total_floors,
                 'apartments'   => $building->apartments->map(function ($apt) use ($building) {
                     $resident = $apt->residents->first();
-                    $totalPaid = (float) $apt->payments->sum('amount_paid');
+                    $confirmedPayments = $apt->payments->filter(fn ($p) => $p->status !== 'DRAFT');
+                    $totalPaid = (float) $confirmedPayments->sum('amount_paid');
                     
-                    $monthsActive = max(1, $apt->created_at->diffInMonths(now()) + 1);
-                    $totalDue = $apt->monthly_fee * $monthsActive;
-                    $arrears = max(0, round($totalDue - $totalPaid, 2));
+                    if (! $apt->is_billable) {
+                        $arrears = 0.0;
+                        $isSettled = true;
+                    } else {
+                        $monthsActive = max(1, $apt->created_at->diffInMonths(now()) + 1);
+                        $totalDue = $apt->monthly_fee * $monthsActive;
+                        $arrears = max(0, round($totalDue - $totalPaid, 2));
+                        $isSettled = $arrears <= 0;
+                    }
 
                     return [
                         'id'             => $apt->id,
@@ -52,9 +59,10 @@ class ApartmentController extends Controller
                         'unit_number'    => $apt->unit_number,
                         'floor'          => $apt->floor,
                         'monthly_fee'    => (float) $apt->monthly_fee,
+                        'is_billable'    => (bool) $apt->is_billable,
                         'total_paid'     => $totalPaid,
                         'arrears'        => $arrears,
-                        'is_settled'     => $arrears <= 0,
+                        'is_settled'     => $isSettled,
                         'resident'       => $resident ? [
                             'id'             => $resident->id,
                             'name'           => $resident->full_name,
@@ -308,6 +316,31 @@ class ApartmentController extends Controller
 
         return response()->json([
             'message' => 'تم حذف الشقة بنجاح',
+        ]);
+    }
+
+    /**
+     * POST /api/v1/syndic/apartments/{id}/toggle-billable
+     *
+     * Feature 4 — Toggle whether a vacant apartment is included in billing.
+     *
+     * is_billable = false → Developer-owned, no residents, EXCLUDED from all financial calculations.
+     * is_billable = true  → Should be billed (even if resident hasn't registered yet).
+     */
+    public function toggleBillable(Request $request, string $id): JsonResponse
+    {
+        $tenantId  = $request->user()->tenant_id;
+        $apartment = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))
+            ->findOrFail($id);
+
+        $apartment->update(['is_billable' => ! $apartment->is_billable]);
+
+        $statusAr = $apartment->is_billable ? 'مدرجة في الحساب' : 'مستثناة من الحساب';
+
+        return response()->json([
+            'message'     => "تم تغيير حالة الشقة: {$statusAr}.",
+            'apartment_id'=> $apartment->id,
+            'is_billable' => $apartment->is_billable,
         ]);
     }
 }

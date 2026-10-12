@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\Syndic\PaymentController;
 use App\Http\Controllers\Api\V1\Syndic\PendingResidentController;
 use App\Http\Controllers\Api\V1\Syndic\ReportController;
 use App\Http\Controllers\Api\V1\Syndic\SuggestionPollController;
+use App\Http\Controllers\Api\V1\Syndic\TenantSettingsController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -55,11 +56,21 @@ Route::middleware(['auth:sanctum', 'tenant.scope', 'tenant.active'])->group(func
         ->middleware('role:ADMIN_SYNDIC')
         ->group(function () {
 
-            // Dashboard KPIs
+            // ─── Dashboard KPIs ──────────────────────────────────
             Route::get('/dashboard/kpis', [DashboardController::class, 'kpis'])
                 ->name('syndic.dashboard.kpis');
 
-            // Real Estate & Apartments
+            // ─── Tenant Settings (Feature 1, 9) ──────────────────
+            Route::get('/settings', [TenantSettingsController::class, 'show'])
+                ->name('syndic.settings.show');
+            Route::put('/settings', [TenantSettingsController::class, 'update'])
+                ->name('syndic.settings.update');
+            Route::post('/settings/stamp', [TenantSettingsController::class, 'uploadStamp'])
+                ->name('syndic.settings.stamp.upload');
+            Route::delete('/settings/stamp', [TenantSettingsController::class, 'deleteStamp'])
+                ->name('syndic.settings.stamp.delete');
+
+            // ─── Apartments ───────────────────────────────────────
             Route::get('/apartments', [ApartmentController::class, 'index'])
                 ->name('syndic.apartments.index');
             Route::post('/apartments', [ApartmentController::class, 'store'])
@@ -71,8 +82,11 @@ Route::middleware(['auth:sanctum', 'tenant.scope', 'tenant.active'])->group(func
                 ->name('syndic.apartments.update');
             Route::delete('/apartments/{id}', [ApartmentController::class, 'destroy'])
                 ->name('syndic.apartments.destroy');
+            // Feature 4 — Toggle billing for developer-owned vacant apartments
+            Route::match(['put', 'post'], '/apartments/{id}/toggle-billable', [ApartmentController::class, 'toggleBillable'])
+                ->name('syndic.apartments.toggle-billable');
 
-            // Pending Resident Management
+            // ─── Pending Resident Management ──────────────────────
             Route::get('/pending-residents', [PendingResidentController::class, 'index'])
                 ->name('syndic.pending-residents.index');
             Route::post('/pending-residents/{id}/approve', [PendingResidentController::class, 'approve'])
@@ -80,25 +94,34 @@ Route::middleware(['auth:sanctum', 'tenant.scope', 'tenant.active'])->group(func
             Route::post('/pending-residents/{id}/reject', [PendingResidentController::class, 'reject'])
                 ->name('syndic.pending-residents.reject');
 
-            // Payments & Collections
+            // ─── Payments & Collections (Feature 12 workflow) ─────
             Route::get('/payments', [PaymentController::class, 'index'])
                 ->name('syndic.payments.index');
             Route::post('/payments', [PaymentController::class, 'store'])
                 ->middleware('throttle:financial')
                 ->name('syndic.payments.store');
+            // Feature 12 — Workflow transitions
+            Route::put('/payments/{id}', [PaymentController::class, 'update'])
+                ->name('syndic.payments.update');
+            Route::delete('/payments/{id}', [PaymentController::class, 'destroy'])
+                ->name('syndic.payments.destroy');
+            Route::post('/payments/{id}/confirm', [PaymentController::class, 'confirm'])
+                ->name('syndic.payments.confirm');
+            Route::post('/payments/{id}/send', [PaymentController::class, 'send'])
+                ->name('syndic.payments.send');
 
-            // Expenses
+            // ─── Expenses ─────────────────────────────────────────
             Route::get('/expenses', [ExpenseController::class, 'index'])
                 ->name('syndic.expenses.index');
             Route::post('/expenses', [ExpenseController::class, 'store'])
                 ->middleware('throttle:financial')
                 ->name('syndic.expenses.store');
 
-            // Financial Reports
+            // ─── Financial Reports ────────────────────────────────
             Route::get('/reports/export', [ReportController::class, 'export'])
                 ->name('syndic.reports.export');
 
-            // Suggestions & Polls
+            // ─── Suggestions & Polls ──────────────────────────────
             Route::get('/suggestions', [SuggestionPollController::class, 'suggestions'])
                 ->name('syndic.suggestions.index');
             Route::post('/suggestions/{id}/convert-to-poll', [SuggestionPollController::class, 'convertToPoll'])
@@ -112,7 +135,7 @@ Route::middleware(['auth:sanctum', 'tenant.scope', 'tenant.active'])->group(func
             Route::post('/polls', [SuggestionPollController::class, 'createPoll'])
                 ->name('syndic.polls.store');
 
-            // Invitation Code
+            // ─── Invitation Code ──────────────────────────────────
             Route::post('/invitation-code/regenerate', [InvitationCodeController::class, 'regenerate'])
                 ->name('syndic.invitation-code.regenerate');
         });

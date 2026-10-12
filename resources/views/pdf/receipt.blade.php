@@ -173,6 +173,12 @@
                     <div class="header-title">{{ $tenant->name }}</div>
                     <div class="header-sub">وصل أداء واجب السانديك / Reçu de Cotisation Syndic</div>
                 </td>
+                <td style="text-align: center; vertical-align: middle; width: 90px;">
+                    {{-- Feature 1 — Stamp image (if configured by syndic) --}}
+                    @if(!empty($stamp_base64))
+                        <img src="{{ $stamp_base64 }}" style="max-width:80px; max-height:80px; opacity:0.85;" alt="طابع" />
+                    @endif
+                </td>
                 <td style="text-align: left; vertical-align: top;" class="receipt-badge">
                     <div class="receipt-number">{{ $receipt_number }}</div>
                     <div class="receipt-date">{{ now()->format('d/m/Y H:i') }}</div>
@@ -247,8 +253,15 @@
                     تم التحصيل والتسجيل في سجلات الإقامة بتاريخ {{ $payment->payment_date->format('d/m/Y') }}
                 </td>
                 <td class="signature-box">
-                    <div class="signature-title">Cachet et Signature du Syndic<br>ختم وتوقيع السانديك</div>
-                    <div class="signature-line">إدارة الإقامة</div>
+                    @if(!empty($stamp_base64))
+                        {{-- Feature 1 — Show stamp in signature area too --}}
+                        <div style="text-align:center;">
+                            <img src="{{ $stamp_base64 }}" style="max-width:70px; max-height:70px; opacity:0.80;" alt="طابع" />
+                        </div>
+                    @else
+                        <div class="signature-title">Cachet et Signature du Syndic<br>ختم وتوقيع السانديك</div>
+                        <div class="signature-line">إدارة الإقامة</div>
+                    @endif
                 </td>
             </tr>
         </table>

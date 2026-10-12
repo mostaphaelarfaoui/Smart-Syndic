@@ -24,12 +24,16 @@ class RegisterSyndicController extends Controller
         $result = DB::transaction(function () use ($request) {
             // Create tenant (organization) in pending state
             $tenant = Tenant::create([
-                'name'            => $request->organization_name,
-                'property_type'   => $request->property_type,
-                'plan_type'       => 'TRIAL',
-                'status'          => 'PENDING_APPROVAL',
-                'invitation_code' => Tenant::generateInvitationCode(),
-                'trial_ends_at'   => now()->addDays(30),
+                'name'                      => $request->organization_name,
+                'property_type'             => $request->property_type,
+                'plan_type'                 => 'TRIAL',
+                'status'                    => 'PENDING_APPROVAL',
+                'invitation_code'           => Tenant::generateInvitationCode(),
+                'trial_ends_at'             => now()->addDays(30),
+                // Feature 9 — Opening treasury & bank balance (set at registration, locked after)
+                'initial_treasury_balance'  => (float) ($request->initial_treasury_balance ?? 0),
+                'initial_bank_balance'      => (float) ($request->initial_bank_balance ?? 0),
+                'initial_balance_locked'    => $request->has('initial_treasury_balance') || $request->has('initial_bank_balance'),
             ]);
 
             // Create Syndic admin user
@@ -147,7 +151,13 @@ class RegisterSyndicController extends Controller
         });
 
         return response()->json([
-            'message' => __('auth.syndic_registration_pending'),
+            'message'      => __('auth.syndic_registration_pending'),
+            // Feature 14 — Contact info for the pending syndic to reach the admin
+            'contact_info' => [
+                'email'    => config('smartsyndic.admin_contact.email', 'support@smartsyndic.com'),
+                'phone'    => config('smartsyndic.admin_contact.phone', '+212 600 000 000'),
+                'whatsapp' => config('smartsyndic.admin_contact.whatsapp'),
+            ],
             'tenant'  => [
                 'id'              => $result['tenant']->id,
                 'name'            => $result['tenant']->name,

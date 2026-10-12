@@ -3,7 +3,7 @@ class ApiConstants {
   // - Android Emulator: 'http://10.0.2.2:8000/api/v1'
   // - Physical Phone: 'http://<YOUR_PC_IP>:8000/api/v1'
   // - Windows / Web: 'http://127.0.0.1:8000/api/v1'
-  static const String defaultBaseUrl = 'http://192.168.11.168:8000/api/v1'; // Fast local Wi-Fi connection
+  static const String defaultBaseUrl = 'http://192.168.11.171:8000/api/v1'; // Fast local Wi-Fi connection
 
   // Auth endpoints
   static const String login = '/auth/login';
@@ -23,6 +23,17 @@ class ApiConstants {
   static const String syndicPolls = '/syndic/polls';
   static const String syndicInviteCodeRegen = '/syndic/invitation-code/regenerate';
   static const String syndicReportsExport = '/syndic/reports/export';
+
+  // Feature 1 — Tenant settings & stamp
+  static const String syndicSettings = '/syndic/settings';
+  static const String syndicStampUpload = '/syndic/settings/stamp';
+
+  // Feature 4 — Toggle apartment billable
+  static String apartmentToggleBillable(String id) => '/syndic/apartments/$id/toggle-billable';
+
+  // Feature 12 — Payment workflow
+  static String paymentConfirm(String id) => '/syndic/payments/$id/confirm';
+  static String paymentSend(String id) => '/syndic/payments/$id/send';
 
   // Resident endpoints
   static const String residentProfile = '/resident/profile';

@@ -180,6 +180,108 @@ class SyndicDashboardTab extends StatelessWidget {
               ),
             ),
 
+          // Features 9 & 11 — Treasury Breakdown (Cash & Bank)
+          Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(8),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.account_balance_wallet, color: AppColors.primary, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'توزيع الخزينة والأرصدة',
+                          style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      'المجموع: ${(kpis?.treasuryBalance ?? 0).toStringAsFixed(0)} د.م',
+                      style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.primary),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withAlpha(15),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.green.withAlpha(40)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.payments_outlined, size: 16, color: Colors.green),
+                                const SizedBox(width: 6),
+                                Text('الصندوق (كاش)', style: GoogleFonts.cairo(fontSize: 12, color: Colors.green[800], fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              '${(kpis?.cashBalance ?? 0).toStringAsFixed(2)} د.م',
+                              style: GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.green[900]),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withAlpha(15),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.blue.withAlpha(40)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.account_balance_outlined, size: 16, color: Colors.blue),
+                                const SizedBox(width: 6),
+                                Text('الحساب البنكي', style: GoogleFonts.cairo(fontSize: 12, color: Colors.blue[800], fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              '${(kpis?.bankBalance ?? 0).toStringAsFixed(2)} د.م',
+                              style: GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.blue[900]),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
           // Metric Cards Grid
           GridView.count(
             crossAxisCount: 2,
@@ -192,7 +294,7 @@ class SyndicDashboardTab extends StatelessWidget {
               StatCard(
                 title: 'مداخيل الشهر',
                 value: '${(kpis?.monthRevenue ?? 0).toStringAsFixed(0)} درهم',
-                subtitle: 'نسبة الاستخلاص: ${(kpis?.collectionRate ?? 0).toStringAsFixed(0)}%',
+                subtitle: 'المتوقع: ${(kpis?.monthlyExpectedTotal ?? 0).toStringAsFixed(0)} د.م (${(kpis?.collectionRate ?? 0).toStringAsFixed(0)}%)',
                 icon: Icons.trending_up,
                 iconColor: AppColors.success,
                 onTap: () => onNavigateTab(2), // Payments tab (index 2)

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../settings/server_settings_dialog.dart';
@@ -55,6 +56,10 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
   final _singleTotalUnitsController = TextEditingController();
   final _singleFeeController = TextEditingController();
 
+  // Feature 9 — Initial balances (Cash & Bank)
+  final _initialTreasuryBalanceController = TextEditingController();
+  final _initialBankBalanceController = TextEditingController();
+
   // Multi Building Complex List (starts with 1 empty building)
   final List<_BuildingConfig> _complexBuildings = [
     _BuildingConfig(),
@@ -73,6 +78,8 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
     _orgNameController.dispose();
     _singleTotalUnitsController.dispose();
     _singleFeeController.dispose();
+    _initialTreasuryBalanceController.dispose();
+    _initialBankBalanceController.dispose();
     for (var b in _complexBuildings) {
       b.dispose();
     }
@@ -125,6 +132,9 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
     final rawPhone = _phoneController.text.trim().replaceAll(RegExp(r'[\s\-\.\(\)]'), '');
     final cleanPhone = rawPhone.startsWith('212') && !rawPhone.startsWith('+') ? '+$rawPhone' : rawPhone;
 
+    final initialTreasury = double.tryParse(_initialTreasuryBalanceController.text.trim());
+    final initialBank = double.tryParse(_initialBankBalanceController.text.trim());
+
     final success = await auth.registerSyndic(
       firstName: _firstNameController.text.trim(),
       lastName: _lastNameController.text.trim(),
@@ -135,11 +145,18 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
       propertyType: _propertyType,
       totalUnits: totalUnits,
       defaultMonthlyFee: defaultFee,
+      initialTreasuryBalance: initialTreasury,
+      initialBankBalance: initialBank,
       buildings: buildingsPayload,
     );
 
     if (mounted) {
       if (success) {
+        final contact = auth.pendingContactInfo;
+        final adminPhone = contact?['phone'] ?? '+212 600 000 000';
+        final adminEmail = contact?['email'] ?? 'support@smartsyndic.com';
+        final adminWhatsapp = contact?['whatsapp'] ?? adminPhone;
+
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -147,14 +164,87 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: Row(
               children: [
-                const Icon(Icons.check_circle, color: AppColors.success, size: 28),
+                const Icon(Icons.hourglass_top_rounded, color: Colors.amber, size: 28),
                 const SizedBox(width: 8),
-                Text('تم التسجيل بنجاح', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+                Expanded(
+                  child: Text('طلبك في انتظار الموافقة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 16)),
+                ),
               ],
             ),
-            content: Text(
-              'تم إنشاء حساب السانديك وتوليد الشقق التابعة للعقار بنجاح! طلبكم قيد المراجعة من طرف الإدارة وسيتم تفعيله قريباً.',
-              style: GoogleFonts.cairo(fontSize: 14),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'تم تسجيل حساب السانديك بنجاح! الإقامة حالياً في انتظار تفعيل السوبر أدمن (SuperAdmin) قبل أن تتمكن من الدخول.',
+                    style: GoogleFonts.cairo(fontSize: 13, height: 1.5),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withAlpha(15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.primary.withAlpha(40)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'معلومات التواصل مع إدارة المنصة للتفعيل:',
+                          style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.primary),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(Icons.phone, size: 16, color: AppColors.textSecondary),
+                            const SizedBox(width: 6),
+                            Text(adminPhone, style: GoogleFonts.cairo(fontSize: 12)),
+                            const Spacer(),
+                            IconButton(
+                              icon: const Icon(Icons.call, size: 18, color: Colors.green),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              onPressed: () async {
+                                final uri = Uri.parse('tel:${adminPhone.replaceAll(" ", "")}');
+                                if (await canLaunchUrl(uri)) await launchUrl(uri);
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            const Icon(Icons.chat, size: 16, color: Color(0xFF25D366)),
+                            const SizedBox(width: 6),
+                            Text('واتساب الدعم', style: GoogleFonts.cairo(fontSize: 12)),
+                            const Spacer(),
+                            IconButton(
+                              icon: const Icon(Icons.open_in_new, size: 18, color: Color(0xFF25D366)),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              onPressed: () async {
+                                final clean = adminWhatsapp.replaceAll(RegExp(r'[^0-9]'), '');
+                                final uri = Uri.parse('https://wa.me/$clean?text=${Uri.encodeComponent("السلام عليكم، لقد سجلت حساب سانديك جديد في Smart Syndic وأنتظر الموافقة.")}');
+                                if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            const Icon(Icons.email_outlined, size: 16, color: AppColors.textSecondary),
+                            const SizedBox(width: 6),
+                            Expanded(child: Text(adminEmail, style: GoogleFonts.cairo(fontSize: 12), overflow: TextOverflow.ellipsis)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
             actions: [
               ElevatedButton(
@@ -167,7 +257,7 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
                   Navigator.pop(ctx);
                   Navigator.pop(context);
                 },
-                child: Text('العودة لتسجيل الدخول', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+                child: Text('فهمت، العودة لتسجيل الدخول', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -481,9 +571,72 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
               ],
               const SizedBox(height: 24),
 
+              // Feature 9: Initial Balances (Cash & Bank)
+              Text(
+                '3. الأرصدة الافتتاحية الأولية (اختياري):',
+                style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'أدخل المبالغ المتوفرة حالياً في صندوق الإقامة وحسابها البنكي قبل بدء التحصيل عبر التطبيق (يتم قفلها تلقائياً).',
+                style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 12),
+
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _initialTreasuryBalanceController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(
+                        labelText: 'رصيد الصندوق النقدي (كاش)',
+                        hintText: 'مثلاً: 1500.00',
+                        prefixIcon: Icon(Icons.account_balance_wallet_outlined, color: Colors.green),
+                        suffixText: 'د.م',
+                      ),
+                      validator: (v) {
+                        if (v != null && v.trim().isNotEmpty) {
+                          if (double.tryParse(v.trim()) == null || double.parse(v.trim()) < 0) {
+                            return 'يرجى إدخال مبلغ صحيح';
+                          }
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 14),
+                    TextFormField(
+                      controller: _initialBankBalanceController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(
+                        labelText: 'رصيد الحساب البنكي',
+                        hintText: 'مثلاً: 12500.00',
+                        prefixIcon: Icon(Icons.account_balance_outlined, color: Colors.blue),
+                        suffixText: 'د.م',
+                      ),
+                      validator: (v) {
+                        if (v != null && v.trim().isNotEmpty) {
+                          if (double.tryParse(v.trim()) == null || double.parse(v.trim()) < 0) {
+                            return 'يرجى إدخال مبلغ صحيح';
+                          }
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
               // Personal Information
               Text(
-                '3. المعلومات الشخصية للسانديك:',
+                '4. المعلومات الشخصية للسانديك:',
                 style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
               ),
               const SizedBox(height: 12),

@@ -305,6 +305,7 @@ class _ResidentProfileScreenState extends State<ResidentProfileScreen> {
     final totalPaid = (financial?['total_paid'] as num?)?.toDouble() ?? 0.0;
     final paymentsCount = financial?['payments_count'] ?? 0;
     final isUpToDate = financial?['is_up_to_date'] ?? (totalDue <= 0);
+    final advancePaidMonths = (financial?['advance_paid_months'] as List?)?.cast<String>() ?? [];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -537,6 +538,33 @@ class _ResidentProfileScreenState extends State<ResidentProfileScreen> {
                               ),
                             ],
                           ),
+                          if (advancePaidMonths.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: AppColors.success.withAlpha(15),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: AppColors.success.withAlpha(60)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.star, color: AppColors.success, size: 16),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'مدفوع مسبقاً حتى شهر: ${advancePaidMonths.last} (${advancePaidMonths.join("، ")})',
+                                      style: GoogleFonts.cairo(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.success,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),

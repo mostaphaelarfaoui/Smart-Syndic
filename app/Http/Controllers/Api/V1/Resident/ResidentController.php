@@ -43,7 +43,7 @@ class ResidentController extends Controller
 
         if ($apartment) {
             $balance = $this->paymentService->getApartmentBalance($apartment);
-            $payments = Payment::where('apartment_id', $apartment->id);
+            $payments = Payment::where('apartment_id', $apartment->id)->where('status', '!=', 'DRAFT');
             $totalPaid = (float) $payments->sum('amount_paid');
             $paymentsCount = (int) $payments->count();
         }
@@ -81,11 +81,15 @@ class ResidentController extends Controller
                 'email' => $syndic->email,
             ] : null,
             'financial_summary' => [
-                'total_due'      => $balance ? (float) $balance['total_due'] : 0.0,
-                'total_paid'     => $totalPaid,
-                'payments_count' => $paymentsCount,
-                'is_up_to_date'  => $balance ? ($balance['total_due'] <= 0) : true,
-                'unpaid_months'  => $balance['unpaid_months'] ?? [],
+                'total_due'       => $balance ? (float) $balance['arrears'] : 0.0, // Amount currently owed
+                'total_expected'  => $balance ? (float) $balance['total_due'] : 0.0,
+                'total_paid'      => $totalPaid,
+                'payments_count'  => $paymentsCount,
+                'is_up_to_date'   => $balance ? ((float) $balance['arrears'] <= 0) : true,
+                'unpaid_months'       => $balance['unpaid_months'] ?? [],
+                'paid_months'         => $balance['paid_months'] ?? [],
+                'advance_paid_months' => $balance['advance_paid_months'] ?? [], // Feature 7
+                'is_current_paid'     => $balance['is_current_paid'] ?? true, // Feature 7
             ],
         ]);
     }
@@ -128,6 +132,7 @@ class ResidentController extends Controller
         $apartmentIds = $user->apartments()->pluck('apartments.id');
 
         $payments = Payment::whereIn('apartment_id', $apartmentIds)
+            ->whereIn('status', ['CONFIRMED', 'SENT_TO_RESIDENT'])
             ->with('apartment.building')
             ->orderByDesc('payment_date')
             ->paginate(20);
@@ -164,6 +169,7 @@ class ResidentController extends Controller
             ->get()
             ->map(function ($apt) use ($currentMonth) {
                 $isPaid = Payment::where('apartment_id', $apt->id)
+                    ->where('status', '!=', 'DRAFT')
                     ->whereJsonContains('covered_months', $currentMonth)
                     ->exists();
 

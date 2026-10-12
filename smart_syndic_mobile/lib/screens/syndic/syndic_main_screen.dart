@@ -7,6 +7,7 @@ import '../../providers/syndic_provider.dart';
 import '../../core/services/api_service.dart';
 import '../settings/server_settings_dialog.dart';
 import '../settings/profile_settings_screen.dart';
+import '../settings/stamp_settings_screen.dart'; // Feature 1
 import 'tabs/syndic_dashboard_tab.dart';
 import 'tabs/syndic_apartments_tab.dart';
 import 'tabs/syndic_payments_tab.dart';
@@ -111,6 +112,15 @@ class _SyndicMainScreenState extends State<SyndicMainScreen> {
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const ProfileSettingsScreen()),
+            ),
+          ),
+          // Feature 1 — Stamp settings
+          IconButton(
+            icon: const Icon(Icons.verified_outlined, color: AppColors.primary),
+            tooltip: 'طابع الإقامة',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const StampSettingsScreen()),
             ),
           ),
           IconButton(

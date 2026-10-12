@@ -13,11 +13,13 @@ class AuthProvider extends ChangeNotifier {
   TenantModel? _tenant;
   bool _isLoading = false;
   String? _errorMessage;
+  Map<String, dynamic>? _pendingContactInfo;
 
   UserModel? get user => _user;
   TenantModel? get tenant => _tenant;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  Map<String, dynamic>? get pendingContactInfo => _pendingContactInfo;
   bool get isAuthenticated => _user != null && _api.token != null;
 
   Future<void> checkAuth() async {
@@ -47,6 +49,7 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> login(String email, String password) async {
     _isLoading = true;
     _errorMessage = null;
+    _pendingContactInfo = null;
     notifyListeners();
 
     try {
@@ -72,6 +75,14 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return true;
+    } on ApiException catch (e) {
+      if (e.statusCode == 403 && e.data is Map && e.data['contact_info'] != null) {
+        _pendingContactInfo = Map<String, dynamic>.from(e.data['contact_info']);
+      }
+      _errorMessage = e.message;
+      _isLoading = false;
+      notifyListeners();
+      return false;
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
       _isLoading = false;
@@ -149,6 +160,8 @@ class AuthProvider extends ChangeNotifier {
     int? totalFloors,
     int? unitsPerFloor,
     double? defaultMonthlyFee,
+    double? initialTreasuryBalance,
+    double? initialBankBalance,
     String? numberingScheme,
     List<Map<String, dynamic>>? buildings,
   }) async {
@@ -169,11 +182,16 @@ class AuthProvider extends ChangeNotifier {
         if (totalFloors != null) 'total_floors': totalFloors,
         if (unitsPerFloor != null) 'units_per_floor': unitsPerFloor,
         if (defaultMonthlyFee != null) 'default_monthly_fee': defaultMonthlyFee,
+        if (initialTreasuryBalance != null) 'initial_treasury_balance': initialTreasuryBalance,
+        if (initialBankBalance != null) 'initial_bank_balance': initialBankBalance,
         if (numberingScheme != null) 'numbering_scheme': numberingScheme,
         if (buildings != null && buildings.isNotEmpty) 'buildings': buildings,
       };
 
-      await _api.post(ApiConstants.registerSyndic, data);
+      final response = await _api.post(ApiConstants.registerSyndic, data);
+      if (response is Map && response['contact_info'] != null) {
+        _pendingContactInfo = Map<String, dynamic>.from(response['contact_info']);
+      }
 
       _isLoading = false;
       notifyListeners();

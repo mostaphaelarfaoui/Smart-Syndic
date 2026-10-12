@@ -40,6 +40,7 @@ class ExpenseController extends Controller
             'category'           => $data['category'],
             'title'              => $data['title'],
             'amount'             => $data['amount'],
+            'payment_method'     => $data['payment_method'] ?? 'CASH',
             'expense_date'       => $data['expense_date'],
             'invoice_proof_path' => $data['invoice_proof_path'],
         ]);

@@ -21,9 +21,16 @@ class _RecordExpenseDialogState extends State<RecordExpenseDialog> {
   final ImagePicker _picker = ImagePicker();
   
   String _selectedCategory = 'CLEANING';
+  String _paymentMethod = 'CASH';
   DateTime _expenseDate = DateTime.now();
   File? _invoiceImage;
   bool _isSubmitting = false;
+
+  final List<Map<String, String>> _paymentMethods = [
+    {'value': 'CASH', 'label': '💵 نقداً (يخصم من الصندوق)'},
+    {'value': 'BANK_TRANSFER', 'label': '🏦 تحويل بنكي (يخصم من البنك)'},
+    {'value': 'CHEQUE', 'label': '🧾 شيك بنكي (يخصم من البنك)'},
+  ];
 
   final List<Map<String, String>> _categories = [
     {'value': 'CLEANING', 'label': '🧹 النظافة'},
@@ -131,6 +138,7 @@ class _RecordExpenseDialogState extends State<RecordExpenseDialog> {
       category: _selectedCategory,
       amount: amount,
       expenseDate: DateFormat('yyyy-MM-dd').format(_expenseDate),
+      paymentMethod: _paymentMethod,
       invoiceFilePath: _invoiceImage?.path,
     );
 
@@ -247,6 +255,24 @@ class _RecordExpenseDialogState extends State<RecordExpenseDialog> {
                     if (num == null || num <= 0) return 'المبلغ غير صالح';
                     return null;
                   },
+                ),
+                const SizedBox(height: 16),
+
+                // Feature 11 — Payment Method (Cash vs Bank)
+                DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  initialValue: _paymentMethod,
+                  decoration: const InputDecoration(
+                    labelText: 'طريقة الدفع ومصدر الخصم',
+                    prefixIcon: Icon(Icons.account_balance_wallet_outlined, color: AppColors.textSecondary),
+                  ),
+                  items: _paymentMethods.map((m) {
+                    return DropdownMenuItem(
+                      value: m['value'],
+                      child: Text(m['label']!, style: GoogleFonts.cairo(), overflow: TextOverflow.ellipsis),
+                    );
+                  }).toList(),
+                  onChanged: (val) => setState(() => _paymentMethod = val!),
                 ),
                 const SizedBox(height: 16),
 

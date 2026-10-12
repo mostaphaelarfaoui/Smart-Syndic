@@ -28,6 +28,8 @@ class RegisterSyndicRequest extends FormRequest
             'total_floors'      => ['nullable', 'integer', 'min:1', 'max:50'],
             'units_per_floor'   => ['nullable', 'integer', 'min:1', 'max:20'],
             'default_monthly_fee' => ['nullable', 'numeric', 'min:0'],
+            'initial_treasury_balance' => ['nullable', 'numeric', 'min:0'],
+            'initial_bank_balance'     => ['nullable', 'numeric', 'min:0'],
             'buildings'         => ['nullable', 'array'],
             'buildings.*.block' => ['nullable', 'string', 'max:100'],
             'buildings.*.name'  => ['nullable', 'string', 'max:100'],

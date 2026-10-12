@@ -12,6 +12,7 @@ class ApartmentModel {
   final bool isSettled;
   final String? lastPayment;
   final List<Map<String, dynamic>> payments;
+  final bool isBillable; // Feature 4
 
   ApartmentModel({
     required this.id,
@@ -27,6 +28,7 @@ class ApartmentModel {
     this.isSettled = true,
     this.lastPayment,
     this.payments = const [],
+    this.isBillable = true, // Feature 4
   });
 
   factory ApartmentModel.fromJson(Map<String, dynamic> json, {String? bName, String? bId, String? blockName}) {
@@ -37,6 +39,9 @@ class ApartmentModel {
 
     final settledRaw = json['is_settled'];
     final isSettledBool = settledRaw == true || settledRaw == 1 || settledRaw == '1';
+
+    final isBillableRaw = json['is_billable'];
+    final isBillableBool = isBillableRaw == null || isBillableRaw == true || isBillableRaw == 1 || isBillableRaw == '1';
 
     return ApartmentModel(
       id: json['id'] ?? '',
@@ -52,6 +57,7 @@ class ApartmentModel {
       isSettled: isSettledBool,
       lastPayment: json['last_payment'],
       payments: parsedPayments,
+      isBillable: isBillableBool, // Feature 4
     );
   }
 }

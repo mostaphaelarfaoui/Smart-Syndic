@@ -10,6 +10,42 @@ import '../dialogs/add_apartment_dialog.dart';
 import '../dialogs/apartment_details_dialog.dart';
 import '../dialogs/bulk_generate_apartments_dialog.dart';
 
+// Feature 4 helper — toggle billable from apartment list
+extension _BillableToggle on _SyndicApartmentsTabState {
+  Future<void> toggleBillable(BuildContext ctx, ApartmentModel apt) async {
+    final label = apt.isBillable ? 'إلغاء الاحتساب (شقة المنعش)' : 'إعادة الاحتساب في الحسابات';
+    final confirm = await showDialog<bool>(
+      context: ctx,
+      builder: (c) => AlertDialog(
+        title: Text('تغيير حالة الشقة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+        content: Text(
+          apt.isBillable
+              ? 'سيتم استثناء هذه الشقة من حسابات الإقامة (مخصصة للمنعش العقاري).'
+              : 'سيتم إدراج هذه الشقة في حسابات الإقامة.',
+          style: GoogleFonts.cairo(),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c, false), child: Text('إلغاء', style: GoogleFonts.cairo())),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: apt.isBillable ? AppColors.warning : AppColors.success),
+            onPressed: () => Navigator.pop(c, true),
+            child: Text(label, style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !ctx.mounted) return;
+    final syndic = Provider.of<SyndicProvider>(ctx, listen: false);
+    final ok = await syndic.toggleApartmentBillable(apt.id);
+    if (ctx.mounted) {
+      ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+        content: Text(ok ? 'تم تحديث حالة الشقة' : (syndic.errorMessage ?? 'حدث خطأ'), style: GoogleFonts.cairo()),
+        backgroundColor: ok ? AppColors.success : AppColors.danger,
+      ));
+    }
+  }
+}
+
 class SyndicApartmentsTab extends StatefulWidget {
   const SyndicApartmentsTab({super.key});
 
@@ -333,6 +369,18 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
                                       tooltip: 'مراسلة واتساب',
                                     ),
                                   ],
+
+                                  // Feature 4 — Toggle is_billable (visible for vacant apts only)
+                                  if (apt.resident == null)
+                                    IconButton(
+                                      onPressed: () => toggleBillable(context, apt),
+                                      icon: Icon(
+                                        apt.isBillable ? Icons.calculate_outlined : Icons.block_outlined,
+                                        color: apt.isBillable ? AppColors.textSecondary : AppColors.warning,
+                                        size: 20,
+                                      ),
+                                      tooltip: apt.isBillable ? 'تعليم كشقة المنعش (استثناء)' : 'إعادة الاحتساب',
+                                    ),
 
                                   const Icon(Icons.chevron_left, color: AppColors.textLight, size: 20),
                                 ],

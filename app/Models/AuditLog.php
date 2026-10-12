@@ -23,12 +23,14 @@ class AuditLog extends Model
         'ip_address',
         'user_agent',
         'metadata',
+        'payment_snapshot', // Feature 3 — immutable receipt copy for dispute resolution
         'created_at',
     ];
 
     protected $casts = [
-        'metadata'   => 'array',
-        'created_at' => 'datetime',
+        'metadata'         => 'array',
+        'payment_snapshot' => 'array', // Feature 3
+        'created_at'       => 'datetime',
     ];
 
     // ─── Immutability Guards ──────────────────────────────────────────
@@ -70,6 +72,7 @@ class AuditLog extends Model
         string $action,
         ?string $targetTenantId = null,
         array $metadata = [],
+        ?array $paymentSnapshot = null,
     ): self {
         return self::create([
             'actor_id'         => $actorId,
@@ -78,7 +81,9 @@ class AuditLog extends Model
             'ip_address'       => request()->ip() ?? '0.0.0.0',
             'user_agent'       => request()->userAgent() ?? 'unknown',
             'metadata'         => $metadata,
+            'payment_snapshot' => $paymentSnapshot, // Feature 3
             'created_at'       => now(),
         ]);
     }
 }
+

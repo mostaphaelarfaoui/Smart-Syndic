@@ -27,9 +27,21 @@ class LoginController extends Controller
 
         // Block inactive accounts (except Super Admins)
         if ($user->status !== 'ACTIVE' && ! $user->isSuperAdmin()) {
+            // Feature 14 — For syndics awaiting approval, return contact info
+            $contactInfo = null;
+            if ($user->isAdminSyndic() && $user->tenant) {
+                $contactInfo = $user->tenant->contact_info ?? [
+                    'email' => config('smartsyndic.admin_contact.email', 'support@smartsyndic.com'),
+                    'phone' => config('smartsyndic.admin_contact.phone', '+212 600 000 000'),
+                    'whatsapp' => config('smartsyndic.admin_contact.whatsapp'),
+                ];
+            }
+
             return response()->json([
-                'message' => __('auth.account_inactive'),
-                'status'  => $user->status,
+                'message'      => __('auth.account_inactive'),
+                'status'       => $user->status,
+                'tenant_status'=> $user->tenant?->status,
+                'contact_info' => $contactInfo, // Feature 14
             ], 403);
         }
 

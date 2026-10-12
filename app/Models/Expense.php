@@ -19,6 +19,7 @@ class Expense extends Model
         'category',
         'title',
         'amount',
+        'payment_method', // Feature 11: CASH, BANK_TRANSFER, CHEQUE
         'expense_date',
         'invoice_proof_path',
     ];

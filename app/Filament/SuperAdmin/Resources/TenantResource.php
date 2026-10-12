@@ -3,6 +3,12 @@
 namespace App\Filament\SuperAdmin\Resources;
 
 use App\Filament\SuperAdmin\Resources\TenantResource\Pages;
+use App\Models\Apartment;
+use App\Models\Building;
+use App\Models\Expense;
+use App\Models\Payment;
+use App\Models\Poll;
+use App\Models\Suggestion;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\AuditService;
@@ -12,6 +18,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
+use Illuminate\Support\Facades\DB;
 
 class TenantResource extends Resource
 {
@@ -234,6 +241,52 @@ class TenantResource extends Resource
                             auth()->login($admin);
                             redirect('/syndic');
                         }
+                    }),
+
+                // Feature 15 — Reject & cascade delete for PENDING_APPROVAL tenants
+                Action::make('reject')
+                    ->label('رفض وحذف')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn (Tenant $record) => $record->status === 'PENDING_APPROVAL')
+                    ->requiresConfirmation()
+                    ->modalHeading('رفض وحذف الإقامة نهائياً')
+                    ->modalDescription('هذا الإجراء سيحذف الإقامة وجميع بياناتها (المستخدمون، الشقق، المدفوعات) بشكل نهائي ولا يمكن التراجع عنه.')
+                    ->form([
+                        Forms\Components\Textarea::make('rejection_reason')
+                            ->label('سبب الرفض (اختياري)')
+                            ->rows(3)
+                            ->maxLength(1000),
+                    ])
+                    ->action(function (Tenant $record, array $data) {
+                        DB::transaction(function () use ($record, $data) {
+                            // Log before deletion
+                            app(AuditService::class)->logTenantAction(
+                                auth()->id(),
+                                'TENANT_REJECTED',
+                                $record->id,
+                                [
+                                    'tenant_name'      => $record->name,
+                                    'rejection_reason' => $data['rejection_reason'] ?? null,
+                                ]
+                            );
+
+                            // Cascade delete: payments, expenses, suggestions, polls, apartments, buildings, users, then tenant
+                            $tenantId = $record->id;
+
+                            Payment::where('tenant_id', $tenantId)->delete();
+                            Expense::where('tenant_id', $tenantId)->delete();
+                            Suggestion::where('tenant_id', $tenantId)->delete();
+                            Poll::where('tenant_id', $tenantId)->delete();
+
+                            $buildingIds = Building::where('tenant_id', $tenantId)->pluck('id');
+                            Apartment::whereIn('building_id', $buildingIds)->delete();
+                            Building::where('tenant_id', $tenantId)->delete();
+
+                            User::where('tenant_id', $tenantId)->delete();
+
+                            $record->delete();
+                        });
                     }),
             ])
             ->bulkActions([

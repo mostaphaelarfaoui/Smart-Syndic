@@ -17,12 +17,14 @@ class ResidentHomeTab extends StatelessWidget {
     final auth = context.watch<AuthProvider>();
     final resident = context.watch<ResidentProvider>();
     final balance = resident.balanceInfo;
+    final balanceData = (balance?['balance'] as Map<String, dynamic>?) ?? balance;
 
     final unitNumber = balance?['apartment']?['unit_number'] ?? '-';
     final floor = balance?['apartment']?['floor']?.toString() ?? '-';
-    final monthlyFee = (balance?['apartment']?['monthly_fee'] as num?)?.toDouble() ?? 0.0;
-    final totalDue = (balance?['total_due'] as num?)?.toDouble() ?? 0.0;
-    final isUpToDate = totalDue <= 0;
+    final monthlyFee = (balanceData?['monthly_fee'] as num?)?.toDouble() ?? (balance?['apartment']?['monthly_fee'] as num?)?.toDouble() ?? 0.0;
+    final arrears = (balanceData?['arrears'] as num?)?.toDouble() ?? 0.0;
+    final isUpToDate = (balanceData?['is_settled'] == true) || arrears <= 0;
+    final advancePaidMonths = (balanceData?['advance_paid_months'] as List?)?.cast<String>() ?? [];
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -172,7 +174,7 @@ class ResidentHomeTab extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  isUpToDate ? '0.00 درهم' : '${totalDue.toStringAsFixed(0)} درهم',
+                  isUpToDate ? '0.00 درهم' : '${arrears.toStringAsFixed(0)} درهم',
                   style: GoogleFonts.cairo(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
@@ -188,6 +190,31 @@ class ResidentHomeTab extends StatelessWidget {
                     color: Colors.white.withAlpha(220),
                   ),
                 ),
+                if (advancePaidMonths.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha(45),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.star, size: 14, color: Colors.amberAccent),
+                        const SizedBox(width: 6),
+                        Text(
+                          'مدفوع مسبقاً حتى شهر: ${advancePaidMonths.last}',
+                          style: GoogleFonts.cairo(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 const Divider(color: Colors.white24, height: 28),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

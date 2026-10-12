@@ -12,6 +12,9 @@ class PaymentModel {
   final String? apartmentUnit;
   final String? residentName;
   final String? residentPhone;
+  final String status;
+  final String? confirmedAt;
+  final String? sentToResidentAt;
 
   PaymentModel({
     required this.id,
@@ -27,7 +30,27 @@ class PaymentModel {
     this.apartmentUnit,
     this.residentName,
     this.residentPhone,
+    this.status = 'DRAFT',
+    this.confirmedAt,
+    this.sentToResidentAt,
   });
+
+  bool get isDraft => status == 'DRAFT';
+  bool get isConfirmed => status == 'CONFIRMED';
+  bool get isSentToResident => status == 'SENT_TO_RESIDENT';
+
+  String get statusArabic {
+    switch (status) {
+      case 'DRAFT':
+        return 'مسودة';
+      case 'CONFIRMED':
+        return 'مؤكد';
+      case 'SENT_TO_RESIDENT':
+        return 'مُرسل للساكن';
+      default:
+        return status;
+    }
+  }
 
   String get paymentMethodArabic {
     switch (paymentMethod) {
@@ -77,6 +100,9 @@ class PaymentModel {
       apartmentUnit: unit,
       residentName: resName,
       residentPhone: resPhone,
+      status: json['status'] ?? 'DRAFT',
+      confirmedAt: json['confirmed_at'],
+      sentToResidentAt: json['sent_to_resident_at'],
     );
   }
 }

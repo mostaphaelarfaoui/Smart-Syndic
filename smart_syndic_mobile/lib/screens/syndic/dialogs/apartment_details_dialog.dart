@@ -121,6 +121,35 @@ class ApartmentDetailsDialog extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Feature 4 — Developer-owned apartment exemption banner
+                    if (!apartment.isBillable) ...[
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.orange.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.domain_disabled, color: Colors.orange, size: 22),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'شقة معفاة من الحسابات المالية (باسم المنعش العقاري)',
+                                style: GoogleFonts.cairo(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.orange.shade900,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
                     // Financial Status Banner
                     Container(
                       padding: const EdgeInsets.all(16),

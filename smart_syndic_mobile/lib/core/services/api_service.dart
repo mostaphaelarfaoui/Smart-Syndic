@@ -188,7 +188,7 @@ class ApiService {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return body;
     } else if (response.statusCode == 401) {
-      throw Exception('انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً.');
+      throw ApiException('انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً.', statusCode: 401, data: body);
     } else if (response.statusCode == 422) {
       if (body is Map) {
         if (body['errors'] is Map) {
@@ -202,19 +202,30 @@ class ApiService {
             }
           });
           if (errorList.isNotEmpty) {
-            throw Exception(errorList.join('\n'));
+            throw ApiException(errorList.join('\n'), statusCode: 422, data: body);
           }
         }
         if (body['message'] != null) {
-          throw Exception(body['message']);
+          throw ApiException(body['message'].toString(), statusCode: 422, data: body);
         }
       }
-      throw Exception('بيانات غير صحيحة، يرجى مراجعة المدخلات.');
+      throw ApiException('بيانات غير صحيحة، يرجى مراجعة المدخلات.', statusCode: 422, data: body);
     } else {
       if (body is Map && body['message'] != null) {
-        throw Exception(body['message']);
+        throw ApiException(body['message'].toString(), statusCode: response.statusCode, data: body);
       }
-      throw Exception('حدث خطأ في الخادم (${response.statusCode})');
+      throw ApiException('حدث خطأ في الخادم (${response.statusCode})', statusCode: response.statusCode, data: body);
     }
   }
+}
+
+class ApiException implements Exception {
+  final String message;
+  final int? statusCode;
+  final dynamic data;
+
+  ApiException(this.message, {this.statusCode, this.data});
+
+  @override
+  String toString() => message;
 }

@@ -220,7 +220,9 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
                     prefixIcon: Icon(Icons.home_outlined),
                   ),
                   items: syndic.apartments.map((apt) {
-                    final resident = apt.resident != null ? apt.resident!['name'] : 'شاغرة';
+                    final resident = !apt.isBillable
+                        ? 'شاغرة لدى المنعش العقاري (معفاة)'
+                        : (apt.resident != null ? apt.resident!['name'] : 'شاغرة');
                     return DropdownMenuItem<String>(
                       value: apt.id,
                       child: Text(
