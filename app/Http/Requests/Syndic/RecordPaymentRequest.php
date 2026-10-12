@@ -22,6 +22,7 @@ class RecordPaymentRequest extends FormRequest
             'covered_months'    => ['required', 'array', 'min:1', 'max:24'],
             'covered_months.*'  => ['required', 'string', 'regex:/^\d{4}-(0[1-9]|1[0-2])$/'],
             'bank_receipt_proof' => ['nullable', 'file', 'max:5120'],
+            'save_as_draft'      => ['nullable', 'boolean'],
         ];
     }
 }

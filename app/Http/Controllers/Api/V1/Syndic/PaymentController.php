@@ -41,6 +41,12 @@ class PaymentController extends Controller
             $request->user()->tenant_id,
         );
 
+        // Feature 12: Auto-confirm and deliver to resident unless explicitly marked as draft
+        if (! $request->boolean('save_as_draft', false)) {
+            $payment = $this->paymentService->confirmPayment($payment, $request->user()->id);
+            $payment = $this->paymentService->sendToResident($payment, $request->user()->id);
+        }
+
         return response()->json([
             'message' => __('payments.recorded'),
             'payment' => $this->formatPayment($payment),
