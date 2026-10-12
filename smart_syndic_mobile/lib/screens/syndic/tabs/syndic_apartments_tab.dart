@@ -304,8 +304,9 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
                                 children: [
                                   // Leading Apartment Number Badge
                                   Container(
-                                    width: 52,
-                                    height: 52,
+                                    width: 54,
+                                    height: 54,
+                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                                     decoration: BoxDecoration(
                                       color: !apt.isBillable
                                           ? Colors.orange.shade50
@@ -318,29 +319,35 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
                                       border: !apt.isBillable ? Border.all(color: Colors.orange.shade200) : null,
                                     ),
                                     child: Center(
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            !apt.isBillable
-                                                ? Icons.money_off_rounded
-                                                : Icons.meeting_room,
-                                            size: 18,
-                                            color: !apt.isBillable
-                                                ? Colors.orange.shade800
-                                                : (apt.resident == null
-                                                    ? AppColors.textLight
-                                                    : (apt.isSettled ? AppColors.primary : AppColors.danger)),
-                                          ),
-                                          Text(
-                                            apt.unitNumber,
-                                            style: GoogleFonts.cairo(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 12,
-                                              color: AppColors.textPrimary,
+                                      child: FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              !apt.isBillable
+                                                  ? Icons.money_off_rounded
+                                                  : Icons.meeting_room,
+                                              size: 18,
+                                              color: !apt.isBillable
+                                                  ? Colors.orange.shade800
+                                                  : (apt.resident == null
+                                                      ? AppColors.textLight
+                                                      : (apt.isSettled ? AppColors.primary : AppColors.danger)),
                                             ),
-                                          ),
-                                        ],
+                                            Text(
+                                              apt.unitNumber,
+                                              style: GoogleFonts.cairo(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 11,
+                                                height: 1.1,
+                                                color: AppColors.textPrimary,
+                                              ),
+                                              maxLines: 1,
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ),
