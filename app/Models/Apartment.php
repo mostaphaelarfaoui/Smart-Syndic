@@ -45,6 +45,11 @@ class Apartment extends Model
         return $this->belongsTo(Building::class);
     }
 
+    public function tenant(): \Illuminate\Database\Eloquent\Relations\HasOneThrough
+    {
+        return $this->hasOneThrough(Tenant::class, Building::class, 'id', 'id', 'building_id', 'tenant_id');
+    }
+
     public function residents(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'resident_apartments')

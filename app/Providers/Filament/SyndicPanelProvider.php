@@ -42,7 +42,7 @@ class SyndicPanelProvider extends PanelProvider
                 'إدارة الإقامة',
                 'المالية والحسابات',
                 'التواصل والتصويت',
-                'الإعدادات',
+                'الإعدادات والرقابة',
             ])
             ->discoverResources(in: app_path('Filament/Syndic/Resources'), for: 'App\\Filament\\Syndic\\Resources')
             ->discoverPages(in: app_path('Filament/Syndic/Pages'), for: 'App\\Filament\\Syndic\\Pages')
@@ -50,9 +50,7 @@ class SyndicPanelProvider extends PanelProvider
                 \Filament\Pages\Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Syndic/Widgets'), for: 'App\\Filament\\Syndic\\Widgets')
-            ->widgets([
-                Widgets\AccountWidget::class,
-            ])
+            ->widgets([])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

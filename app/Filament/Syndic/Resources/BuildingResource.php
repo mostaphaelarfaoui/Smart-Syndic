@@ -86,7 +86,7 @@ class BuildingResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            \App\Filament\Syndic\Resources\BuildingResource\RelationManagers\ApartmentsRelationManager::class,
         ];
     }
 

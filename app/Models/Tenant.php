@@ -65,6 +65,11 @@ class Tenant extends Model implements HasName
         return $this->hasMany(Building::class);
     }
 
+    public function apartments(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    {
+        return $this->hasManyThrough(Apartment::class, Building::class);
+    }
+
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
