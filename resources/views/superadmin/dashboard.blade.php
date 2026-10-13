@@ -176,7 +176,7 @@
 {{-- Two Columns: Left = Recent Organizations / Right = Security & Threat Stream --}}
 <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem;">
     {{-- Left: Organizations --}}
-    <div class="card">
+    <div class="card" style="min-width:0;">
         <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
             <div>
                 <h3 class="card-title">🏢 أحدث الإقامات المسجلة</h3>
@@ -255,7 +255,7 @@
     </div>
 
     {{-- Right: Security Incidents & Threat Log --}}
-    <div class="card">
+    <div class="card" style="min-width:0;">
         <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
             <div>
                 <h3 class="card-title">🛡️ أحدث التهديدات والبلاغات الأمنية</h3>

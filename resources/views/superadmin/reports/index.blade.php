@@ -87,7 +87,7 @@
 {{-- Two Top Panels: Top Active vs Dormant Alerts --}}
 <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem;">
     {{-- Top Performers --}}
-    <div class="card">
+    <div class="card" style="min-width:0;">
         <div class="card-header">
             <h3 class="card-title">🏆 الإقامات الأكثر نشاطاً وتحصيلاً</h3>
             <p class="card-subtitle">أعلى الإقامات من حيث حجم الأموال المدارة والانتظام</p>
@@ -97,21 +97,33 @@
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>الإقامة</th>
-                            <th>الشقق</th>
-                            <th>المجموع المحصل</th>
-                            <th>صافي الصندوق</th>
+                            <th style="min-width:140px;">الإقامة</th>
+                            <th style="text-align:center; min-width:70px;">الشقق</th>
+                            <th style="min-width:130px;">المجموع المحصل</th>
+                            <th style="min-width:130px;">صافي الصندوق</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($topCollectedTenants as $t)
+                        @forelse($topCollectedTenants as $t)
                             <tr>
-                                <td style="font-weight:700;">{{ $t->name }}</td>
-                                <td>{{ $t->apartments_count }}</td>
-                                <td style="font-weight:700; color:#10b981;">{{ number_format($t->total_collected, 2) }} DH</td>
-                                <td style="font-weight:700; color:#6366f1;">{{ number_format($t->net_treasury, 2) }} DH</td>
+                                <td style="font-weight:700; color:var(--text-primary);">{{ $t->name }}</td>
+                                <td style="text-align:center;">
+                                    <span class="badge badge-info" style="font-size:0.8rem;">{{ $t->apartments_count }}</span>
+                                </td>
+                                <td style="font-weight:700; color:#10b981; font-family:monospace; font-size:0.95rem;">
+                                    {{ number_format($t->total_collected, 2) }} <span class="currency-unit">DH</span>
+                                </td>
+                                <td style="font-weight:700; color:#6366f1; font-family:monospace; font-size:0.95rem;">
+                                    {{ number_format($t->net_treasury, 2) }} <span class="currency-unit">DH</span>
+                                </td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="4" style="text-align:center; padding:2rem; color:var(--text-muted);">
+                                    لا توجد بيانات متاحة حالياً.
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
@@ -119,7 +131,7 @@
     </div>
 
     {{-- Dormant Tenants Alert --}}
-    <div class="card" style="border-color:{{ $dormantTenants->count() > 0 ? 'rgba(245,158,11,0.4)' : 'var(--border-color)' }};">
+    <div class="card" style="min-width:0; border-color:{{ $dormantTenants->count() > 0 ? 'rgba(245,158,11,0.4)' : 'var(--border-color)' }};">
         <div class="card-header">
             <h3 class="card-title" style="color:#f59e0b; display:flex; align-items:center; gap:0.5rem;">
                 <span>⚠️</span>
@@ -132,18 +144,18 @@
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>الإقامة</th>
-                            <th>الحالة</th>
-                            <th>آخر نشاط مسجل</th>
+                            <th style="min-width:150px;">الإقامة</th>
+                            <th style="text-align:center; min-width:110px;">الحالة</th>
+                            <th style="min-width:150px;">آخر نشاط مسجل</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($dormantTenants as $dt)
                             <tr>
-                                <td style="font-weight:700;">{{ $dt->name }}</td>
-                                <td>
+                                <td style="font-weight:700; color:var(--text-primary);">{{ $dt->name }}</td>
+                                <td style="text-align:center;">
                                     <span class="badge {{ $dt->status === 'ACTIVE' ? 'badge-warning' : 'badge-danger' }}">
-                                        {{ $dt->status }}
+                                        {{ $dt->status === 'PENDING_APPROVAL' ? 'قيد الموافقة' : ($dt->status === 'ACTIVE' ? 'نشطة' : 'موقوفة') }}
                                     </span>
                                 </td>
                                 <td style="color:var(--text-muted); font-size:0.85rem;">
@@ -177,25 +189,25 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>الإقامة</th>
-                        <th>المدينة</th>
-                        <th>الحالة</th>
-                        <th>الشقق</th>
-                        <th>المستخدمون</th>
-                        <th>المقبوضات</th>
-                        <th>المصاريف</th>
-                        <th>الرصيد الصافي</th>
-                        <th>حالة النشاط</th>
+                        <th style="min-width:180px;">الإقامة</th>
+                        <th style="min-width:100px;">المدينة</th>
+                        <th style="text-align:center; min-width:110px;">الحالة</th>
+                        <th style="text-align:center; min-width:80px;">الشقق</th>
+                        <th style="text-align:center; min-width:90px;">المستخدمون</th>
+                        <th style="min-width:130px;">المقبوضات</th>
+                        <th style="min-width:130px;">المصاريف</th>
+                        <th style="min-width:130px;">الرصيد الصافي</th>
+                        <th style="text-align:center; min-width:110px;">حالة النشاط</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($tenants as $tenant)
                         <tr>
                             <td>
-                                <div style="font-weight:700;">{{ $tenant->name }}</div>
+                                <div style="font-weight:700; color:var(--text-primary);">{{ $tenant->name }}</div>
                             </td>
-                            <td>{{ $tenant->city ?? '—' }}</td>
-                            <td>
+                            <td style="color:var(--text-secondary);">{{ $tenant->city ?? '—' }}</td>
+                            <td style="text-align:center;">
                                 @if($tenant->status === 'ACTIVE')
                                     <span class="badge badge-success">نشطة</span>
                                 @elseif($tenant->status === 'PENDING_APPROVAL')
@@ -204,12 +216,22 @@
                                     <span class="badge badge-danger">موقوفة</span>
                                 @endif
                             </td>
-                            <td>{{ $tenant->apartments_count }}</td>
-                            <td>{{ $tenant->users_count }}</td>
-                            <td style="font-weight:700; color:#10b981;">{{ number_format($tenant->total_collected, 2) }} DH</td>
-                            <td style="font-weight:700; color:#ef4444;">{{ number_format($tenant->total_expenses, 2) }} DH</td>
-                            <td style="font-weight:800; color:#6366f1;">{{ number_format($tenant->net_treasury, 2) }} DH</td>
-                            <td>
+                            <td style="text-align:center;">
+                                <span class="badge badge-info" style="font-size:0.85rem;">{{ $tenant->apartments_count }}</span>
+                            </td>
+                            <td style="text-align:center;">
+                                <span class="badge badge-secondary" style="font-size:0.85rem;">{{ $tenant->users_count }}</span>
+                            </td>
+                            <td style="font-weight:700; color:#10b981; font-family:monospace; font-size:0.95rem;">
+                                {{ number_format($tenant->total_collected, 2) }} <span class="currency-unit">DH</span>
+                            </td>
+                            <td style="font-weight:700; color:#ef4444; font-family:monospace; font-size:0.95rem;">
+                                {{ number_format($tenant->total_expenses, 2) }} <span class="currency-unit">DH</span>
+                            </td>
+                            <td style="font-weight:800; color:#6366f1; font-family:monospace; font-size:0.95rem;">
+                                {{ number_format($tenant->net_treasury, 2) }} <span class="currency-unit">DH</span>
+                            </td>
+                            <td style="text-align:center;">
                                 @if($tenant->is_dormant)
                                     <span class="badge badge-warning" style="font-size:0.75rem;">خاملة</span>
                                 @else
