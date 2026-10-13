@@ -114,6 +114,11 @@ Route::middleware(['auth:web', 'role:SUPER_ADMIN'])->prefix('platform')->name('s
     Route::post('/tenants/{id}/suspend', [SuperAdminController::class, 'suspendTenant'])->name('tenants.suspend');
     Route::delete('/tenants/{id}', [SuperAdminController::class, 'destroyTenant'])->name('tenants.destroy');
 
+    // Global Users Directory
+    Route::get('/users', [SuperAdminController::class, 'users'])->name('users.index');
+    Route::post('/users/{id}/toggle-status', [SuperAdminController::class, 'toggleUserStatus'])->name('users.toggle-status');
+    Route::post('/users/{id}/reset-password', [SuperAdminController::class, 'resetUserPassword'])->name('users.reset-password');
+
     // Server & Database Health
     Route::get('/server', [SuperAdminController::class, 'server'])->name('server.index');
     Route::post('/server/vacuum', [SuperAdminController::class, 'vacuumDb'])->name('server.vacuum');
@@ -136,6 +141,22 @@ Route::middleware(['auth:web', 'role:SUPER_ADMIN'])->prefix('platform')->name('s
 
     // Audit Trail
     Route::get('/audit', [SuperAdminController::class, 'auditLogs'])->name('audit.index');
+
+    // Broadcasts & Announcements (Feature 3)
+    Route::get('/announcements', [SuperAdminController::class, 'announcements'])->name('announcements.index');
+    Route::post('/announcements', [SuperAdminController::class, 'storeAnnouncement'])->name('announcements.store');
+    Route::post('/announcements/{id}/toggle', [SuperAdminController::class, 'toggleAnnouncement'])->name('announcements.toggle');
+    Route::delete('/announcements/{id}', [SuperAdminController::class, 'destroyAnnouncement'])->name('announcements.destroy');
+
+    // SaaS Subscriptions & Quotas (Feature 4)
+    Route::get('/subscriptions', [SuperAdminController::class, 'subscriptions'])->name('subscriptions.index');
+    Route::post('/subscriptions/{id}/update', [SuperAdminController::class, 'updateSubscription'])->name('subscriptions.update');
+    Route::post('/subscriptions/{id}/extend', [SuperAdminController::class, 'extendSubscription'])->name('subscriptions.extend');
+
+    // System Settings & Feature Flags (Feature 5)
+    Route::get('/settings', [SuperAdminController::class, 'settings'])->name('settings.index');
+    Route::post('/settings', [SuperAdminController::class, 'updateSettings'])->name('settings.update');
+    Route::post('/settings/maintenance/toggle', [SuperAdminController::class, 'toggleMaintenance'])->name('settings.maintenance.toggle');
 
     // Impersonation Support Actions
     Route::post('/tenants/{id}/impersonate', [SuperAdminController::class, 'impersonateTenant'])->name('tenants.impersonate');

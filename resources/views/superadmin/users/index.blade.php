@@ -1,0 +1,241 @@
+@extends('layouts.superadmin')
+@section('title', 'دليل المستخدمين الشامل')
+
+@section('content')
+<div class="page-header" style="margin-bottom:1.5rem;">
+    <div>
+        <h1 class="page-title">👥 دليل المستخدمين الشامل</h1>
+        <p class="page-subtitle">البحث والتحكم في جميع مستخدمي المنصة — سانديك، ملاك، وسكان</p>
+    </div>
+</div>
+
+{{-- Alerts --}}
+@if(session('success'))
+    <div class="alert alert-success" style="margin-bottom:1rem; padding:0.9rem 1.2rem; border-radius:10px; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); color:#10b981; display:flex; align-items:center; gap:0.6rem;">
+        ✓ {{ session('success') }}
+    </div>
+@endif
+@if(session('error'))
+    <div class="alert alert-danger" style="margin-bottom:1rem; padding:0.9rem 1.2rem; border-radius:10px; background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.3); color:#ef4444; display:flex; align-items:center; gap:0.6rem;">
+        ⚠ {{ session('error') }}
+    </div>
+@endif
+
+{{-- KPI Row --}}
+<div class="kpi-grid" style="grid-template-columns:repeat(4,1fr); margin-bottom:1.5rem;">
+    <div class="kpi-card" style="border-top:3px solid #6366f1;">
+        <div class="kpi-header">
+            <span class="kpi-label">إجمالي المستخدمين</span>
+            <span class="kpi-icon" style="background:rgba(99,102,241,0.12); color:#6366f1;">👥</span>
+        </div>
+        <div class="kpi-value">{{ $totalUsersCount }}</div>
+    </div>
+    <div class="kpi-card" style="border-top:3px solid #f59e0b;">
+        <div class="kpi-header">
+            <span class="kpi-label">السانديك والمسيرون</span>
+            <span class="kpi-icon" style="background:rgba(245,158,11,0.12); color:#f59e0b;">👔</span>
+        </div>
+        <div class="kpi-value">{{ $totalSyndicsCount }}</div>
+    </div>
+    <div class="kpi-card" style="border-top:3px solid #3b82f6;">
+        <div class="kpi-header">
+            <span class="kpi-label">السكان والمقيمون</span>
+            <span class="kpi-icon" style="background:rgba(59,130,246,0.12); color:#3b82f6;">🏠</span>
+        </div>
+        <div class="kpi-value">{{ $totalResidentsCount }}</div>
+    </div>
+    <div class="kpi-card" style="border-top:3px solid #10b981;">
+        <div class="kpi-header">
+            <span class="kpi-label">الحسابات النشطة</span>
+            <span class="kpi-icon" style="background:rgba(16,185,129,0.12); color:#10b981;">✓</span>
+        </div>
+        <div class="kpi-value">{{ $activeUsersCount }}</div>
+    </div>
+</div>
+
+{{-- Filters --}}
+<div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-body" style="padding:1rem 1.5rem;">
+        <form method="GET" action="{{ route('superadmin.users.index') }}" style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:flex-end;">
+            <div style="flex:1; min-width:200px;">
+                <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:0.3rem;">بحث بالاسم، الإيميل أو الهاتف</label>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="ابحث هنا..." class="form-input" style="width:100%;">
+            </div>
+            <div style="min-width:150px;">
+                <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:0.3rem;">الدور</label>
+                <select name="role" class="form-select">
+                    <option value="">كل الأدوار</option>
+                    <option value="SYNDIC" {{ request('role') === 'SYNDIC' ? 'selected' : '' }}>سانديك</option>
+                    <option value="ADMIN_SYNDIC" {{ request('role') === 'ADMIN_SYNDIC' ? 'selected' : '' }}>مسير الإقامة</option>
+                    <option value="RESIDENT" {{ request('role') === 'RESIDENT' ? 'selected' : '' }}>ساكن</option>
+                </select>
+            </div>
+            <div style="min-width:150px;">
+                <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:0.3rem;">الحالة</label>
+                <select name="status" class="form-select">
+                    <option value="">كل الحالات</option>
+                    <option value="ACTIVE" {{ request('status') === 'ACTIVE' ? 'selected' : '' }}>نشط</option>
+                    <option value="SUSPENDED" {{ request('status') === 'SUSPENDED' ? 'selected' : '' }}>موقوف</option>
+                    <option value="PENDING_APPROVAL" {{ request('status') === 'PENDING_APPROVAL' ? 'selected' : '' }}>في الانتظار</option>
+                    <option value="REJECTED" {{ request('status') === 'REJECTED' ? 'selected' : '' }}>مرفوض</option>
+                </select>
+            </div>
+            <div style="min-width:180px;">
+                <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:0.3rem;">الإقامة</label>
+                <select name="tenant_id" class="form-select">
+                    <option value="">كل الإقامات</option>
+                    @foreach($tenants as $tenant)
+                        <option value="{{ $tenant->id }}" {{ request('tenant_id') === $tenant->id ? 'selected' : '' }}>{{ $tenant->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm" style="padding:0.65rem 1.2rem;">🔍 بحث</button>
+            @if(request()->hasAny(['search','role','status','tenant_id']))
+                <a href="{{ route('superadmin.users.index') }}" class="btn btn-secondary btn-sm" style="padding:0.65rem 1rem;">✕ إلغاء</a>
+            @endif
+        </form>
+    </div>
+</div>
+
+{{-- Users Table --}}
+<div class="card">
+    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+            <h3 class="card-title">قائمة المستخدمين</h3>
+            <p class="card-subtitle">{{ $users->total() }} مستخدم — صفحة {{ $users->currentPage() }} من {{ $users->lastPage() }}</p>
+        </div>
+    </div>
+    <div class="card-body" style="padding:0;">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>المستخدم</th>
+                        <th>الإقامة</th>
+                        <th>الدور</th>
+                        <th>الحالة</th>
+                        <th>تاريخ التسجيل</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($users as $user)
+                        <tr>
+                            <td>
+                                <div style="font-weight:700;">{{ $user->full_name }}</div>
+                                <div style="font-size:0.78rem; color:var(--text-muted);">{{ $user->email }}</div>
+                                <div style="font-size:0.78rem; color:var(--text-muted); font-family:monospace;">{{ $user->phone }}</div>
+                            </td>
+                            <td>
+                                @if($user->tenant)
+                                    <div style="font-size:0.85rem;">{{ $user->tenant->name }}</div>
+                                    <div style="font-size:0.75rem; color:var(--text-muted);">{{ $user->tenant->city ?? '—' }}</div>
+                                @else
+                                    <span style="color:var(--text-muted);">—</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($user->role === 'SUPER_ADMIN')
+                                    <span class="badge" style="background:rgba(99,102,241,0.15); color:#6366f1; font-size:0.75rem;">⭐ سوبر أدمن</span>
+                                @elseif(in_array($user->role, ['SYNDIC','ADMIN_SYNDIC']))
+                                    <span class="badge badge-warning" style="font-size:0.75rem;">👔 سانديك</span>
+                                @else
+                                    <span class="badge badge-info" style="font-size:0.75rem;">🏠 ساكن</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($user->status === 'ACTIVE')
+                                    <span class="badge badge-success">نشط ✓</span>
+                                @elseif($user->status === 'SUSPENDED')
+                                    <span class="badge badge-danger">موقوف ⏸</span>
+                                @elseif($user->status === 'PENDING_APPROVAL')
+                                    <span class="badge badge-warning">في الانتظار ⏳</span>
+                                @else
+                                    <span class="badge badge-danger">مرفوض ✕</span>
+                                @endif
+                            </td>
+                            <td class="num" style="font-size:0.82rem; color:var(--text-muted);">
+                                {{ $user->created_at->format('Y/m/d') }}
+                            </td>
+                            <td>
+                                <div style="display:flex; gap:0.4rem; flex-wrap:wrap; align-items:center;">
+                                    @if($user->role !== 'SUPER_ADMIN')
+                                        {{-- Toggle status --}}
+                                        <form method="POST" action="{{ route('superadmin.users.toggle-status', $user->id) }}"
+                                              onsubmit="return confirm('{{ $user->status === 'ACTIVE' ? 'هل تريد توقيف حساب ' . $user->full_name . '؟' : 'هل تريد تنشيط حساب ' . $user->full_name . '؟' }}')">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm"
+                                                style="padding:0.25rem 0.6rem; font-size:0.75rem;
+                                                {{ $user->status === 'ACTIVE'
+                                                    ? 'background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.25);'
+                                                    : 'background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.25);' }}"
+                                                title="{{ $user->status === 'ACTIVE' ? 'توقيف الحساب' : 'تنشيط الحساب' }}">
+                                                {{ $user->status === 'ACTIVE' ? '⏸ توقيف' : '▶ تنشيط' }}
+                                            </button>
+                                        </form>
+
+                                        {{-- Impersonate user --}}
+                                        @if($user->status === 'ACTIVE')
+                                            <form method="POST" action="{{ route('superadmin.users.impersonate', $user->id) }}"
+                                                  onsubmit="return confirm('هل تريد الدخول بصفتك {{ $user->full_name }}؟')">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-secondary"
+                                                    style="padding:0.25rem 0.5rem; font-size:0.75rem; color:#6366f1; border-color:rgba(99,102,241,0.3);"
+                                                    title="تقمص الحساب للدعم الفني">
+                                                    👤
+                                                </button>
+                                            </form>
+                                        @endif
+
+                                        {{-- Reset password modal trigger --}}
+                                        <button type="button" class="btn btn-sm btn-secondary"
+                                            style="padding:0.25rem 0.5rem; font-size:0.75rem;"
+                                            title="تغيير كلمة المرور"
+                                            onclick="document.getElementById('modal-reset-{{ $user->id }}').style.display='flex'">
+                                            🔑
+                                        </button>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+
+                        {{-- Password Reset Modal --}}
+                        <div id="modal-reset-{{ $user->id }}" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
+                            <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:16px; padding:2rem; min-width:350px; max-width:450px; box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+                                <h3 style="margin:0 0 0.5rem; color:var(--text-primary);">🔑 تغيير كلمة المرور</h3>
+                                <p style="color:var(--text-muted); font-size:0.875rem; margin-bottom:1.5rem;">تغيير كلمة مرور <strong>{{ $user->full_name }}</strong></p>
+                                <form method="POST" action="{{ route('superadmin.users.reset-password', $user->id) }}">
+                                    @csrf
+                                    <div style="margin-bottom:1rem;">
+                                        <label style="font-size:0.85rem; color:var(--text-muted); display:block; margin-bottom:0.4rem;">كلمة المرور الجديدة (6 أحرف على الأقل)</label>
+                                        <input type="password" name="new_password" required minlength="6"
+                                            class="form-input" style="width:100%;" placeholder="••••••••">
+                                    </div>
+                                    <div style="display:flex; gap:0.75rem; justify-content:flex-end;">
+                                        <button type="button" class="btn btn-secondary btn-sm"
+                                            onclick="document.getElementById('modal-reset-{{ $user->id }}').style.display='none'">
+                                            إلغاء
+                                        </button>
+                                        <button type="submit" class="btn btn-primary btn-sm">حفظ كلمة المرور</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    @empty
+                        <tr>
+                            <td colspan="6" style="text-align:center; padding:3rem; color:var(--text-muted);">
+                                لا يوجد مستخدمون مطابقون لمعايير البحث.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @if($users->hasPages())
+        <div style="padding:1rem 1.5rem; border-top:1px solid var(--border-color);">
+            {{ $users->links() }}
+        </div>
+    @endif
+</div>
+@endsection

@@ -21,7 +21,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
-use Illuminate\Support\Facades\Storage;
+use App\Models\PlatformAnnouncement;
+use App\Models\SystemSetting;
+use App\Services\System\SystemSettingsService;
+use Carbon\Carbon;
 use Laravel\Sanctum\PersonalAccessToken;
 
 class SuperAdminController extends Controller
@@ -94,6 +97,108 @@ class SuperAdminController extends Controller
         $tenants = $query->latest('created_at')->paginate(20)->withQueryString();
 
         return view('superadmin.tenants.index', compact('tenants'));
+    }
+
+    public function users(Request $request)
+    {
+        $query = User::with('tenant');
+
+        if ($request->filled('search')) {
+            $s = trim($request->search);
+            $query->where(function ($q) use ($s) {
+                $q->where('first_name', 'like', "%{$s}%")
+                  ->orWhere('last_name', 'like', "%{$s}%")
+                  ->orWhere('email', 'like', "%{$s}%")
+                  ->orWhere('phone', 'like', "%{$s}%");
+            });
+        }
+
+        if ($request->filled('role')) {
+            $query->where('role', $request->role);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('tenant_id')) {
+            $query->where('tenant_id', $request->tenant_id);
+        }
+
+        $totalUsersCount     = User::count();
+        $totalSyndicsCount   = User::whereIn('role', ['SYNDIC', 'ADMIN_SYNDIC'])->count();
+        $totalResidentsCount = User::where('role', 'RESIDENT')->count();
+        $activeUsersCount    = User::where('status', 'ACTIVE')->count();
+
+        $users = $query->latest('created_at')->paginate(20)->withQueryString();
+        $tenants = Tenant::orderBy('name')->get();
+
+        return view('superadmin.users.index', compact(
+            'users',
+            'tenants',
+            'totalUsersCount',
+            'totalSyndicsCount',
+            'totalResidentsCount',
+            'activeUsersCount'
+        ));
+    }
+
+    public function toggleUserStatus($id)
+    {
+        $user = User::findOrFail($id);
+
+        if ($user->role === 'SUPER_ADMIN') {
+            return back()->with('error', 'لا يمكن توقيف حساب السوبر أدمن.');
+        }
+
+        $newStatus = $user->status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+        $user->update(['status' => $newStatus]);
+
+        if ($newStatus === 'SUSPENDED') {
+            PersonalAccessToken::where('tokenable_id', $user->id)->delete();
+        }
+
+        AuditLog::record(
+            actorId: auth()->id(),
+            action: 'SUPERADMIN_USER_TOGGLE_STATUS',
+            targetTenantId: $user->tenant_id,
+            metadata: [
+                'target_user_id' => $user->id,
+                'target_name'    => $user->full_name,
+                'new_status'     => $newStatus,
+            ]
+        );
+
+        $msg = $newStatus === 'ACTIVE' ? "تم تنشيط حساب {$user->full_name} بنجاح." : "تم توقيف حساب {$user->full_name} وإلغاء تسجيل دخوله فوراً.";
+        return back()->with('success', $msg);
+    }
+
+    public function resetUserPassword(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $request->validate([
+            'new_password' => 'required|string|min:6',
+        ]);
+
+        $user->update([
+            'password' => bcrypt($request->new_password),
+        ]);
+
+        // Revoke tokens so mobile app forces new login
+        PersonalAccessToken::where('tokenable_id', $user->id)->delete();
+
+        AuditLog::record(
+            actorId: auth()->id(),
+            action: 'SUPERADMIN_USER_PASSWORD_RESET',
+            targetTenantId: $user->tenant_id,
+            metadata: [
+                'target_user_id' => $user->id,
+                'target_email'   => $user->email,
+            ]
+        );
+
+        return back()->with('success', "تم تغيير كلمة المرور للمستخدم {$user->full_name} بنجاح.");
     }
 
     public function approveTenant($id)
@@ -622,4 +727,287 @@ class SuperAdminController extends Controller
 
         return view('superadmin.audit.index', compact('logs'));
     }
+
+    // ─── Feature 3: Announcements & Broadcasts ───────────────────────────────
+    public function announcements(Request $request)
+    {
+        $query = PlatformAnnouncement::with(['tenant', 'creator']);
+
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        if ($request->filled('audience')) {
+            $query->where('target_audience', $request->audience);
+        }
+
+        $announcements = $query->latest('created_at')->paginate(15)->withQueryString();
+        $tenants = Tenant::where('status', 'ACTIVE')->orderBy('name')->get();
+
+        $totalCount  = PlatformAnnouncement::count();
+        $activeCount = PlatformAnnouncement::where('is_active', true)->count();
+
+        return view('superadmin.announcements.index', compact('announcements', 'tenants', 'totalCount', 'activeCount'));
+    }
+
+    public function storeAnnouncement(Request $request)
+    {
+        $request->validate([
+            'title'           => 'required|string|max:255',
+            'message'         => 'required|string',
+            'type'            => 'required|in:INFO,WARNING,DANGER,SUCCESS',
+            'target_audience' => 'required|in:ALL,SYNDICS_ONLY,RESIDENTS_ONLY,SPECIFIC_TENANT',
+            'tenant_id'       => 'nullable|required_if:target_audience,SPECIFIC_TENANT|uuid|exists:tenants,id',
+            'starts_at'       => 'nullable|date',
+            'expires_at'      => 'nullable|date|after_or_equal:starts_at',
+        ]);
+
+        $announcement = PlatformAnnouncement::create([
+            'title'           => $request->title,
+            'message'         => $request->message,
+            'type'            => $request->type,
+            'target_audience' => $request->target_audience,
+            'tenant_id'       => $request->target_audience === 'SPECIFIC_TENANT' ? $request->tenant_id : null,
+            'is_active'       => $request->boolean('is_active', true),
+            'is_dismissible'  => $request->boolean('is_dismissible', true),
+            'starts_at'       => $request->starts_at,
+            'expires_at'      => $request->expires_at,
+            'created_by'      => auth()->id(),
+        ]);
+
+        AuditLog::record(
+            actorId: auth()->id(),
+            action: 'SUPERADMIN_BROADCAST_CREATE',
+            targetTenantId: $announcement->tenant_id,
+            metadata: [
+                'announcement_id' => $announcement->id,
+                'title'           => $announcement->title,
+                'audience'        => $announcement->target_audience,
+            ]
+        );
+
+        return back()->with('success', 'تم نشر الإعلان / الإشعار الجماعي بنجاح.');
+    }
+
+    public function toggleAnnouncement($id)
+    {
+        $announcement = PlatformAnnouncement::findOrFail($id);
+        $announcement->update(['is_active' => !$announcement->is_active]);
+
+        AuditLog::record(
+            actorId: auth()->id(),
+            action: 'SUPERADMIN_BROADCAST_TOGGLE',
+            targetTenantId: $announcement->tenant_id,
+            metadata: [
+                'announcement_id' => $announcement->id,
+                'new_status'      => $announcement->is_active,
+            ]
+        );
+
+        $statusStr = $announcement->is_active ? 'تفعيل' : 'إيقاف';
+        return back()->with('success', "تم {$statusStr} الإعلان بنجاح.");
+    }
+
+    public function destroyAnnouncement($id)
+    {
+        $announcement = PlatformAnnouncement::findOrFail($id);
+        $title = $announcement->title;
+        $announcement->delete();
+
+        AuditLog::record(
+            actorId: auth()->id(),
+            action: 'SUPERADMIN_BROADCAST_DELETE',
+            metadata: ['title' => $title]
+        );
+
+        return back()->with('success', 'تم حذف الإعلان الجماعي نهائياً.');
+    }
+
+    // ─── Feature 4: SaaS Subscription Plans & Quotas ──────────────────────────
+    public function subscriptions(Request $request)
+    {
+        $query = Tenant::withCount(['apartments', 'users']);
+
+        if ($request->filled('plan_type')) {
+            $query->where('plan_type', $request->plan_type);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $query->where('name', 'like', "%{$request->search}%");
+        }
+
+        if ($request->boolean('expiring_soon')) {
+            $query->where(function ($q) {
+                $q->whereBetween('subscription_expires_at', [now(), now()->addDays(14)])
+                  ->orWhereBetween('trial_ends_at', [now(), now()->addDays(14)]);
+            });
+        }
+
+        $tenants = $query->orderBy('name')->paginate(20)->withQueryString();
+
+        // Calculate SaaS metrics
+        $totalTenants        = Tenant::count();
+        $trialTenants        = Tenant::where('plan_type', 'TRIAL')->count();
+        $proTenants          = Tenant::where('plan_type', 'PRO')->count();
+        $enterpriseTenants   = Tenant::where('plan_type', 'ENTERPRISE')->count();
+        
+        $expiringSoonCount   = Tenant::where(function ($q) {
+            $q->whereBetween('subscription_expires_at', [now(), now()->addDays(14)])
+              ->orWhereBetween('trial_ends_at', [now(), now()->addDays(14)]);
+        })->count();
+
+        // Pro: 299 DH/month, Enterprise: 799 DH/month
+        $estimatedMRR = ($proTenants * 299) + ($enterpriseTenants * 799);
+
+        $stats = [
+            'totalTenants'      => $totalTenants,
+            'trialTenants'      => $trialTenants,
+            'proTenants'        => $proTenants,
+            'enterpriseTenants' => $enterpriseTenants,
+            'expiringSoonCount' => $expiringSoonCount,
+            'estimatedMRR'      => $estimatedMRR,
+        ];
+
+        return view('superadmin.subscriptions.index', compact('tenants', 'stats'));
+    }
+
+    public function updateSubscription(Request $request, $id)
+    {
+        $tenant = Tenant::findOrFail($id);
+
+        $request->validate([
+            'plan_type'               => 'required|in:TRIAL,PRO,ENTERPRISE',
+            'status'                  => 'required|in:ACTIVE,PENDING_APPROVAL,SUSPENDED,EXPIRED',
+            'trial_ends_at'           => 'nullable|date',
+            'subscription_expires_at' => 'nullable|date',
+        ]);
+
+        $tenant->update([
+            'plan_type'               => $request->plan_type,
+            'status'                  => $request->status,
+            'trial_ends_at'           => $request->trial_ends_at,
+            'subscription_expires_at' => $request->subscription_expires_at,
+        ]);
+
+        AuditLog::record(
+            actorId: auth()->id(),
+            action: 'SUPERADMIN_SUBSCRIPTION_UPDATE',
+            targetTenantId: $tenant->id,
+            metadata: [
+                'tenant_name' => $tenant->name,
+                'plan_type'   => $tenant->plan_type,
+                'status'      => $tenant->status,
+            ]
+        );
+
+        return back()->with('success', "تم تحديث خطة الاشتراك وحالة الإقامة \"{$tenant->name}\" بنجاح.");
+    }
+
+    public function extendSubscription(Request $request, $id)
+    {
+        $tenant = Tenant::findOrFail($id);
+
+        $request->validate([
+            'days' => 'required|integer|in:30,90,180,365',
+        ]);
+
+        $days = (int) $request->days;
+
+        if ($tenant->plan_type === 'TRIAL') {
+            $base = $tenant->trial_ends_at && Carbon::parse($tenant->trial_ends_at)->isFuture()
+                ? Carbon::parse($tenant->trial_ends_at)
+                : now();
+            $tenant->update(['trial_ends_at' => $base->addDays($days)]);
+        } else {
+            $base = $tenant->subscription_expires_at && Carbon::parse($tenant->subscription_expires_at)->isFuture()
+                ? Carbon::parse($tenant->subscription_expires_at)
+                : now();
+            $tenant->update(['subscription_expires_at' => $base->addDays($days)]);
+        }
+
+        AuditLog::record(
+            actorId: auth()->id(),
+            action: 'SUPERADMIN_SUBSCRIPTION_EXTEND',
+            targetTenantId: $tenant->id,
+            metadata: [
+                'tenant_name' => $tenant->name,
+                'added_days'  => $days,
+            ]
+        );
+
+        return back()->with('success', "تم تمديد اشتراك إقامة \"{$tenant->name}\" بمقدار {$days} يوماً بنجاح.");
+    }
+
+    // ─── Feature 5: System Settings & Feature Flags & Maintenance ────────────
+    public function settings(SystemSettingsService $settingsService)
+    {
+        $settingsGrouped = $settingsService->getAllGrouped();
+
+        return view('superadmin.settings.index', compact('settingsGrouped'));
+    }
+
+    public function updateSettings(Request $request, SystemSettingsService $settingsService)
+    {
+        $data = $request->except(['_token', 'maintenance_mode_enabled']);
+
+        // Handle boolean checkboxes in features group
+        $booleanKeys = [
+            'allow_new_registrations',
+            'enable_online_payments',
+            'enable_resident_polls',
+            'enable_incident_reporting',
+        ];
+
+        foreach ($booleanKeys as $bKey) {
+            $val = $request->has($bKey) ? '1' : '0';
+            $settingsService->set($bKey, $val, 'boolean', 'features');
+        }
+
+        // Handle text/general fields
+        foreach ($data as $key => $value) {
+            if (!in_array($key, $booleanKeys)) {
+                $setting = SystemSetting::where('key', $key)->first();
+                if ($setting) {
+                    $settingsService->set($key, (string)$value, $setting->type, $setting->group, $setting->description);
+                }
+            }
+        }
+
+        AuditLog::record(
+            actorId: auth()->id(),
+            action: 'SUPERADMIN_SETTINGS_UPDATE',
+            metadata: ['updated_by' => auth()->user()->full_name]
+        );
+
+        return back()->with('success', 'تم حفظ إعدادات النظام وعلامات الميزات بنجاح.');
+    }
+
+    public function toggleMaintenance(Request $request, SystemSettingsService $settingsService)
+    {
+        $currentState = $settingsService->isMaintenanceMode();
+        $newState = !$currentState;
+
+        $settingsService->set('maintenance_mode_enabled', $newState ? '1' : '0', 'boolean', 'maintenance', 'تفعيل وضع الصيانة العام');
+        
+        if ($request->filled('maintenance_message')) {
+            $settingsService->set('maintenance_message', $request->maintenance_message, 'string', 'maintenance');
+        }
+
+        AuditLog::record(
+            actorId: auth()->id(),
+            action: 'SUPERADMIN_MAINTENANCE_TOGGLE',
+            metadata: [
+                'enabled' => $newState,
+                'message' => $request->maintenance_message ?? '',
+            ]
+        );
+
+        $stateMsg = $newState ? 'تم تفعيل وضع الصيانة العام على المنصة.' : 'تم إلغاء وضع الصيانة وعودة المنصة للعمل الطبيعي.';
+        return back()->with('success', $stateMsg);
+    }
 }
+

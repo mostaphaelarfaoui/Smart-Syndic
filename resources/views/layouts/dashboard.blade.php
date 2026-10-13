@@ -155,6 +155,39 @@
             </div>
         @endif
 
+        {{-- Active Platform Broadcasts & Announcements --}}
+        @php
+            $activeAnnouncements = \App\Models\PlatformAnnouncement::currentlyActive(auth()->user()?->role, auth()->user()?->tenant_id)->get();
+        @endphp
+        @foreach($activeAnnouncements as $bc)
+            <div x-data="{ dismissed: false }" x-show="!dismissed"
+                 style="display:flex; align-items:center; justify-content:space-between; padding:0.75rem 1.5rem; font-size:0.875rem; font-weight:600; box-shadow:0 2px 8px rgba(0,0,0,0.12); z-index:9998;
+                 @if($bc->type === 'DANGER') background: linear-gradient(90deg, #991b1b, #dc2626); color:#ffffff;
+                 @elseif($bc->type === 'WARNING') background: linear-gradient(90deg, #b45309, #d97706); color:#ffffff;
+                 @elseif($bc->type === 'SUCCESS') background: linear-gradient(90deg, #065f46, #059669); color:#ffffff;
+                 @else background: linear-gradient(90deg, #1e40af, #3b82f6); color:#ffffff;
+                 @endif">
+                <div style="display:flex; align-items:center; gap:0.75rem; flex:1;">
+                    <span style="font-size:1.25rem;">
+                        @if($bc->type === 'DANGER') 🚨
+                        @elseif($bc->type === 'WARNING') ⚠️
+                        @elseif($bc->type === 'SUCCESS') ✨
+                        @else 📢
+                        @endif
+                    </span>
+                    <div>
+                        <strong style="text-decoration:underline; margin-left:0.4rem;">{{ $bc->title }}:</strong>
+                        <span>{{ $bc->message }}</span>
+                    </div>
+                </div>
+                @if($bc->is_dismissible)
+                    <button type="button" @click="dismissed = true" style="background:rgba(255,255,255,0.2); border:none; color:#ffffff; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-weight:bold;" title="إغلاق الإشعار">
+                        &times;
+                    </button>
+                @endif
+            </div>
+        @endforeach
+
         {{-- Sticky Topbar --}}
         <header class="app-topbar">
             <div class="topbar-right">
