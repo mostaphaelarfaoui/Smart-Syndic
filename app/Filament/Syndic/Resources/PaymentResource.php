@@ -114,7 +114,7 @@ class PaymentResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('amount_paid')
                     ->label('المبلغ المؤدى')
-                    ->money('MAD')
+                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2) . ' د.م.')
                     ->sortable(),
                 Tables\Columns\BadgeColumn::make('payment_method')
                     ->label('طريقة الأداء')
@@ -138,7 +138,7 @@ class PaymentResource extends Resource
                     ->label('أداء جزئي'),
                 Tables\Columns\TextColumn::make('remaining_balance')
                     ->label('المتبقي')
-                    ->money('MAD')
+                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2) . ' د.م.')
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('recorder.full_name')
                     ->label('سجل بواسطة')

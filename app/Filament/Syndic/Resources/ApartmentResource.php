@@ -126,7 +126,7 @@ class ApartmentResource extends Resource
 
                 Tables\Columns\TextColumn::make('monthly_fee')
                     ->label('الواجب الشهري')
-                    ->money('MAD')
+                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2) . ' د.م.')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('residents_info')

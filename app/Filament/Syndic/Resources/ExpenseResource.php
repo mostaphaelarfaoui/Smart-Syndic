@@ -127,7 +127,7 @@ class ExpenseResource extends Resource
                     ]),
                 Tables\Columns\TextColumn::make('amount')
                     ->label('المبلغ')
-                    ->money('MAD')
+                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2) . ' د.م.')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('building.name')
                     ->label('العمارة')

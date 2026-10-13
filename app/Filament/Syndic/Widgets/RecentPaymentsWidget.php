@@ -46,7 +46,7 @@ class RecentPaymentsWidget extends TableWidget
 
                 Tables\Columns\TextColumn::make('amount_paid')
                     ->label('المبلغ')
-                    ->money('MAD')
+                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2) . ' د.م.')
                     ->weight('bold')
                     ->color('success'),
 

@@ -17,6 +17,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureRateLimiting();
+
+        // Enforce Latin (Western) numerals across Filament tables and currency formatters
+        \Filament\Tables\Table::$defaultNumberLocale = 'ar@numbers=latn';
+        \Illuminate\Support\Number::useLocale('ar@numbers=latn');
     }
 
     /**

@@ -38,6 +38,11 @@ class SetLocale
         // 3. Fallback to default
         app()->setLocale($default);
 
+        if (app()->getLocale() === 'ar') {
+            \Illuminate\Support\Number::useLocale('ar@numbers=latn');
+            \Filament\Tables\Table::$defaultNumberLocale = 'ar@numbers=latn';
+        }
+
         return $next($request);
     }
 }
