@@ -18,6 +18,7 @@ use App\Services\Security\FraudDetectorService;
 use App\Services\Server\LogViewerService;
 use App\Services\Server\ServerHealthService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Storage;
@@ -244,6 +245,110 @@ class SuperAdminController extends Controller
         });
 
         return back()->with('success', "تم حذف الإقامة \"{$tenantName}\" وحذف كافة حسابات السانديك والسكان وجميع بياناتها نهائياً.");
+    }
+
+    public function impersonateTenant($id)
+    {
+        $tenant = Tenant::findOrFail($id);
+
+        if ($tenant->status !== 'ACTIVE') {
+            return back()->with('error', 'لا يمكن الدخول كمسير لإقامة غير نشطة أو موقوفة.');
+        }
+
+        $syndic = User::where('tenant_id', $tenant->id)
+            ->whereIn('role', ['SYNDIC', 'ADMIN_SYNDIC'])
+            ->where('status', 'ACTIVE')
+            ->first();
+
+        if (!$syndic) {
+            return back()->with('error', 'لا يوجد حساب سانديك نشط مرتبط بهذه الإقامة حالياً.');
+        }
+
+        $superAdmin = auth()->user();
+
+        session([
+            'impersonator_id'   => $superAdmin->id,
+            'impersonator_name' => $superAdmin->full_name,
+        ]);
+
+        AuditLog::record(
+            actorId: $superAdmin->id,
+            action: 'SUPERADMIN_IMPERSONATE_START',
+            targetTenantId: $tenant->id,
+            metadata: [
+                'target_user_id'    => $syndic->id,
+                'target_user_name'  => $syndic->full_name,
+                'target_user_email' => $syndic->email,
+                'tenant_name'       => $tenant->name,
+            ]
+        );
+
+        Auth::login($syndic);
+
+        return redirect()->route('portal.dashboard')->with('success', "تم الدخول بنجاح كمسير لإقامة \"{$tenant->name}\". أنت الآن في وضع الدعم الفني.");
+    }
+
+    public function impersonateUser($id)
+    {
+        $user = User::findOrFail($id);
+
+        if ($user->status !== 'ACTIVE') {
+            return back()->with('error', 'لا يمكن تقمص حساب غير نشط أو موقوف.');
+        }
+
+        if ($user->role === 'SUPER_ADMIN') {
+            return back()->with('error', 'لا يمكن تقمص حساب سوبر أدمن آخر.');
+        }
+
+        $superAdmin = auth()->user();
+
+        session([
+            'impersonator_id'   => $superAdmin->id,
+            'impersonator_name' => $superAdmin->full_name,
+        ]);
+
+        AuditLog::record(
+            actorId: $superAdmin->id,
+            action: 'SUPERADMIN_IMPERSONATE_START',
+            targetTenantId: $user->tenant_id,
+            metadata: [
+                'target_user_id'    => $user->id,
+                'target_user_name'  => $user->full_name,
+                'target_user_email' => $user->email,
+                'user_role'         => $user->role,
+            ]
+        );
+
+        Auth::login($user);
+
+        return redirect()->route('portal.dashboard')->with('success', "تم الدخول بنجاح بصفتك \"{$user->full_name}\".");
+    }
+
+    public function leaveImpersonation()
+    {
+        if (!session()->has('impersonator_id')) {
+            return redirect()->route('portal.dashboard');
+        }
+
+        $superAdminId = session('impersonator_id');
+        $superAdmin = User::findOrFail($superAdminId);
+        $impersonatedUser = auth()->user();
+
+        AuditLog::record(
+            actorId: $superAdmin->id,
+            action: 'SUPERADMIN_IMPERSONATE_STOP',
+            targetTenantId: $impersonatedUser?->tenant_id,
+            metadata: [
+                'returned_from_user' => $impersonatedUser?->full_name,
+                'returned_at'        => now()->toDateTimeString(),
+            ]
+        );
+
+        session()->forget(['impersonator_id', 'impersonator_name']);
+
+        Auth::login($superAdmin);
+
+        return redirect()->route('superadmin.dashboard')->with('success', 'تم إنهاء وضع الدعم الفني والعودة بنجاح إلى لوحة تحكم السوبر أدمن.');
     }
 
     public function server(ServerHealthService $healthService)

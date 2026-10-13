@@ -107,6 +107,13 @@
                                         </button>
                                     </form>
                                 @elseif($tenant->status === 'ACTIVE')
+                                    <form method="POST" action="{{ route('superadmin.tenants.impersonate', $tenant->id) }}" onsubmit="return confirm('هل تريد الدخول كمسير لإقامة {{ $tenant->name }} للدعم الفني؟ سيتم تسجيل الجلسة في سجل الرقابة.');">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-secondary" style="color:var(--brand-primary); border-color:rgba(99,102,241,0.3);" title="الدخول كمسير للإقامة (تقمص للدعم الفني)">
+                                            👤 دخول كمسير
+                                        </button>
+                                    </form>
+
                                     <form method="POST" action="{{ route('superadmin.tenants.suspend', $tenant->id) }}" onsubmit="return confirm('تحذير: هل تؤكد توقيف إقامة {{ $tenant->name }}؟ سيتم إيقاف كافة حسابات السانديك والسكان التابعة لها عن العمل فوراً.');">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-secondary" style="color:var(--color-warning);" title="توقيف الإقامة والسكان">

@@ -232,6 +232,12 @@
                                                 </button>
                                             </form>
                                         @elseif($tenant->status === 'ACTIVE')
+                                            <form method="POST" action="{{ route('superadmin.tenants.impersonate', $tenant->id) }}" onsubmit="return confirm('هل تريد الدخول كمسير لإقامة {{ $tenant->name }} للدعم الفني؟')">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-secondary" style="padding:0.25rem 0.5rem; font-size:0.75rem; color:#6366f1; border-color:rgba(99,102,241,0.3);" title="دخول كمسير للدعم الفني">
+                                                    👤 دخول
+                                                </button>
+                                            </form>
                                             <form method="POST" action="{{ route('superadmin.tenants.suspend', $tenant->id) }}" onsubmit="return confirm('تنبيه: سيتم إيقاف الإقامة وكافة حسابات السانديك والسكان التابعة لها فوراً. هل تريد المتابعة؟')">
                                                 @csrf
                                                 <button type="submit" class="btn btn-sm btn-danger" style="padding:0.25rem 0.6rem; font-size:0.75rem;">

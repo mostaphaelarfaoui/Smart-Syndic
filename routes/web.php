@@ -136,4 +136,11 @@ Route::middleware(['auth:web', 'role:SUPER_ADMIN'])->prefix('platform')->name('s
 
     // Audit Trail
     Route::get('/audit', [SuperAdminController::class, 'auditLogs'])->name('audit.index');
+
+    // Impersonation Support Actions
+    Route::post('/tenants/{id}/impersonate', [SuperAdminController::class, 'impersonateTenant'])->name('tenants.impersonate');
+    Route::post('/users/{id}/impersonate', [SuperAdminController::class, 'impersonateUser'])->name('users.impersonate');
 });
+
+// ─── Leave Impersonation Session ─────────────────────────────────────────
+Route::post('/impersonate/leave', [SuperAdminController::class, 'leaveImpersonation'])->name('impersonate.leave')->middleware('auth:web');

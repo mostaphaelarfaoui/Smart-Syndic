@@ -139,6 +139,22 @@
 
     {{-- Main Area --}}
     <main class="app-main">
+        @if(session()->has('impersonator_id'))
+            <div style="background: linear-gradient(90deg, #92400e, #b45309, #d97706); color:#ffffff; padding:0.65rem 1.5rem; display:flex; justify-content:space-between; align-items:center; font-size:0.875rem; font-weight:600; box-shadow:0 3px 12px rgba(0,0,0,0.25); position:sticky; top:0; z-index:9999;">
+                <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <span style="font-size:1.2rem;">👤</span>
+                    <span>وضع الدعم الفني: أنت تتصفح حالياً بصفتك السانديك <strong>{{ auth()->user()->full_name }}</strong> (إقامة: <strong>{{ auth()->user()->tenant?->name }}</strong>)</span>
+                </div>
+                <form method="POST" action="{{ route('impersonate.leave') }}" style="margin:0;">
+                    @csrf
+                    <button type="submit" style="background:#ffffff; color:#92400e; border:none; padding:0.35rem 0.9rem; border-radius:6px; font-weight:700; font-size:0.8rem; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; box-shadow:0 2px 4px rgba(0,0,0,0.15); transition:transform 0.15s ease;">
+                        <span>إنهاء التقمص والعودة للسوبر أدمن</span>
+                        <span>&larr;</span>
+                    </button>
+                </form>
+            </div>
+        @endif
+
         {{-- Sticky Topbar --}}
         <header class="app-topbar">
             <div class="topbar-right">
