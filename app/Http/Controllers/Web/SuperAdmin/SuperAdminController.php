@@ -3,18 +3,25 @@
 namespace App\Http\Controllers\Web\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Apartment;
 use App\Models\AuditLog;
 use App\Models\BlockedIp;
+use App\Models\Building;
 use App\Models\Expense;
 use App\Models\Payment;
+use App\Models\Poll;
 use App\Models\SecurityIncident;
+use App\Models\Suggestion;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Security\FraudDetectorService;
 use App\Services\Server\LogViewerService;
 use App\Services\Server\ServerHealthService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Storage;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class SuperAdminController extends Controller
 {
@@ -91,31 +98,152 @@ class SuperAdminController extends Controller
     public function approveTenant($id)
     {
         $tenant = Tenant::findOrFail($id);
-        $tenant->update(['status' => 'ACTIVE']);
 
-        AuditLog::record(
-            actorId: auth()->id(),
-            action: 'SUPERADMIN_TENANT_APPROVE',
-            targetTenantId: $tenant->id,
-            metadata: ['tenant_name' => $tenant->name]
-        );
+        DB::transaction(function () use ($tenant) {
+            // 1. Activate tenant
+            $tenant->update(['status' => 'ACTIVE']);
 
-        return back()->with('success', "تم تفعيل الإقامة \"{$tenant->name}\" بنجاح وتمكين السانديك من إدارة المنظومة.");
+            // 2. Cascade: Reactivate all users under this tenant (Syndic & Residents)
+            User::where('tenant_id', $tenant->id)->update(['status' => 'ACTIVE']);
+
+            AuditLog::record(
+                actorId: auth()->id(),
+                action: 'SUPERADMIN_TENANT_APPROVE',
+                targetTenantId: $tenant->id,
+                metadata: ['tenant_name' => $tenant->name]
+            );
+        });
+
+        return back()->with('success', "تم تفعيل الإقامة \"{$tenant->name}\" وتفعيل كافة حسابات السانديك والسكان التابعة لها بنجاح.");
+    }
+
+    public function rejectTenant($id)
+    {
+        $tenant = Tenant::findOrFail($id);
+
+        DB::transaction(function () use ($tenant) {
+            // 1. Reject tenant
+            $tenant->update(['status' => 'REJECTED']);
+
+            // 2. Cascade: Reject and disable all users under this tenant
+            User::where('tenant_id', $tenant->id)->update(['status' => 'REJECTED']);
+
+            // 3. Revoke any active tokens
+            $userIds = User::where('tenant_id', $tenant->id)->pluck('id')->toArray();
+            if (!empty($userIds)) {
+                PersonalAccessToken::whereIn('tokenable_id', $userIds)->delete();
+            }
+
+            AuditLog::record(
+                actorId: auth()->id(),
+                action: 'SUPERADMIN_TENANT_REJECT',
+                targetTenantId: $tenant->id,
+                metadata: ['tenant_name' => $tenant->name]
+            );
+        });
+
+        return back()->with('success', "تم رفض تسجيل سانديك وإقامة \"{$tenant->name}\" وتعطيل كافة الحسابات التابعة لها.");
     }
 
     public function suspendTenant($id)
     {
         $tenant = Tenant::findOrFail($id);
-        $tenant->update(['status' => 'SUSPENDED']);
 
-        AuditLog::record(
-            actorId: auth()->id(),
-            action: 'SUPERADMIN_TENANT_SUSPEND',
-            targetTenantId: $tenant->id,
-            metadata: ['tenant_name' => $tenant->name]
-        );
+        $suspendedCount = 0;
+        DB::transaction(function () use ($tenant, &$suspendedCount) {
+            // 1. Suspend tenant
+            $tenant->update(['status' => 'SUSPENDED']);
 
-        return back()->with('success', "تم توقيف إقامة \"{$tenant->name}\".");
+            // 2. Cascade: Suspend ALL users of this tenant (both Syndic and all Residents)
+            $users = User::where('tenant_id', $tenant->id)->get();
+            $suspendedCount = $users->count();
+            $userIds = $users->pluck('id')->toArray();
+
+            User::where('tenant_id', $tenant->id)->update(['status' => 'SUSPENDED']);
+
+            // 3. Revoke all active API tokens immediately
+            if (!empty($userIds)) {
+                PersonalAccessToken::whereIn('tokenable_id', $userIds)->delete();
+            }
+
+            AuditLog::record(
+                actorId: auth()->id(),
+                action: 'SUPERADMIN_TENANT_SUSPEND',
+                targetTenantId: $tenant->id,
+                metadata: [
+                    'tenant_name'     => $tenant->name,
+                    'suspended_users' => $suspendedCount,
+                ]
+            );
+        });
+
+        return back()->with('success', "تم توقيف إقامة \"{$tenant->name}\" وإيقاف كافة حسابات السانديك والسكان التابعة لها ({$suspendedCount} حساب) عن العمل فوراً.");
+    }
+
+    public function destroyTenant($id)
+    {
+        $tenant = Tenant::findOrFail($id);
+        $tenantName = $tenant->name;
+
+        DB::transaction(function () use ($tenant, $tenantName) {
+            $tenantId = $tenant->id;
+
+            // 1. Gather all users belonging to this tenant
+            $users = User::where('tenant_id', $tenantId)->get();
+            $userIds = $users->pluck('id')->toArray();
+
+            // 2. Revoke any tokens
+            if (!empty($userIds)) {
+                PersonalAccessToken::whereIn('tokenable_id', $userIds)->delete();
+            }
+
+            // 3. Delete Resident-Apartment bindings
+            if (!empty($userIds)) {
+                DB::table('resident_apartments')->whereIn('user_id', $userIds)->delete();
+            }
+
+            // 4. Delete Payments & Expenses
+            Payment::where('tenant_id', $tenantId)->delete();
+            Expense::where('tenant_id', $tenantId)->delete();
+
+            // 5. Delete Suggestions & Polls
+            Suggestion::where('tenant_id', $tenantId)->delete();
+            $pollIds = Poll::where('tenant_id', $tenantId)->pluck('id');
+            if ($pollIds->isNotEmpty()) {
+                DB::table('poll_votes')->whereIn('poll_id', $pollIds)->delete();
+                DB::table('poll_options')->whereIn('poll_id', $pollIds)->delete();
+                Poll::where('tenant_id', $tenantId)->delete();
+            }
+
+            // 6. Delete Apartments and Buildings
+            $buildingIds = Building::where('tenant_id', $tenantId)->pluck('id');
+            if ($buildingIds->isNotEmpty()) {
+                Apartment::whereIn('building_id', $buildingIds)->delete();
+                Building::where('tenant_id', $tenantId)->delete();
+            }
+
+            // 7. Delete ALL users (Syndic & all Residents)
+            User::where('tenant_id', $tenantId)->delete();
+
+            // 8. Delete stamp file if exists
+            if ($tenant->stamp_image_path) {
+                Storage::disk('public')->delete($tenant->stamp_image_path);
+            }
+
+            // 9. Delete the tenant
+            $tenant->delete();
+
+            AuditLog::record(
+                actorId: auth()->id(),
+                action: 'SUPERADMIN_TENANT_DELETE',
+                metadata: [
+                    'tenant_name' => $tenantName,
+                    'deleted_at'  => now()->toDateTimeString(),
+                ]
+            );
+        });
+
+        return back()->with('success', "تم حذف الإقامة \"{$tenantName}\" وحذف كافة حسابات السانديك والسكان وجميع بياناتها نهائياً.");
     }
 
     public function server(ServerHealthService $healthService)

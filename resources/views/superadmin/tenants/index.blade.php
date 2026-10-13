@@ -25,6 +25,7 @@
                 <option value="ACTIVE" {{ request('status') == 'ACTIVE' ? 'selected' : '' }}>مفعلة</option>
                 <option value="PENDING_APPROVAL" {{ request('status') == 'PENDING_APPROVAL' ? 'selected' : '' }}>في انتظار التفعيل</option>
                 <option value="SUSPENDED" {{ request('status') == 'SUSPENDED' ? 'selected' : '' }}>موقوفة</option>
+                <option value="REJECTED" {{ request('status') == 'REJECTED' ? 'selected' : '' }}>مرفوضة</option>
             </select>
 
             <button type="submit" class="btn btn-primary btn-sm" style="padding:0.75rem 1.25rem;">
@@ -80,37 +81,54 @@
                                 <span class="badge badge-success">✓ مفعلة</span>
                             @elseif($tenant->status === 'PENDING_APPROVAL')
                                 <span class="badge badge-warning">⏳ في الانتظار</span>
+                            @elseif($tenant->status === 'REJECTED')
+                                <span class="badge badge-danger">✕ مرفوضة</span>
                             @else
-                                <span class="badge badge-danger">موقوفة</span>
+                                <span class="badge badge-danger">⏸ موقوفة</span>
                             @endif
                         </td>
                         <td class="num" style="color:var(--text-muted); font-size:0.85rem;">
                             {{ $tenant->created_at->format('Y/m/d') }}
                         </td>
                         <td>
-                            <div style="display:flex; align-items:center; gap:0.5rem;">
+                            <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
                                 @if($tenant->status === 'PENDING_APPROVAL')
                                     <form method="POST" action="{{ route('superadmin.tenants.approve', $tenant->id) }}">
                                         @csrf
-                                        <button type="submit" class="btn btn-sm btn-success">
+                                        <button type="submit" class="btn btn-sm btn-success" title="قبول وتفعيل الإقامة">
                                             تفعيل ✓
                                         </button>
                                     </form>
-                                @elseif($tenant->status === 'ACTIVE')
-                                    <form method="POST" action="{{ route('superadmin.tenants.suspend', $tenant->id) }}" onsubmit="return confirm('هل تؤكد توقيف هذه الإقامة؟');">
+
+                                    <form method="POST" action="{{ route('superadmin.tenants.reject', $tenant->id) }}" onsubmit="return confirm('هل تؤكد رفض تسجيل سانديك وإقامة {{ $tenant->name }}؟');">
                                         @csrf
-                                        <button type="submit" class="btn btn-sm btn-secondary" style="color:var(--color-danger);">
-                                            توقيف
+                                        <button type="submit" class="btn btn-sm btn-secondary" style="color:var(--color-danger); border-color:rgba(244,63,94,0.3);" title="رفض طلب التسجيل">
+                                            رفض ✕
+                                        </button>
+                                    </form>
+                                @elseif($tenant->status === 'ACTIVE')
+                                    <form method="POST" action="{{ route('superadmin.tenants.suspend', $tenant->id) }}" onsubmit="return confirm('تحذير: هل تؤكد توقيف إقامة {{ $tenant->name }}؟ سيتم إيقاف كافة حسابات السانديك والسكان التابعة لها عن العمل فوراً.');">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-secondary" style="color:var(--color-warning);" title="توقيف الإقامة والسكان">
+                                            توقيف ⏸
                                         </button>
                                     </form>
                                 @else
                                     <form method="POST" action="{{ route('superadmin.tenants.approve', $tenant->id) }}">
                                         @csrf
-                                        <button type="submit" class="btn btn-sm btn-success">
-                                            إعادة التفعيل
+                                        <button type="submit" class="btn btn-sm btn-success" title="إعادة التفعيل لكافة الحسابات">
+                                            تفعيل ✓
                                         </button>
                                     </form>
                                 @endif
+
+                                <form method="POST" action="{{ route('superadmin.tenants.destroy', $tenant->id) }}" onsubmit="return confirm('تحذير شديد: هل أنت متأكد من حذف إقامة {{ $tenant->name }} نهائياً؟ سيتم حذف جميع حسابات السانديك والسكان التابعة لها، وكافة الشقق والدفعات والمصاريف بدون إمكانية استرجاع.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-danger" style="padding:0.4rem 0.6rem;" title="حذف نهائي للإقامة وكافة حساباتها">
+                                        🗑️
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>

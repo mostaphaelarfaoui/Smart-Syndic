@@ -210,12 +210,14 @@
                                         <span class="badge badge-success">نشطة</span>
                                     @elseif($tenant->status === 'PENDING_APPROVAL')
                                         <span class="badge badge-warning">قيد الموافقة</span>
+                                    @elseif($tenant->status === 'REJECTED')
+                                        <span class="badge badge-danger" style="background:rgba(239,68,68,0.15); color:#ef4444;">مرفوضة</span>
                                     @else
                                         <span class="badge badge-danger">موقوفة</span>
                                     @endif
                                 </td>
                                 <td>
-                                    <div style="display:flex; gap:0.4rem;">
+                                    <div style="display:flex; gap:0.4rem; flex-wrap:wrap; align-items:center;">
                                         @if($tenant->status === 'PENDING_APPROVAL')
                                             <form method="POST" action="{{ route('superadmin.tenants.approve', $tenant->id) }}">
                                                 @csrf
@@ -223,10 +225,16 @@
                                                     موافقة
                                                 </button>
                                             </form>
-                                        @elseif($tenant->status === 'ACTIVE')
-                                            <form method="POST" action="{{ route('superadmin.tenants.suspend', $tenant->id) }}">
+                                            <form method="POST" action="{{ route('superadmin.tenants.reject', $tenant->id) }}" onsubmit="return confirm('هل تؤكد رفض تسجيل هذه الإقامة وحساب السانديك التابع لها؟')">
                                                 @csrf
-                                                <button type="submit" class="btn btn-sm btn-danger" style="padding:0.25rem 0.6rem; font-size:0.75rem;" onclick="return confirm('هل تريد توقيف الإقامة؟')">
+                                                <button type="submit" class="btn btn-sm" style="padding:0.25rem 0.6rem; font-size:0.75rem; background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.25);">
+                                                    رفض
+                                                </button>
+                                            </form>
+                                        @elseif($tenant->status === 'ACTIVE')
+                                            <form method="POST" action="{{ route('superadmin.tenants.suspend', $tenant->id) }}" onsubmit="return confirm('تنبيه: سيتم إيقاف الإقامة وكافة حسابات السانديك والسكان التابعة لها فوراً. هل تريد المتابعة؟')">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-danger" style="padding:0.25rem 0.6rem; font-size:0.75rem;">
                                                     توقيف
                                                 </button>
                                             </form>
@@ -238,6 +246,14 @@
                                                 </button>
                                             </form>
                                         @endif
+
+                                        <form method="POST" action="{{ route('superadmin.tenants.destroy', $tenant->id) }}" onsubmit="return confirm('تحذير شديد: سيتم حذف الإقامة وكافة حسابات السانديك والسكان التابعة لها وجميع بياناتها نهائياً. هل أنت متأكد؟')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm" style="padding:0.25rem 0.5rem; font-size:0.75rem; background:rgba(239,68,68,0.08); color:#ef4444; border:1px solid rgba(239,68,68,0.2);" title="حذف نهائي">
+                                                🗑️
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>

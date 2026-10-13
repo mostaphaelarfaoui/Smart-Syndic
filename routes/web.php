@@ -110,7 +110,9 @@ Route::middleware(['auth:web', 'role:SUPER_ADMIN'])->prefix('platform')->name('s
     // Tenants & Organizations
     Route::get('/tenants', [SuperAdminController::class, 'tenants'])->name('tenants.index');
     Route::post('/tenants/{id}/approve', [SuperAdminController::class, 'approveTenant'])->name('tenants.approve');
+    Route::post('/tenants/{id}/reject', [SuperAdminController::class, 'rejectTenant'])->name('tenants.reject');
     Route::post('/tenants/{id}/suspend', [SuperAdminController::class, 'suspendTenant'])->name('tenants.suspend');
+    Route::delete('/tenants/{id}', [SuperAdminController::class, 'destroyTenant'])->name('tenants.destroy');
 
     // Server & Database Health
     Route::get('/server', [SuperAdminController::class, 'server'])->name('server.index');
