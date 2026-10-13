@@ -25,16 +25,22 @@ class EnsureUserRole
         }
 
         if (! in_array($user->role, $roles, true)) {
-            return response()->json([
-                'message' => __('auth.forbidden'),
-            ], 403);
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'message' => __('auth.forbidden'),
+                ], 403);
+            }
+            abort(403, 'غير مصرح لك بالوصول إلى هذه اللوحة.');
         }
 
         // Block non-active users from accessing protected resources
         if ($user->status !== 'ACTIVE' && $user->role !== 'SUPER_ADMIN') {
-            return response()->json([
-                'message' => __('auth.account_inactive'),
-            ], 403);
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'message' => __('auth.account_inactive'),
+                ], 403);
+            }
+            abort(403, 'الحساب معطل.');
         }
 
         return $next($request);
