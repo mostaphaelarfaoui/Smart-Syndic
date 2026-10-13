@@ -27,6 +27,37 @@ class Apartment extends Model
         'is_billable' => 'boolean',
     ];
 
+    public static function boot(): void
+    {
+        parent::boot();
+
+        static::deleting(function (Apartment $apartment) {
+            // 1. Fetch all residents linked to this apartment
+            $residents = $apartment->residents()->get();
+
+            // 2. Detach residents from this apartment
+            $apartment->residents()->detach();
+
+            // 3. Delete payments of this apartment first (cleans up FK references)
+            $apartment->payments()->delete();
+
+            // 4. Delete suggestions and poll votes of this apartment
+            $apartment->suggestions()->delete();
+            $apartment->pollVotes()->delete();
+
+            // 5. Directly delete the resident accounts associated with this apartment
+            foreach ($residents as $resident) {
+                if ($resident->apartments()->count() === 0) {
+                    \App\Models\Payment::where('recorded_by', $resident->id)->delete();
+                    $resident->tokens()->delete();
+                    $resident->suggestions()->delete();
+                    $resident->pollVotes()->delete();
+                    $resident->delete();
+                }
+            }
+        });
+    }
+
     // ─── Scopes ───────────────────────────────────────────────────
 
     /**

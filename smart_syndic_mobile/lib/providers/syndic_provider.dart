@@ -368,6 +368,22 @@ class SyndicProvider extends ChangeNotifier {
     }
   }
 
+
+  /// Vacate apartment: deletes resident account, resets unit finances to initial state
+  Future<bool> vacateApartment(String apartmentId) async {
+    try {
+      await _api.post(ApiConstants.apartmentVacate(apartmentId), {});
+      await fetchApartments();
+      await fetchDashboardKpis();
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
   /// Feature 12 — Confirm a DRAFT payment.
   Future<bool> confirmPayment(String paymentId) async {
     try {

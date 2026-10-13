@@ -30,6 +30,7 @@ class ApiConstants {
 
   // Feature 4 — Toggle apartment billable
   static String apartmentToggleBillable(String id) => '/syndic/apartments/$id/toggle-billable';
+  static String apartmentVacate(String id) => '/syndic/apartments/$id/vacate';
 
   // Feature 12 — Payment workflow
   static String paymentConfirm(String id) => '/syndic/payments/$id/confirm';

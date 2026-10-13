@@ -49,6 +49,42 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasDefau
         ];
     }
 
+    public static function boot(): void
+    {
+        parent::boot();
+
+        static::deleting(function (User $user) {
+            if ($user->isResident()) {
+                // For each apartment linked to this resident
+                $apartments = $user->apartments()->get();
+
+                // Detach resident from apartments
+                $user->apartments()->detach();
+
+                foreach ($apartments as $apartment) {
+                    // Check if apartment now has no residents (vacant)
+                    if ($apartment->residents()->count() === 0) {
+                        // Reset apartment finances: delete past payments so slate is clean
+                        $apartment->payments()->delete();
+
+                        // Reset created_at to now so expected due months calculation starts fresh
+                        $apartment->forceFill([
+                            'created_at' => now(),
+                        ])->saveQuietly();
+                    }
+                }
+
+                // Clean up any payments recorded by this user
+                Payment::where('recorded_by', $user->id)->delete();
+
+                // Delete tokens, suggestions, poll votes
+                $user->tokens()->delete();
+                $user->suggestions()->delete();
+                $user->pollVotes()->delete();
+            }
+        });
+    }
+
     // ─── Filament Authorization ───────────────────────────────────────
 
     public function canAccessPanel(Panel $panel): bool

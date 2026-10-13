@@ -108,7 +108,11 @@ class ApartmentsRelationManager extends RelationManager
                             ->send();
                     }),
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->label('حذف الشقة')
+                    ->modalHeading(fn (Apartment $record) => "حذف الشقة {$record->unit_number}")
+                    ->modalDescription('سيتم حذف الشقة وحساب الساكن المرتبط بها وجميع سجلاتها نهائياً.')
+                    ->modalSubmitActionLabel('نعم، حذف الشقة وحساب الساكن'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

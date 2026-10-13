@@ -85,6 +85,9 @@ Route::middleware(['auth:sanctum', 'tenant.scope', 'tenant.active'])->group(func
             // Feature 4 — Toggle billing for developer-owned vacant apartments
             Route::match(['put', 'post'], '/apartments/{id}/toggle-billable', [ApartmentController::class, 'toggleBillable'])
                 ->name('syndic.apartments.toggle-billable');
+            // Vacate apartment and delete resident account
+            Route::post('/apartments/{id}/vacate', [ApartmentController::class, 'vacate'])
+                ->name('syndic.apartments.vacate');
 
             // ─── Pending Resident Management ──────────────────────
             Route::get('/pending-residents', [PendingResidentController::class, 'index'])

@@ -317,17 +317,65 @@ class ApartmentController extends Controller
             ->with(['residents', 'payments'])
             ->findOrFail($id);
 
-        if ($apartment->payments()->exists()) {
-            return response()->json([
-                'message' => 'لا يمكن حذف الشقة لوجود إيصالات أداء مسجلة لها. يمكنك تعديل بياناتها بدلاً من ذلك.',
-            ], 422);
-        }
+        $unitNumber = $apartment->unit_number;
+        $residentNames = $apartment->residents->map(fn ($r) => $r->full_name)->implode(', ');
 
-        $apartment->residents()->detach();
-        $apartment->delete();
+        DB::transaction(function () use ($apartment) {
+            $apartment->delete(); // Triggers Apartment::deleting hook: deletes resident accounts & payments
+        });
+
+        $this->auditService->log(
+            $request->user()->id,
+            'APARTMENT_DELETED_WITH_RESIDENTS',
+            $tenantId,
+            [
+                'unit_number'        => $unitNumber,
+                'deleted_residents'  => $residentNames ?: 'لا يوجد ساكن',
+            ]
+        );
 
         return response()->json([
-            'message' => 'تم حذف الشقة بنجاح',
+            'message' => "تم حذف الشقة {$unitNumber} بنجاح وحذف الحسابات المرتبطة بها.",
+        ]);
+    }
+
+    /**
+     * POST /api/v1/syndic/apartments/{id}/vacate
+     *
+     * Vacate an apartment: delete resident account, clear payments, reset unit so new resident can register.
+     */
+    public function vacate(Request $request, string $id): JsonResponse
+    {
+        $tenantId = $request->user()->tenant_id;
+        $apartment = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))
+            ->with(['residents'])
+            ->findOrFail($id);
+
+        $unitNumber = $apartment->unit_number;
+        $residentNames = $apartment->residents->map(fn ($r) => $r->full_name)->implode(', ');
+
+        DB::transaction(function () use ($apartment) {
+            $residents = $apartment->residents()->get();
+            foreach ($residents as $resident) {
+                $resident->delete(); // Triggers User::deleting hook: clears payments & sets created_at = now()
+            }
+            $apartment->refresh();
+        });
+
+        $this->auditService->log(
+            $request->user()->id,
+            'APARTMENT_VACATED_AND_RESET',
+            $tenantId,
+            [
+                'apartment_id'       => $apartment->id,
+                'unit_number'        => $unitNumber,
+                'vacated_residents'  => $residentNames,
+            ]
+        );
+
+        return response()->json([
+            'message'      => "تم إخلاء الشقة {$unitNumber} بنجاح وحذف حساب الساكن وتصفير المبالغ لتبدأ من جديد.",
+            'apartment_id' => $apartment->id,
         ]);
     }
 

@@ -150,6 +150,38 @@ class ResidentResource extends Resource
                     ->modalHeading('تعليق حساب الساكن')
                     ->modalDescription('هل أنت متأكد من رغبتك في تعليق حساب هذا الساكن؟')
                     ->action(fn (User $record) => $record->update(['status' => 'SUSPENDED'])),
+
+                Tables\Actions\DeleteAction::make()
+                    ->label('حذف الحساب وإخلاء الشقة')
+                    ->icon('heroicon-o-trash')
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (User $record) => "حذف حساب الساكن {$record->full_name}")
+                    ->modalDescription('هل أنت متأكد من حذف حساب هذا الساكن؟ سيتم تفريغ الشقة لتصبح شاغرة فوراً ومتاحة لشخص جديد، مع تصفير مبالغها وحساباتها لتبدأ من جديد.')
+                    ->modalSubmitActionLabel('نعم، حذف وتفريغ الشقة')
+                    ->after(function (User $record) {
+                        \App\Models\AuditLog::record(
+                            actorId: auth()->id(),
+                            action: 'RESIDENT_DELETED_AND_VACATED',
+                            targetTenantId: auth()->user()?->tenant_id,
+                            metadata: [
+                                'resident_id'    => $record->id,
+                                'resident_name'  => $record->full_name,
+                                'resident_email' => $record->email,
+                                'resident_phone' => $record->phone,
+                            ]
+                        );
+
+                        \Filament\Notifications\Notification::make()
+                            ->title("تم حذف حساب الساكن {$record->full_name} وتفريغ الشقة بنجاح")
+                            ->success()
+                            ->send();
+                    }),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->label('حذف وتفريغ الشقق المحددة'),
+                ]),
             ]);
     }
 

@@ -176,7 +176,8 @@ class PaymentService
      */
     public function getApartmentBalance(Apartment $apartment): array
     {
-        if (! $apartment->is_billable) {
+        // If apartment is exempt or vacant (has no residents), arrears and total due are 0
+        if (! $apartment->is_billable || ! $apartment->residents()->exists()) {
             $paidMonths = $this->getPaidMonths($apartment);
             $totalPaid  = (float) $apartment->payments()->where('status', '!=', 'DRAFT')->sum('amount_paid');
             return [
@@ -190,7 +191,7 @@ class PaymentService
                 'is_settled'          => true,
                 'current_month'       => now()->format('Y-m'),
                 'is_current_paid'     => true,
-                'is_exempt'           => true,
+                'is_exempt'           => ! $apartment->is_billable,
             ];
         }
 
@@ -223,11 +224,16 @@ class PaymentService
     }
 
     /**
-     * Get all months that should have been paid (from apartment creation to now).
+     * Get all months that should have been paid (from resident start / unit reset to now).
      */
     private function getExpectedMonths(Apartment $apartment): array
     {
-        $start  = $apartment->created_at->startOfMonth();
+        $firstResident = $apartment->residents()->orderBy('resident_apartments.created_at', 'asc')->first();
+        if ($firstResident && $firstResident->pivot && $firstResident->pivot->created_at) {
+            $start = \Illuminate\Support\Carbon::parse($firstResident->pivot->created_at)->startOfMonth();
+        } else {
+            $start = $apartment->created_at->copy()->startOfMonth();
+        }
         $end    = now()->startOfMonth();
         $months = [];
 

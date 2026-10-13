@@ -281,8 +281,62 @@ class ApartmentResource extends Resource
                             ->send();
                     }),
 
+                // Vacate Resident Action
+                Action::make('vacate_resident')
+                    ->label('إخلاء الشقة وحذف الساكن')
+                    ->icon('heroicon-o-user-minus')
+                    ->color('danger')
+                    ->visible(fn (Apartment $record) => $record->residents->isNotEmpty())
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (Apartment $record) => "إخلاء وتفريغ الشقة {$record->unit_number}")
+                    ->modalDescription(fn (Apartment $record) => "سيتم حذف حساب الساكن الحالي (" . ($record->residents->first()?->full_name ?? '') . ") وتفريغ الشقة لتصبح شاغرة فوراً ومتاحة لتسجيل ساكن جديد، مع تصفير مبالغ وحسابات الشقة للصيغة الأولى.")
+                    ->modalSubmitActionLabel('نعم، إخلاء الشقة وحذف الساكن')
+                    ->action(function (Apartment $record) {
+                        DB::transaction(function () use ($record) {
+                            $residents = $record->residents()->get();
+                            foreach ($residents as $resident) {
+                                $resident->delete();
+                            }
+                            $record->refresh();
+                        });
+
+                        AuditLog::record(
+                            actorId: auth()->id(),
+                            action: 'APARTMENT_VACATED_AND_RESET',
+                            targetTenantId: auth()->user()?->tenant_id,
+                            metadata: [
+                                'apartment_id' => $record->id,
+                                'unit_number'  => $record->unit_number,
+                            ]
+                        );
+
+                        Notification::make()
+                            ->title("تم إخلاء الشقة {$record->unit_number} بنجاح وأصبحت شاغرة ومتاحة لساكن جديد")
+                            ->success()
+                            ->send();
+                    }),
+
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->label('حذف الشقة')
+                    ->modalHeading(fn (Apartment $record) => "حذف الشقة {$record->unit_number}")
+                    ->modalDescription(fn (Apartment $record) => "تحذير: سيتم حذف هذه الشقة نهائياً، وسيتم مباشرة حذف حساب الساكن المرتبط بها (" . ($record->residents->first()?->full_name ?? 'بدون ساكن') . ") وجميع وصولات وسجلات الأداء المرتبطة بها.")
+                    ->modalSubmitActionLabel('نعم، حذف الشقة وحساب الساكن')
+                    ->after(function (Apartment $record) {
+                        AuditLog::record(
+                            actorId: auth()->id(),
+                            action: 'APARTMENT_DELETED_WITH_RESIDENT',
+                            targetTenantId: auth()->user()?->tenant_id,
+                            metadata: [
+                                'unit_number' => $record->unit_number,
+                            ]
+                        );
+
+                        Notification::make()
+                            ->title("تم حذف الشقة وحساب الساكن المرتبط بها بنجاح")
+                            ->success()
+                            ->send();
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

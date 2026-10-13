@@ -115,6 +115,70 @@ class ApartmentDetailsDialog extends StatelessWidget {
     }
   }
 
+  Future<void> _vacateApartment(BuildContext context) async {
+    final resident = apartment.resident;
+    final residentName = resident?['name'] ?? 'الساكن';
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.person_remove_rounded, color: AppColors.danger),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'إخلاء الشقة وحذف الساكن',
+                style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'هل أنت متأكد من رغبتك في إخلاء الشقة ${apartment.unitNumber} وحذف حساب $residentName؟\n\n'
+          '• سيتم حذف حساب الساكن نهائياً لتصبح الشقة شاغرة وقابلة لربط شخص آخر بها.\n'
+          '• سيتم تصفير وإرجاع الحسابات والمبالغ للصيغة الأولى (0 درهم متأخرات).',
+          style: GoogleFonts.cairo(fontSize: 13, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('إلغاء', style: GoogleFonts.cairo(color: AppColors.textSecondary)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.danger,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              'تأكيد الإخلاء والحذف',
+              style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && context.mounted) {
+      final syndic = context.read<SyndicProvider>();
+      final ok = await syndic.vacateApartment(apartment.id);
+      if (context.mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              ok
+                  ? 'تم إخلاء الشقة وتصفير سجلاتها وحذف حساب الساكن بنجاح ✓'
+                  : (syndic.errorMessage ?? 'تعذر إخلاء الشقة'),
+              style: GoogleFonts.cairo(),
+            ),
+            backgroundColor: ok ? AppColors.success : AppColors.danger,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final resident = apartment.resident;
@@ -436,6 +500,25 @@ class ApartmentDetailsDialog extends StatelessWidget {
                                 ],
                               ],
                             ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppColors.danger,
+                                  side: BorderSide(color: AppColors.danger.withAlpha(120), width: 1.2),
+                                  backgroundColor: AppColors.danger.withAlpha(10),
+                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                ),
+                                onPressed: () => _vacateApartment(context),
+                                icon: const Icon(Icons.person_remove_outlined, size: 16),
+                                label: Text(
+                                  'إخلاء الشقة وحذف حساب الساكن',
+                                  style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -626,7 +709,11 @@ class ApartmentDetailsDialog extends StatelessWidget {
                               context: context,
                               builder: (ctx) => AlertDialog(
                                 title: Text('تأكيد حذف الشقة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
-                                content: Text('هل أنت متأكد من رغبتك في حذف ${apartment.unitNumber}؟', style: GoogleFonts.cairo()),
+                                content: Text(
+                                  'هل أنت متأكد من رغبتك في حذف الشقة ${apartment.unitNumber}؟\n\n'
+                                  '⚠️ تنبيه: سيتم مباشرة حذف حساب الساكن المرتبط بها، بالإضافة إلى كافة إيصالاتها ومستحقاتها المالية.',
+                                  style: GoogleFonts.cairo(fontSize: 13, height: 1.5),
+                                ),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(ctx, false),
