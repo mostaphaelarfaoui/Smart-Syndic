@@ -201,12 +201,12 @@
             <table class="table">
                 <thead>
                     <tr>
-                        <th>الشقة</th>
-                        <th>المؤدي / الساكن</th>
-                        <th>المبلغ</th>
-                        <th>طريقة الدفع</th>
-                        <th>التاريخ</th>
-                        <th>التوصيل</th>
+                        <th style="min-width:90px;">الشقة</th>
+                        <th style="min-width:140px;">المؤدي / الساكن</th>
+                        <th style="min-width:120px;">المبلغ</th>
+                        <th style="min-width:110px;">طريقة الدفع</th>
+                        <th style="min-width:100px;">التاريخ</th>
+                        <th style="text-align:center; min-width:80px;">التوصيل</th>
                     </tr>
                 </thead>
                 <tbody>

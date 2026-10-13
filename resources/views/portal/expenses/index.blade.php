@@ -151,13 +151,13 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th>بيان المصروف</th>
-                    <th>الصنف</th>
-                    <th>المبلغ المصروف</th>
-                    <th>طريقة الأداء</th>
-                    <th>تاريخ الصرف</th>
-                    <th>الفاتورة / الإثبات</th>
-                    <th>الإجراءات</th>
+                    <th style="min-width:160px;">بيان المصروف</th>
+                    <th style="min-width:120px;">الصنف</th>
+                    <th style="min-width:130px;">المبلغ المصروف</th>
+                    <th style="min-width:110px;">طريقة الأداء</th>
+                    <th style="min-width:110px;">تاريخ الصرف</th>
+                    <th style="text-align:center; min-width:120px;">الفاتورة / الإثبات</th>
+                    <th style="text-align:center; min-width:90px;">الإجراءات</th>
                 </tr>
             </thead>
             <tbody>

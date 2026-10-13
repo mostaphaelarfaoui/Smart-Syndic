@@ -160,13 +160,13 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th>رقم الشقة</th>
-                    <th>العمارة</th>
-                    <th>الطابق</th>
-                    <th>المقيم الحالي</th>
-                    <th>الواجب الشهري</th>
-                    <th>حالة الخضوع</th>
-                    <th>الإجراءات</th>
+                    <th style="min-width:110px;">رقم الشقة</th>
+                    <th style="min-width:120px;">العمارة</th>
+                    <th style="min-width:110px;">الطابق</th>
+                    <th style="min-width:150px;">المقيم الحالي</th>
+                    <th style="min-width:130px;">الواجب الشهري</th>
+                    <th style="text-align:center; min-width:120px;">حالة الخضوع</th>
+                    <th style="min-width:160px;">الإجراءات</th>
                 </tr>
             </thead>
             <tbody>

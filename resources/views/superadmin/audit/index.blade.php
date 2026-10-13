@@ -44,12 +44,12 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th>المسؤول / المستخدم</th>
-                    <th>نوع العملية</th>
-                    <th>التفاصيل والبيانات</th>
-                    <th>معرف الإقامة</th>
-                    <th>عنوان IP</th>
-                    <th>التاريخ والوقت</th>
+                    <th style="min-width:160px;">المسؤول / المستخدم</th>
+                    <th style="min-width:130px;">نوع العملية</th>
+                    <th style="min-width:250px;">التفاصيل والبيانات</th>
+                    <th style="min-width:120px;">معرف الإقامة</th>
+                    <th style="min-width:110px;">عنوان IP</th>
+                    <th style="min-width:130px;">التاريخ والوقت</th>
                 </tr>
             </thead>
             <tbody>

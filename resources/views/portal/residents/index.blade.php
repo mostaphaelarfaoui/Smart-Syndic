@@ -91,13 +91,13 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th>الاسم الكامل</th>
-                    <th>رقم الهاتف</th>
-                    <th>البريد الإلكتروني</th>
-                    <th>الشقة المرتبطة</th>
-                    <th>الحالة</th>
-                    <th>تاريخ التسجيل</th>
-                    <th>الإجراءات</th>
+                    <th style="min-width:150px;">الاسم الكامل</th>
+                    <th style="min-width:120px;">رقم الهاتف</th>
+                    <th style="min-width:160px;">البريد الإلكتروني</th>
+                    <th style="min-width:110px;">الشقة المرتبطة</th>
+                    <th style="text-align:center; min-width:110px;">الحالة</th>
+                    <th style="min-width:110px;">تاريخ التسجيل</th>
+                    <th style="min-width:150px;">الإجراءات</th>
                 </tr>
             </thead>
             <tbody>

@@ -105,11 +105,11 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th>الشهر</th>
-                    <th>المداخيل المحصلة</th>
-                    <th>المصاريف والنفقات</th>
-                    <th>الصافي الشهري</th>
-                    <th>حالة الرصيد</th>
+                    <th style="min-width:140px;">الشهر</th>
+                    <th style="min-width:140px;">المداخيل المحصلة</th>
+                    <th style="min-width:140px;">المصاريف والنفقات</th>
+                    <th style="min-width:140px;">الصافي الشهري</th>
+                    <th style="text-align:center; min-width:110px;">حالة الرصيد</th>
                 </tr>
             </thead>
             <tbody>

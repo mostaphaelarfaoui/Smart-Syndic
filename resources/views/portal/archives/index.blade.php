@@ -56,11 +56,11 @@
             <table class="table">
                 <thead>
                     <tr>
-                        <th>المسؤول / الفاعل</th>
-                        <th>نوع العملية</th>
-                        <th>التفاصيل والبيانات</th>
-                        <th>عنوان IP</th>
-                        <th>التاريخ والوقت</th>
+                        <th style="min-width:140px;">المسؤول / الفاعل</th>
+                        <th style="min-width:130px;">نوع العملية</th>
+                        <th style="min-width:250px;">التفاصيل والبيانات</th>
+                        <th style="min-width:110px;">عنوان IP</th>
+                        <th style="min-width:120px;">التاريخ والوقت</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -136,11 +136,11 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>رقم الوصل</th>
-                                <th>الشقة</th>
-                                <th>المبلغ</th>
-                                <th>التاريخ</th>
-                                <th>التحميل</th>
+                                <th style="min-width:110px;">رقم الوصل</th>
+                                <th style="min-width:100px;">الشقة</th>
+                                <th style="min-width:120px;">المبلغ</th>
+                                <th style="min-width:110px;">التاريخ</th>
+                                <th style="text-align:center; min-width:90px;">التحميل</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -189,11 +189,11 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>البيان</th>
-                                <th>الصنف</th>
-                                <th>المبلغ</th>
-                                <th>التاريخ</th>
-                                <th>المعاينة</th>
+                                <th style="min-width:140px;">البيان</th>
+                                <th style="min-width:120px;">الصنف</th>
+                                <th style="min-width:120px;">المبلغ</th>
+                                <th style="min-width:110px;">التاريخ</th>
+                                <th style="text-align:center; min-width:90px;">المعاينة</th>
                             </tr>
                         </thead>
                         <tbody>

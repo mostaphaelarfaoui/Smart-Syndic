@@ -149,15 +149,15 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th>رقم الوصل</th>
-                    <th>الشقة</th>
-                    <th>المؤدي / الساكن</th>
-                    <th>المبلغ المؤدى</th>
-                    <th>طريقة الدفع</th>
-                    <th>الشهور المغطاة</th>
-                    <th>تاريخ الأداء</th>
-                    <th>الحالة</th>
-                    <th>التوصيل</th>
+                    <th style="min-width:110px;">رقم الوصل</th>
+                    <th style="min-width:100px;">الشقة</th>
+                    <th style="min-width:150px;">المؤدي / الساكن</th>
+                    <th style="min-width:140px;">المبلغ المؤدى</th>
+                    <th style="min-width:110px;">طريقة الدفع</th>
+                    <th style="min-width:130px;">الشهور المغطاة</th>
+                    <th style="min-width:110px;">تاريخ الأداء</th>
+                    <th style="text-align:center; min-width:110px;">الحالة</th>
+                    <th style="text-align:center; min-width:90px;">التوصيل</th>
                 </tr>
             </thead>
             <tbody>

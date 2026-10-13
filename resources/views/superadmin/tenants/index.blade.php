@@ -46,13 +46,13 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th>اسم الإقامة</th>
-                    <th>نوع العقار</th>
-                    <th>المدينة</th>
-                    <th>كود الدعوة</th>
-                    <th>حالة الاشتراك</th>
-                    <th>تاريخ التسجيل</th>
-                    <th>الإجراءات</th>
+                    <th style="min-width:170px;">اسم الإقامة</th>
+                    <th style="min-width:120px;">نوع العقار</th>
+                    <th style="min-width:110px;">المدينة</th>
+                    <th style="text-align:center; min-width:120px;">كود الدعوة</th>
+                    <th style="text-align:center; min-width:120px;">حالة الاشتراك</th>
+                    <th style="min-width:110px;">تاريخ التسجيل</th>
+                    <th style="min-width:140px;">الإجراءات</th>
                 </tr>
             </thead>
             <tbody>

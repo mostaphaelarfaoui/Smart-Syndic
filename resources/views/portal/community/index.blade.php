@@ -81,12 +81,12 @@
             <table class="table">
                 <thead>
                     <tr>
-                        <th>المرسل والشقة</th>
-                        <th>موضوع الشكاية / الملاحظة</th>
-                        <th>التفاصيل</th>
-                        <th>الحالة الحالية</th>
-                        <th>التاريخ</th>
-                        <th>تحديث الحالة</th>
+                        <th style="min-width:140px;">المرسل والشقة</th>
+                        <th style="min-width:170px;">موضوع الشكاية / الملاحظة</th>
+                        <th style="min-width:240px;">التفاصيل</th>
+                        <th style="text-align:center; min-width:110px;">الحالة الحالية</th>
+                        <th style="min-width:110px;">التاريخ</th>
+                        <th style="min-width:160px;">تحديث الحالة</th>
                     </tr>
                 </thead>
                 <tbody>

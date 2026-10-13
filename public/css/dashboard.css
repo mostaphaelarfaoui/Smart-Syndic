@@ -647,6 +647,10 @@ a {
     gap: 1.5rem;
 }
 
+.grid-2 > *, .grid-3 > * {
+    min-width: 0;
+}
+
 @media (max-width: 1024px) {
     .grid-2, .grid-3 {
         grid-template-columns: 1fr;
