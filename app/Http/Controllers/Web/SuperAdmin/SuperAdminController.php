@@ -260,6 +260,16 @@ class SuperAdminController extends Controller
                 targetTenantId: $tenant->id,
                 metadata: ['tenant_name' => $tenant->name]
             );
+
+            // Notify Tenant Syndics
+            app(\App\Services\NotificationService::class)->sendToTenantSyndics(
+                tenantId: $tenant->id,
+                title: '🎉 تمت الموافقة على إقامتكم',
+                message: "تم تفعيل إقامة \"{$tenant->name}\" بنجاح من طرف إدارة المنصة.",
+                type: 'success',
+                url: route('portal.dashboard'),
+                icon: '🏢'
+            );
         });
 
         return back()->with('success', "تم تفعيل الإقامة \"{$tenant->name}\" وتفعيل كافة حسابات السانديك والسكان التابعة لها بنجاح.");

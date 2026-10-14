@@ -97,6 +97,16 @@ class PaymentController extends Controller
         $this->paymentService->confirmPayment($payment, auth()->id());
         $this->paymentService->sendToResident($payment, auth()->id());
 
+        // In-app notification
+        app(\App\Services\NotificationService::class)->send(
+            user: auth()->user(),
+            title: 'تم استخلاص دفعة مالية جديدة',
+            message: "تم استخلاص دفعة بقيمة {$payment->amount_paid} درهم برقم وصل {$payment->receipt_number}.",
+            type: 'success',
+            url: route('portal.payments.index'),
+            icon: '💰'
+        );
+
         return back()->with('success', "تم تسجيل واستخلاص الدفعة بنجاح برقم وصل: {$payment->receipt_number}");
     }
 

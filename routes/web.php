@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Web\NotificationController;
 use App\Http\Controllers\Web\Portal\AnalyticsController;
 use App\Http\Controllers\Web\Portal\ApartmentController;
 use App\Http\Controllers\Web\Portal\ArchiveController;
@@ -191,3 +192,12 @@ Route::middleware(['auth:web', 'role:SUPER_ADMIN'])->prefix('platform')->name('s
 
 // ─── Leave Impersonation Session ─────────────────────────────────────────
 Route::post('/impersonate/leave', [SuperAdminController::class, 'leaveImpersonation'])->name('impersonate.leave')->middleware('auth:web');
+
+// ─── Real-Time Notifications Hub ─────────────────────────────────────────
+Route::middleware('auth:web')->prefix('portal/notifications')->name('notifications.')->group(function () {
+    Route::get('/', [NotificationController::class, 'index'])->name('index');
+    Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('read');
+    Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+    Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
+    Route::delete('/clear-all', [NotificationController::class, 'clearAll'])->name('clear-all');
+});

@@ -203,10 +203,13 @@
                 </div>
             </div>
 
-            <div class="topbar-left">
+            <div class="topbar-left" style="display:flex; align-items:center; gap:0.75rem;">
                 <span class="badge badge-neutral" style="font-size:0.85rem; padding:0.4rem 0.9rem;">
                     🗓️ {{ now()->locale('ar')->translatedFormat('l، j F Y') }}
                 </span>
+
+                {{-- In-App Notification Bell --}}
+                <x-notification-bell />
 
                 {{-- Dark/Light toggle --}}
                 <button type="button" class="theme-toggle-btn" @click="toggleTheme()" :title="theme === 'dark' ? 'التحويل للوضع النهاري' : 'التحويل للوضع الليلي'">
