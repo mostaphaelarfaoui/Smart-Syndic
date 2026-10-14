@@ -54,6 +54,7 @@
             <div class="smart-confirm-password-hint">
                 لحماية البيانات ومنع الحذف غير المصرح به، يتطلب هذا الإجراء إدخال الرقم السري لحسابك.
             </div>
+            {{-- Inline error message box inside the modal --}}
             <div id="smart-confirm-password-error" class="smart-confirm-password-error" style="display:none;"></div>
         </div>
 
@@ -239,11 +240,36 @@
 }
 
 .smart-confirm-password-error {
-    margin-top: 0.45rem;
-    font-size: 0.8rem;
+    margin-top: 0.65rem;
+    padding: 0.65rem 0.85rem;
+    font-size: 0.82rem;
     color: #ef4444;
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    border-radius: 8px;
     font-weight: 700;
     text-align: right;
+    display: none;
+    align-items: center;
+    gap: 0.45rem;
+    line-height: 1.4;
+    animation: smartShake 0.35s ease-in-out;
+}
+
+.smart-confirm-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #ffffff;
+    animation: smartSpin 0.6s linear infinite;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+@keyframes smartSpin {
+    to { transform: rotate(360deg); }
 }
 
 @keyframes smartShake {
@@ -335,7 +361,7 @@
 /**
  * Smart Syndic Unified Confirmation Engine
  * Automatically intercepts forms with data-confirm or converts inline confirm()
- * Supports secure password confirmation for sensitive deletions (data-confirm-password="true")
+ * Supports in-modal asynchronous password validation keeping modal open on wrong password
  */
 (function() {
     let currentResolver = null;
@@ -390,7 +416,10 @@
         });
         passwordInput.addEventListener('input', function() {
             passwordInput.classList.remove('input-error');
-            if (passwordError) passwordError.style.display = 'none';
+            if (passwordError) {
+                passwordError.style.display = 'none';
+                passwordError.textContent = '';
+            }
         });
     }
 
@@ -420,7 +449,9 @@
             titleEl.textContent = title || (finalType === 'danger' ? 'تأكيد الحذف والإلغاء' : (finalType === 'info' ? 'تأكيد المتابعة والدخول' : 'تأكيد الإجراء'));
             msgEl.textContent = message || 'هل تؤكد متابعة تنفيذ هذا الإجراء؟';
             confirmBtn.textContent = confirmText || (finalType === 'danger' ? 'نعم، حذف وتأكيد' : 'تأكيد ومتابعة');
+            confirmBtn.disabled = false;
             cancelBtn.textContent = cancelText || 'إلغاء الأمر';
+            cancelBtn.disabled = false;
 
             // Reset icon visibility
             Object.values(icons).forEach(icon => { if (icon) icon.style.display = 'none'; });
@@ -440,6 +471,7 @@
                     if (passwordInput) {
                         passwordInput.value = '';
                         passwordInput.type = 'password';
+                        passwordInput.disabled = false;
                         passwordInput.classList.remove('input-error');
                     }
                     if (eyeOpen) eyeOpen.style.display = 'block';
@@ -470,9 +502,16 @@
         modal.setAttribute('aria-hidden', 'true');
         if (passwordInput) {
             passwordInput.value = '';
+            passwordInput.disabled = false;
             passwordInput.classList.remove('input-error');
-            if (passwordError) passwordError.style.display = 'none';
+            if (passwordError) {
+                passwordError.style.display = 'none';
+                passwordError.textContent = '';
+            }
         }
+        confirmBtn.disabled = false;
+        cancelBtn.disabled = false;
+
         if (currentResolver) {
             currentResolver(confirmed ? { confirmed: true, password: passwordVal } : false);
             currentResolver = null;
@@ -484,11 +523,13 @@
 
     // Handle cancel button & backdrop click
     cancelBtn.addEventListener('click', () => {
+        if (confirmBtn.disabled) return; // Prevent canceling while in-flight
         pendingForm = null;
         closeModal(false);
     });
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
+            if (confirmBtn.disabled) return;
             pendingForm = null;
             closeModal(false);
         }
@@ -496,26 +537,93 @@
 
     // Handle confirm button
     confirmBtn.addEventListener('click', () => {
-        let passwordVal = null;
-
-        if (isPasswordRequired && passwordInput) {
-            passwordVal = passwordInput.value.trim();
-            if (!passwordVal) {
-                passwordInput.classList.add('input-error');
-                if (passwordError) {
-                    passwordError.textContent = '⚠️ يرجى إدخال كلمة المرور لحسابك لتأكيد هذا الإجراء الحساس.';
-                    passwordError.style.display = 'block';
-                }
-                passwordInput.focus();
-                return;
+        // If password is NOT required:
+        if (!isPasswordRequired) {
+            if (pendingForm) {
+                const formToSubmit = pendingForm;
+                pendingForm = null;
+                closeModal(true);
+                formToSubmit.__smartConfirmed = true;
+                formToSubmit.submit();
+            } else {
+                closeModal(true);
             }
+            return;
         }
 
-        if (pendingForm) {
-            const formToSubmit = pendingForm;
-            pendingForm = null;
+        // Password IS required:
+        const passwordVal = passwordInput ? passwordInput.value.trim() : '';
+        if (!passwordVal) {
+            passwordInput.classList.remove('input-error');
+            void passwordInput.offsetWidth;
+            passwordInput.classList.add('input-error');
+            if (passwordError) {
+                passwordError.innerHTML = '<span>⚠️</span> <span>يرجى إدخال كلمة المرور لحسابك لتأكيد هذا الإجراء الحساس.</span>';
+                passwordError.style.display = 'flex';
+            }
+            passwordInput.focus();
+            return;
+        }
 
-            if (isPasswordRequired && passwordVal) {
+        // Start asynchronous verification
+        const originalBtnText = confirmBtn.textContent;
+        confirmBtn.disabled = true;
+        cancelBtn.disabled = true;
+        confirmBtn.innerHTML = '<span class="smart-confirm-spinner"></span> <span>جاري التحقق...</span>';
+        passwordInput.disabled = true;
+
+        // Obtain CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') 
+            || (pendingForm ? pendingForm.querySelector('input[name="_token"]')?.value : '');
+
+        fetch('{{ route("portal.verify-password") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({
+                password: passwordVal,
+                action_description: titleEl.textContent || 'حذف حساس'
+            })
+        })
+        .then(async (response) => {
+            let data = {};
+            try {
+                data = await response.json();
+            } catch (err) {
+                data = {};
+            }
+
+            if (!response.ok || !data.valid) {
+                // INCORRECT PASSWORD: KEEP MODAL OPEN!
+                confirmBtn.disabled = false;
+                cancelBtn.disabled = false;
+                confirmBtn.textContent = originalBtnText;
+                passwordInput.disabled = false;
+
+                // Shake and highlight input in red
+                passwordInput.classList.remove('input-error');
+                void passwordInput.offsetWidth;
+                passwordInput.classList.add('input-error');
+
+                const errMsg = data.message || 'كلمة المرور المدخلة غير صحيحة! تم إلغاء العملية لحماية البيانات.';
+                if (passwordError) {
+                    passwordError.innerHTML = '<span>⚠️</span> <span>' + errMsg + '</span>';
+                    passwordError.style.display = 'flex';
+                }
+
+                passwordInput.focus();
+                passwordInput.select();
+                return; // Modal stays open! User can re-try immediately.
+            }
+
+            // CORRECT PASSWORD: submit form or resolve
+            if (pendingForm) {
+                const formToSubmit = pendingForm;
+                pendingForm = null;
+
                 let pwHidden = formToSubmit.querySelector('input[name="confirm_password"]');
                 if (!pwHidden) {
                     pwHidden = document.createElement('input');
@@ -524,19 +632,30 @@
                     formToSubmit.appendChild(pwHidden);
                 }
                 pwHidden.value = passwordVal;
-            }
 
-            closeModal(true, passwordVal);
-            formToSubmit.__smartConfirmed = true;
-            formToSubmit.submit();
-        } else {
-            closeModal(true, passwordVal);
-        }
+                closeModal(true, passwordVal);
+                formToSubmit.__smartConfirmed = true;
+                formToSubmit.submit();
+            } else {
+                closeModal(true, passwordVal);
+            }
+        })
+        .catch(() => {
+            confirmBtn.disabled = false;
+            cancelBtn.disabled = false;
+            confirmBtn.textContent = originalBtnText;
+            passwordInput.disabled = false;
+            if (passwordError) {
+                passwordError.innerHTML = '<span>⚠️</span> <span>حدث خطأ في الاتصال بالخادم، يرجى إعادة المحاولة.</span>';
+                passwordError.style.display = 'flex';
+            }
+            passwordInput.focus();
+        });
     });
 
     // Handle Escape key
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.style.display === 'flex') {
+        if (e.key === 'Escape' && modal.style.display === 'flex' && !confirmBtn.disabled) {
             pendingForm = null;
             closeModal(false);
         }

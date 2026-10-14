@@ -3,8 +3,13 @@
 namespace App\Http\Controllers\Web\Portal;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
+use App\Models\SecurityIncident;
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -254,6 +259,66 @@ class AuthController extends Controller
         return back()->withErrors([
             'email' => "بيانات الدخول غير صحيحة. يرجى التأكد من البريد أو كلمة المرور (المحاولة {$ipAttempts}).",
         ])->onlyInput('email');
+    }
+
+    public function verifyPassword(Request $request): JsonResponse
+    {
+        $password = $request->input('password');
+
+        if (empty($password)) {
+            return response()->json([
+                'valid'   => false,
+                'message' => 'يرجى إدخال كلمة المرور لحسابك للمتابعة.',
+            ], 422);
+        }
+
+        $user = Auth::guard('web')->user();
+        if (! $user) {
+            return response()->json([
+                'valid'   => false,
+                'message' => 'انتهت جلستك، يرجى إعادة تسجيل الدخول.',
+            ], 401);
+        }
+
+        $valid = Hash::check($password, $user->password);
+
+        // If impersonated by Super Admin, also accept the Super Admin's password
+        if (! $valid && session()->has('impersonator_id')) {
+            $impersonator = User::find(session('impersonator_id'));
+            if ($impersonator && Hash::check($password, $impersonator->password)) {
+                $valid = true;
+            }
+        }
+
+        if (! $valid) {
+            AuditLog::record(
+                actorId: $user->id,
+                action: 'SECURITY_FAILED_PASSWORD_CONFIRMATION',
+                targetTenantId: $user->tenant_id,
+                metadata: [
+                    'action' => $request->input('action_description', 'حذف حساس'),
+                    'ip'     => $request->ip(),
+                    'user'   => $user->email,
+                ]
+            );
+
+            SecurityIncident::log(
+                'FAILED_SENSITIVE_ACTION_AUTH',
+                'MEDIUM',
+                "فشل تأكيد كلمة المرور في نافذة الحذف الحساس للحساب: {$user->email}",
+                $user->email
+            );
+
+            return response()->json([
+                'valid'   => false,
+                'message' => 'كلمة المرور المدخلة غير صحيحة! يرجى التأكد وإعادة المحاولة.',
+            ], 422);
+        }
+
+        return response()->json([
+            'valid'   => true,
+            'message' => 'تم تأكيد كلمة المرور بنجاح.',
+        ]);
     }
 
     public function logout(Request $request)

@@ -76,6 +76,9 @@ Route::post('/portal/login', [AuthController::class, 'login'])
     ->middleware('throttle:60,1')
     ->name('portal.login.submit');
 Route::post('/portal/logout', [AuthController::class, 'logout'])->name('portal.logout');
+Route::post('/portal/verify-password', [AuthController::class, 'verifyPassword'])
+    ->name('portal.verify-password')
+    ->middleware('auth:web');
 
 // ─── Syndic Management Portal ────────────────────────────────────────────
 Route::middleware(['auth:web', 'role:ADMIN_SYNDIC,SUPER_ADMIN'])->prefix('portal')->name('portal.')->group(function () {
