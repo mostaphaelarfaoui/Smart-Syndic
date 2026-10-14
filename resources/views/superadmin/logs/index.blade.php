@@ -24,7 +24,11 @@
             <span>تحميل ملف السجل</span>
         </a>
 
-        <form method="POST" action="{{ route('superadmin.logs.clear') }}" onsubmit="return confirm('هل أنت متأكد من رغبتك في تفريغ ومسح سجل الأخطاء؟')">
+        <form method="POST" action="{{ route('superadmin.logs.clear') }}"
+              data-confirm="هل أنت متأكد من رغبتك في تفريغ ومسح ملف سجل الأخطاء بالكامل؟"
+              data-confirm-title="مسح سجل الأخطاء"
+              data-confirm-type="danger"
+              data-confirm-btn="مسح السجل الآن">
             @csrf
             <button type="submit" class="btn btn-danger" style="border:none;">
                 <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">

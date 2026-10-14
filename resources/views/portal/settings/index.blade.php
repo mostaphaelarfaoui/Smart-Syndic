@@ -83,7 +83,11 @@
                     <span class="badge badge-success">✓ الخاتم مفعل ويظهر على جميع التوصيلات PDF</span>
                 </div>
 
-                <form method="POST" action="{{ route('portal.settings.stamp.delete') }}" onsubmit="return confirm('هل تؤكد حذف خاتم السانديك؟');">
+                <form method="POST" action="{{ route('portal.settings.stamp.delete') }}"
+                      data-confirm="هل تؤكد حذف خاتم السانديك؟ لن يظهر الخاتم على التوصيلات الجديدة بعد الحذف."
+                      data-confirm-title="تأكيد حذف الخاتم"
+                      data-confirm-type="danger"
+                      data-confirm-btn="حذف الخاتم">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="btn btn-sm btn-danger">

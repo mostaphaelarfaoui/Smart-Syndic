@@ -246,6 +246,8 @@
     </main>
 </div>
 
+@include('components.confirm-dialog')
+
 @stack('scripts')
 </body>
 </html>

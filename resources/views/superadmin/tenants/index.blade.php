@@ -100,28 +100,44 @@
                                         </button>
                                     </form>
 
-                                    <form method="POST" action="{{ route('superadmin.tenants.reject', $tenant->id) }}" onsubmit="return confirm('هل تؤكد رفض تسجيل سانديك وإقامة {{ $tenant->name }}؟');">
+                                    <form method="POST" action="{{ route('superadmin.tenants.reject', $tenant->id) }}"
+                                          data-confirm="هل تؤكد رفض تسجيل سانديك وإقامة {{ $tenant->name }}؟ سيتم تعطيل كافة الحسابات المرتبطة بها."
+                                          data-confirm-title="تأكيد رفض الإقامة"
+                                          data-confirm-type="danger"
+                                          data-confirm-btn="رفض التسجيل">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-secondary" style="color:var(--color-danger); border-color:rgba(244,63,94,0.3);" title="رفض طلب التسجيل">
                                             رفض ✕
                                         </button>
                                     </form>
                                 @elseif($tenant->status === 'ACTIVE')
-                                    <form method="POST" action="{{ route('superadmin.tenants.impersonate', $tenant->id) }}" onsubmit="return confirm('هل تريد الدخول كمسير لإقامة {{ $tenant->name }} للدعم الفني؟ سيتم تسجيل الجلسة في سجل الرقابة.');">
+                                    <form method="POST" action="{{ route('superadmin.tenants.impersonate', $tenant->id) }}"
+                                          data-confirm="هل تريد الدخول كمسير لإقامة {{ $tenant->name }} للدعم الفني؟ سيتم تسجيل الجلسة في سجل الرقابة."
+                                          data-confirm-title="الدخول كمسير للإقامة"
+                                          data-confirm-type="info"
+                                          data-confirm-btn="دخول كمسير">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-secondary" style="color:var(--brand-primary); border-color:rgba(99,102,241,0.3);" title="الدخول كمسير للإقامة (تقمص للدعم الفني)">
                                             👤 دخول كمسير
                                         </button>
                                     </form>
 
-                                    <form method="POST" action="{{ route('superadmin.tenants.suspend', $tenant->id) }}" onsubmit="return confirm('تحذير: هل تؤكد توقيف إقامة {{ $tenant->name }}؟ سيتم إيقاف كافة حسابات السانديك والسكان التابعة لها عن العمل فوراً.');">
+                                    <form method="POST" action="{{ route('superadmin.tenants.suspend', $tenant->id) }}"
+                                          data-confirm="تحذير: هل تؤكد توقيف إقامة {{ $tenant->name }}؟ سيتم إيقاف كافة حسابات السانديك والسكان التابعة لها عن العمل فوراً."
+                                          data-confirm-title="تأكيد توقيف الإقامة"
+                                          data-confirm-type="warning"
+                                          data-confirm-btn="توقيف الإقامة">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-secondary" style="color:var(--color-warning);" title="توقيف الإقامة والسكان">
                                             توقيف ⏸
                                         </button>
                                     </form>
                                 @else
-                                    <form method="POST" action="{{ route('superadmin.tenants.approve', $tenant->id) }}">
+                                    <form method="POST" action="{{ route('superadmin.tenants.approve', $tenant->id) }}"
+                                          data-confirm="هل تريد إعادة تفعيل إقامة {{ $tenant->name }} وكافة حسابات السانديك والسكان التابعة لها؟"
+                                          data-confirm-title="تأكيد إعادة التفعيل"
+                                          data-confirm-type="success"
+                                          data-confirm-btn="إعادة التفعيل">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-success" title="إعادة التفعيل لكافة الحسابات">
                                             تفعيل ✓
@@ -129,7 +145,11 @@
                                     </form>
                                 @endif
 
-                                <form method="POST" action="{{ route('superadmin.tenants.destroy', $tenant->id) }}" onsubmit="return confirm('تحذير شديد: هل أنت متأكد من حذف إقامة {{ $tenant->name }} نهائياً؟ سيتم حذف جميع حسابات السانديك والسكان التابعة لها، وكافة الشقق والدفعات والمصاريف بدون إمكانية استرجاع.');">
+                                <form method="POST" action="{{ route('superadmin.tenants.destroy', $tenant->id) }}"
+                                      data-confirm="تحذير شديد: هل أنت متأكد من حذف إقامة {{ $tenant->name }} نهائياً؟ سيتم حذف جميع حسابات السانديك والسكان التابعة لها، وكافة الشقق والدفعات والمصاريف بدون إمكانية استرجاع."
+                                      data-confirm-title="حذف الإقامة نهائياً"
+                                      data-confirm-type="danger"
+                                      data-confirm-btn="حذف نهائي لا رجعة فيه">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-danger" style="padding:0.4rem 0.6rem;" title="حذف نهائي للإقامة وكافة حساباتها">

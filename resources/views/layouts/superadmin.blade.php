@@ -187,5 +187,7 @@
     </main>
 </div>
 
+@include('components.confirm-dialog')
+
 </body>
 </html>

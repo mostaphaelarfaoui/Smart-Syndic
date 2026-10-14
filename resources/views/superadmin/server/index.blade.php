@@ -12,8 +12,11 @@
         </p>
     </div>
 
-    <div style="display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;">
-        <form method="POST" action="{{ route('superadmin.server.vacuum') }}" onsubmit="return confirm('هل ترغب في تشغيل أمر VACUUM لتفريغ وضغط ملف قاعدة البيانات وتحسين الفهارس؟')">
+        <form method="POST" action="{{ route('superadmin.server.vacuum') }}"
+              data-confirm="هل ترغب في تشغيل أمر VACUUM لتفريغ وضغط ملف قاعدة البيانات وتحسين الفهارس؟"
+              data-confirm-title="تحسين قاعدة البيانات"
+              data-confirm-type="info"
+              data-confirm-btn="بدء التحسين الفوري">
             @csrf
             <button type="submit" class="btn btn-secondary" style="border-color:#6366f1; color:#6366f1;">
                 <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">

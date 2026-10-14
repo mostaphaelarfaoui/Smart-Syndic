@@ -331,7 +331,11 @@
                                 <div style="font-size:0.75rem; color:#ef4444;">{{ $bUser->blocked_reason ?? 'تجاوز 15 محاولة فاشلة' }}</div>
                             </td>
                             <td>
-                                <form method="POST" action="{{ route('superadmin.users.unblock', $bUser->id) }}" onsubmit="return confirm('هل تؤكد فك الحظر الأمني عن حساب {{ $bUser->full_name }} وتصفير محاولات الدخول؟')">
+                                <form method="POST" action="{{ route('superadmin.users.unblock', $bUser->id) }}"
+                                      data-confirm="هل تؤكد فك الحظر الأمني عن حساب {{ $bUser->full_name }} وتصفير محاولات الدخول؟"
+                                      data-confirm-title="تأكيد فك الحظر الأمني"
+                                      data-confirm-type="success"
+                                      data-confirm-btn="فك الحظر وتفعيل الحساب">
                                     @csrf
                                     <button type="submit" class="btn btn-sm btn-success" style="padding:0.3rem 0.75rem; font-size:0.8rem; font-weight:700;">
                                         🔓 فك الحظر

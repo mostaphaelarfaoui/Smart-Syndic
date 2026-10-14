@@ -168,7 +168,10 @@
                                         {{-- If blocked due to 15 attempts, provide direct Unblock action --}}
                                         @if($user->status === 'BLOCKED')
                                             <form method="POST" action="{{ route('superadmin.users.unblock', $user->id) }}"
-                                                  onsubmit="return confirm('هل تؤكد فك الحظر الأمني عن حساب {{ $user->full_name }} وتصفير عداد المحاولات؟')">
+                                                  data-confirm="هل تؤكد فك الحظر الأمني عن حساب {{ $user->full_name }} وتصفير عداد المحاولات الفاشلة؟"
+                                                  data-confirm-title="تأكيد فك الحظر الأمني"
+                                                  data-confirm-type="success"
+                                                  data-confirm-btn="فك الحظر وتفعيل الحساب">
                                                 @csrf
                                                 <button type="submit" class="btn btn-sm btn-success"
                                                     style="padding:0.25rem 0.6rem; font-size:0.75rem; font-weight:700;"
@@ -179,7 +182,10 @@
                                         @else
                                             {{-- Toggle status --}}
                                             <form method="POST" action="{{ route('superadmin.users.toggle-status', $user->id) }}"
-                                                  onsubmit="return confirm('{{ $user->status === 'ACTIVE' ? 'هل تريد توقيف حساب ' . $user->full_name . '؟' : 'هل تريد تنشيط حساب ' . $user->full_name . '؟' }}')">
+                                                  data-confirm="{{ $user->status === 'ACTIVE' ? 'هل تريد توقيف حساب ' . $user->full_name . '؟ سيتم منعه من تسجيل الدخول فوراً.' : 'هل تريد تنشيط حساب ' . $user->full_name . ' وإعادته للعمل؟' }}"
+                                                  data-confirm-title="{{ $user->status === 'ACTIVE' ? 'تأكيد توقيف الحساب' : 'تأكيد تنشيط الحساب' }}"
+                                                  data-confirm-type="{{ $user->status === 'ACTIVE' ? 'warning' : 'success' }}"
+                                                  data-confirm-btn="{{ $user->status === 'ACTIVE' ? 'توقيف الحساب' : 'تنشيط الحساب' }}">
                                                 @csrf
                                                 <button type="submit" class="btn btn-sm"
                                                     style="padding:0.25rem 0.6rem; font-size:0.75rem;
@@ -195,7 +201,10 @@
                                         {{-- Impersonate user --}}
                                         @if($user->status === 'ACTIVE')
                                             <form method="POST" action="{{ route('superadmin.users.impersonate', $user->id) }}"
-                                                  onsubmit="return confirm('هل تريد الدخول بصفتك {{ $user->full_name }}؟')">
+                                                  data-confirm="هل تريد الدخول بصفتك {{ $user->full_name }} للدعم الفني؟ سيتم تسجيل الجلسة في سجل الرقابة."
+                                                  data-confirm-title="تقمص الحساب للدعم الفني"
+                                                  data-confirm-type="info"
+                                                  data-confirm-btn="دخول كمسير">
                                                 @csrf
                                                 <button type="submit" class="btn btn-sm btn-secondary"
                                                     style="padding:0.25rem 0.5rem; font-size:0.75rem; color:#6366f1; border-color:rgba(99,102,241,0.3);"

@@ -207,7 +207,11 @@
                         <td>
                             <div style="display:flex; align-items:center; gap:0.5rem;">
                                 @if($apartment->residents->isNotEmpty())
-                                    <form method="POST" action="{{ route('portal.apartments.vacate', $apartment->id) }}" onsubmit="return confirm('هل تؤكد تفريغ الشقة {{ $apartment->unit_number }}؟ سيتم حذف ربط الساكن وإعادة ضبط المبالغ والحسابات للصيغة الأولى.');">
+                                    <form method="POST" action="{{ route('portal.apartments.vacate', $apartment->id) }}"
+                                          data-confirm="هل تؤكد تفريغ الشقة {{ $apartment->unit_number }}؟ سيتم فك ارتباط الساكن وإعادة ضبط المبالغ والحسابات للصيغة الأولى."
+                                          data-confirm-title="تفريغ الشقة"
+                                          data-confirm-type="warning"
+                                          data-confirm-btn="تفريغ الشقة">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-secondary" style="color:var(--color-warning);" title="تفريغ الشقة وتصفير السجلات">
                                             🚪 تفريغ الشقة
@@ -215,7 +219,11 @@
                                     </form>
                                 @endif
 
-                                <form method="POST" action="{{ route('portal.apartments.destroy', $apartment->id) }}" onsubmit="return confirm('هل أنت متأكد من حذف الشقة {{ $apartment->unit_number }} نهائياً؟');">
+                                <form method="POST" action="{{ route('portal.apartments.destroy', $apartment->id) }}"
+                                      data-confirm="هل أنت متأكد من حذف الشقة رقم {{ $apartment->unit_number }} نهائياً؟"
+                                      data-confirm-title="تأكيد حذف الشقة"
+                                      data-confirm-type="danger"
+                                      data-confirm-btn="حذف الشقة نهائياً">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-secondary" style="color:var(--color-danger);" title="حذف الشقة">

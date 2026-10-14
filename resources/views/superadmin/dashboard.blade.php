@@ -252,20 +252,20 @@
                                                     موافقة
                                                 </button>
                                             </form>
-                                            <form method="POST" action="{{ route('superadmin.tenants.reject', $tenant->id) }}" onsubmit="return confirm('هل تؤكد رفض تسجيل هذه الإقامة وحساب السانديك التابع لها؟')">
+                                            <form method="POST" action="{{ route('superadmin.tenants.reject', $tenant->id) }}" data-confirm="هل تؤكد رفض تسجيل هذه الإقامة وحساب السانديك التابع لها؟" data-confirm-title="رفض الإقامة" data-confirm-type="danger" data-confirm-btn="رفض التسجيل">
                                                 @csrf
                                                 <button type="submit" class="btn btn-sm" style="padding:0.25rem 0.6rem; font-size:0.75rem; background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.25);">
                                                     رفض
                                                 </button>
                                             </form>
                                         @elseif($tenant->status === 'ACTIVE')
-                                            <form method="POST" action="{{ route('superadmin.tenants.impersonate', $tenant->id) }}" onsubmit="return confirm('هل تريد الدخول كمسير لإقامة {{ $tenant->name }} للدعم الفني؟')">
+                                            <form method="POST" action="{{ route('superadmin.tenants.impersonate', $tenant->id) }}" data-confirm="هل تريد الدخول كمسير لإقامة {{ $tenant->name }} للدعم الفني؟ سيتم تسجيل الجلسة في سجل الرقابة." data-confirm-title="الدخول كمسير للإقامة" data-confirm-type="info" data-confirm-btn="دخول كمسير">
                                                 @csrf
                                                 <button type="submit" class="btn btn-sm btn-secondary" style="padding:0.25rem 0.5rem; font-size:0.75rem; color:#6366f1; border-color:rgba(99,102,241,0.3);" title="دخول كمسير للدعم الفني">
                                                     👤 دخول
                                                 </button>
                                             </form>
-                                            <form method="POST" action="{{ route('superadmin.tenants.suspend', $tenant->id) }}" onsubmit="return confirm('تنبيه: سيتم إيقاف الإقامة وكافة حسابات السانديك والسكان التابعة لها فوراً. هل تريد المتابعة؟')">
+                                            <form method="POST" action="{{ route('superadmin.tenants.suspend', $tenant->id) }}" data-confirm="تنبيه: سيتم إيقاف الإقامة وكافة حسابات السانديك والسكان التابعة لها فوراً. هل تريد المتابعة؟" data-confirm-title="توقيف الإقامة" data-confirm-type="warning" data-confirm-btn="توقيف الإقامة">
                                                 @csrf
                                                 <button type="submit" class="btn btn-sm btn-danger" style="padding:0.25rem 0.6rem; font-size:0.75rem;">
                                                     توقيف
@@ -280,7 +280,7 @@
                                             </form>
                                         @endif
 
-                                        <form method="POST" action="{{ route('superadmin.tenants.destroy', $tenant->id) }}" onsubmit="return confirm('تحذير شديد: سيتم حذف الإقامة وكافة حسابات السانديك والسكان التابعة لها وجميع بياناتها نهائياً. هل أنت متأكد؟')">
+                                        <form method="POST" action="{{ route('superadmin.tenants.destroy', $tenant->id) }}" data-confirm="تحذير شديد: سيتم حذف الإقامة وكافة حسابات السانديك والسكان التابعة لها وجميع بياناتها نهائياً. هل أنت متأكد؟" data-confirm-title="حذف الإقامة نهائياً" data-confirm-type="danger" data-confirm-btn="حذف نهائي لا رجعة فيه">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm" style="padding:0.25rem 0.5rem; font-size:0.75rem; background:rgba(239,68,68,0.08); color:#ef4444; border:1px solid rgba(239,68,68,0.2);" title="حذف نهائي">
@@ -440,7 +440,11 @@
                                 @endif
                             </div>
                             <div>
-                                <form method="POST" action="{{ route('superadmin.users.unblock', $bUser->id) }}" onsubmit="return confirm('هل تؤكد فك الحظر الأمني عن حساب {{ $bUser->full_name }} وتصفير محاولات الدخول؟')">
+                                <form method="POST" action="{{ route('superadmin.users.unblock', $bUser->id) }}"
+                                      data-confirm="هل تؤكد فك الحظر الأمني عن حساب {{ $bUser->full_name }} وتصفير محاولات الدخول؟"
+                                      data-confirm-title="تأكيد فك الحظر الأمني"
+                                      data-confirm-type="success"
+                                      data-confirm-btn="فك الحظر الآن">
                                     @csrf
                                     <button type="submit" class="btn btn-sm btn-success" style="display:flex; align-items:center; gap:0.45rem; padding:0.55rem 1.1rem; font-weight:700; font-size:0.875rem; box-shadow:0 3px 10px rgba(16,185,129,0.35);">
                                         <span>🔓</span>

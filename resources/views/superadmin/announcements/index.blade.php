@@ -194,7 +194,11 @@
                                     </form>
 
                                     {{-- Delete --}}
-                                    <form method="POST" action="{{ route('superadmin.announcements.destroy', $item->id) }}" style="display:inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذا الإعلان نهائياً؟');">
+                                    <form method="POST" action="{{ route('superadmin.announcements.destroy', $item->id) }}" style="display:inline;"
+                                          data-confirm="هل أنت متأكد من حذف هذا الإعلان الجماعي نهائياً؟"
+                                          data-confirm-title="تأكيد حذف الإعلان"
+                                          data-confirm-type="danger"
+                                          data-confirm-btn="حذف الإعلان">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-danger" title="حذف الإعلان">

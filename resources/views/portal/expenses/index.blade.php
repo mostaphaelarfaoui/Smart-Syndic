@@ -206,8 +206,11 @@
                                 <span style="color:var(--text-muted); font-size:0.82rem;">—</span>
                             @endif
                         </td>
-                        <td>
-                            <form method="POST" action="{{ route('portal.expenses.destroy', $expense->id) }}" onsubmit="return confirm('هل تؤكد حذف هذا المصروف؟');">
+                            <form method="POST" action="{{ route('portal.expenses.destroy', $expense->id) }}"
+                                  data-confirm="هل تؤكد حذف هذا المصروف المسجل بمبلغ {{ number_format($expense->amount, 2) }} درهم؟"
+                                  data-confirm-title="تأكيد حذف المصروف"
+                                  data-confirm-type="danger"
+                                  data-confirm-btn="حذف المصروف">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-secondary" style="color:var(--color-danger);" title="حذف">

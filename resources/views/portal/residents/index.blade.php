@@ -25,7 +25,11 @@
             <span x-show="copied" x-cloak style="color:var(--color-success); font-weight:700;">تم! ✓</span>
         </button>
 
-        <form method="POST" action="{{ route('portal.residents.regenerate-code') }}" onsubmit="return confirm('هل تؤكد تجديد كود الدعوة؟ الكود القديم سيتوقف عن العمل.');">
+        <form method="POST" action="{{ route('portal.residents.regenerate-code') }}"
+              data-confirm="هل تؤكد تجديد كود الدعوة للإقامة؟ الكود القديم سيتوقف عن العمل فوراً."
+              data-confirm-title="تجديد كود الدعوة"
+              data-confirm-type="warning"
+              data-confirm-btn="تجديد الكود">
             @csrf
             <button type="submit" class="btn btn-sm btn-secondary" title="توليد كود جديد">
                 🔄 تجديد
@@ -139,14 +143,22 @@
                                         </button>
                                     </form>
 
-                                    <form method="POST" action="{{ route('portal.residents.reject', $resident->id) }}" onsubmit="return confirm('هل تؤكد رفض وحذف طلب انضمام {{ $resident->full_name }}؟');">
+                                    <form method="POST" action="{{ route('portal.residents.reject', $resident->id) }}"
+                                          data-confirm="هل تؤكد رفض وحذف طلب انضمام الساكن {{ $resident->full_name }}؟"
+                                          data-confirm-title="رفض طلب الانضمام"
+                                          data-confirm-type="danger"
+                                          data-confirm-btn="رفض الطلب">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-danger" title="رفض الطلب">
                                             رفض ✕
                                         </button>
                                     </form>
                                 @else
-                                    <form method="POST" action="{{ route('portal.residents.destroy', $resident->id) }}" onsubmit="return confirm('تحذير: هل تؤكد حذف حساب الساكن {{ $resident->full_name }}؟ سيتم فك ارتباطه بالشقة وإعادتها شاغرة وتصفير الحسابات.');">
+                                    <form method="POST" action="{{ route('portal.residents.destroy', $resident->id) }}"
+                                          data-confirm="تحذير: هل تؤكد حذف حساب الساكن {{ $resident->full_name }}؟ سيتم فك ارتباطه بالشقة وإعادتها شاغرة وتصفير الحسابات."
+                                          data-confirm-title="تأكيد حذف حساب الساكن"
+                                          data-confirm-type="danger"
+                                          data-confirm-btn="حذف الحساب">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-secondary" style="color:var(--color-danger);" title="حذف حساب الساكن وتفريغ الشقة">
