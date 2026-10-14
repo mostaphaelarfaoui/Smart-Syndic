@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(\App\Http\Middleware\CheckBlockedIp::class);
         $middleware->append(\App\Http\Middleware\SanitizeInput::class);
         $middleware->append(\App\Http\Middleware\SetLocale::class);
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
 
         // ─── API Middleware Group ─────────────────────────────────────
         $middleware->api(prepend: [

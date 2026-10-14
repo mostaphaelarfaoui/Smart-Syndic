@@ -30,8 +30,28 @@ Route::get('/login', function () {
     return redirect()->route('portal.login');
 })->name('login');
 
-// ─── Direct Receipt Download ─────────────────────────────────────────────
+// ─── Direct Receipt Download (Secured & Access-Controlled) ───────────────
 Route::get('/receipts/{payment}/download', function (Payment $payment) {
+    $user = auth('web')->user() ?? auth('sanctum')->user();
+
+    if (! $user) {
+        abort(401, 'يجب تسجيل الدخول لتحميل وصل الأداء.');
+    }
+
+    // Authorization: Super Admin, Admin Syndic of the same tenant, or Resident who owns the payment
+    $isAuthorized = false;
+    if ($user->isSuperAdmin()) {
+        $isAuthorized = true;
+    } elseif ($user->isAdminSyndic() && $user->tenant_id === $payment->tenant_id) {
+        $isAuthorized = true;
+    } elseif ($payment->user_id === $user->id) {
+        $isAuthorized = true;
+    }
+
+    if (! $isAuthorized) {
+        abort(403, 'غير مصرح لك بتحميل هذا الوصل المالي.');
+    }
+
     $path = $payment->receipt_pdf_path;
     $disk = config('smartsyndic.uploads.storage_disk', 'public');
 
@@ -52,11 +72,13 @@ Route::get('/receipts/{payment}/download', function (Payment $payment) {
 
 // ─── Portal Authentication Routes ────────────────────────────────────────
 Route::get('/portal/login', [AuthController::class, 'showLogin'])->name('portal.login');
-Route::post('/portal/login', [AuthController::class, 'login'])->name('portal.login.submit');
+Route::post('/portal/login', [AuthController::class, 'login'])
+    ->middleware('throttle:5,1')
+    ->name('portal.login.submit');
 Route::post('/portal/logout', [AuthController::class, 'logout'])->name('portal.logout');
 
 // ─── Syndic Management Portal ────────────────────────────────────────────
-Route::middleware(['auth:web'])->prefix('portal')->name('portal.')->group(function () {
+Route::middleware(['auth:web', 'role:ADMIN_SYNDIC,SUPER_ADMIN'])->prefix('portal')->name('portal.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Apartments
