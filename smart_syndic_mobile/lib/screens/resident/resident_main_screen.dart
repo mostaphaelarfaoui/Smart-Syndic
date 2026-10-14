@@ -11,6 +11,8 @@ import 'tabs/resident_home_tab.dart';
 import 'tabs/resident_payments_tab.dart';
 import 'tabs/resident_transparency_tab.dart';
 import 'tabs/resident_community_tab.dart';
+import '../../providers/notification_provider.dart';
+import '../notifications/notifications_screen.dart';
 
 class ResidentMainScreen extends StatefulWidget {
   const ResidentMainScreen({super.key});
@@ -38,6 +40,10 @@ class _ResidentMainScreenState extends State<ResidentMainScreen> {
     res.fetchTransparencyLedger();
     res.fetchPolls();
     res.fetchMySuggestions();
+
+    final notif = Provider.of<NotificationProvider>(context, listen: false);
+    notif.fetchNotifications(silent: true);
+    notif.startSilentPolling();
   }
 
   void _navigateTab(int index) {
@@ -93,6 +99,47 @@ class _ResidentMainScreenState extends State<ResidentMainScreen> {
           ),
         ),
         actions: [
+          // Notifications Bell Icon with live unread badge
+          Consumer<NotificationProvider>(
+            builder: (context, notifProv, _) {
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications_none_rounded, color: AppColors.primary),
+                    tooltip: 'الإشعارات',
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                    ),
+                  ),
+                  if (notifProv.unreadCount > 0)
+                    Positioned(
+                      top: 6,
+                      right: 6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.danger,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Theme.of(context).cardColor, width: 1.5),
+                        ),
+                        constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                        child: Text(
+                          notifProv.unreadCount > 99 ? '99+' : '${notifProv.unreadCount}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.person_outline, color: AppColors.primary),
             tooltip: 'ملفي الشخصي',

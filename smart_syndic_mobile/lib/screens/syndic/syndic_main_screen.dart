@@ -13,6 +13,8 @@ import 'tabs/syndic_apartments_tab.dart';
 import 'tabs/syndic_payments_tab.dart';
 import 'tabs/syndic_expenses_tab.dart';
 import 'tabs/syndic_community_tab.dart';
+import '../../providers/notification_provider.dart';
+import '../notifications/notifications_screen.dart';
 
 class SyndicMainScreen extends StatefulWidget {
   const SyndicMainScreen({super.key});
@@ -42,6 +44,10 @@ class _SyndicMainScreenState extends State<SyndicMainScreen> {
     syndic.fetchPendingResidents();
     syndic.fetchSuggestions();
     syndic.fetchPolls();
+
+    final notif = Provider.of<NotificationProvider>(context, listen: false);
+    notif.fetchNotifications(silent: true);
+    notif.startSilentPolling();
   }
 
   void _navigateTab(int index, [int? subIndex]) {
@@ -106,6 +112,47 @@ class _SyndicMainScreenState extends State<SyndicMainScreen> {
           ),
         ),
         actions: [
+          // Notifications Bell Icon with live unread badge
+          Consumer<NotificationProvider>(
+            builder: (context, notifProv, _) {
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications_none_rounded, color: AppColors.primary),
+                    tooltip: 'الإشعارات',
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                    ),
+                  ),
+                  if (notifProv.unreadCount > 0)
+                    Positioned(
+                      top: 6,
+                      right: 6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.danger,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Theme.of(context).cardColor, width: 1.5),
+                        ),
+                        constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                        child: Text(
+                          notifProv.unreadCount > 99 ? '99+' : '${notifProv.unreadCount}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.person_outline, color: AppColors.primary),
             tooltip: 'حسابي',

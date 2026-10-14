@@ -108,6 +108,10 @@ class AuthProvider extends ChangeNotifier {
           _fieldErrorEmail = e.data['message']?.toString() ?? 'البريد الإلكتروني غير مسجل في النظام.';
         } else if (errType == 'INVALID_PASSWORD') {
           _fieldErrorPassword = e.data['message']?.toString() ?? 'كلمة المرور غير صحيحة.';
+        } else if (errType == 'ACCOUNT_LOCKED') {
+          _errorMessage = e.data['message']?.toString() ?? 'تم قفل هذا الحساب مؤقتاً لأسباب أمنية.';
+        } else if (errType == 'ACCOUNT_BLOCKED') {
+          _errorMessage = e.data['message']?.toString() ?? 'تم حظر هذا الحساب نهائياً لتجاوز الحد الأقصى للمحاولات الخاطئة.';
         } else if (errType == 'RESIDENT_PENDING_APPROVAL') {
           _pendingResidentData = Map<String, dynamic>.from(e.data);
         } else if (errType == 'SYNDIC_PENDING_APPROVAL') {

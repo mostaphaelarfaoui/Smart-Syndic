@@ -48,9 +48,9 @@ class AppServiceProvider extends ServiceProvider
                 ->by($request->user()?->id ?: $request->ip());
         });
 
-        // ─── Authentication: 5 req/min per IP ─────────────────────────
+        // ─── Authentication DDoS Protection: 30 req/min per IP ─────────
         RateLimiter::for('auth', function (Request $request) {
-            $limit = config('smartsyndic.rate_limits.auth', 5);
+            $limit = config('smartsyndic.rate_limits.auth', 30);
             return Limit::perMinute($limit)->by($request->ip());
         });
     }

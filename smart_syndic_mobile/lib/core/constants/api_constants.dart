@@ -43,4 +43,14 @@ class ApiConstants {
   static const String residentTransparency = '/resident/transparency-ledger';
   static const String residentSuggestions = '/resident/suggestions';
   static const String residentPolls = '/resident/polls';
+
+  // Notifications endpoints
+  static const String notifications = '/notifications';
+  static String notificationRead(String id) => '/notifications/$id/read';
+  static const String notificationMarkAllRead = '/notifications/mark-all-read';
+  static String notificationDelete(String id) => '/notifications/$id';
+  static const String notificationClearAll = '/notifications/clear-all';
+
+  // Security & Password verification for sensitive actions
+  static const String verifyPassword = '/auth/verify-password';
 }

@@ -51,6 +51,18 @@ Route::middleware(['auth:sanctum', 'tenant.scope', 'tenant.active'])->group(func
     Route::put('/auth/profile', [App\Http\Controllers\Api\V1\Auth\ProfileController::class, 'update'])
         ->name('auth.profile-update');
 
+    Route::post('/auth/verify-password', \App\Http\Controllers\Api\V1\Auth\VerifyPasswordController::class)
+        ->name('auth.verify-password');
+
+    // ─── Real-Time Notifications Hub ──────────────────────────────
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\V1\NotificationApiController::class, 'index'])->name('api.notifications.index');
+        Route::post('/{id}/read', [\App\Http\Controllers\Api\V1\NotificationApiController::class, 'markAsRead'])->name('api.notifications.read');
+        Route::post('/mark-all-read', [\App\Http\Controllers\Api\V1\NotificationApiController::class, 'markAllAsRead'])->name('api.notifications.mark-all-read');
+        Route::delete('/{id}', [\App\Http\Controllers\Api\V1\NotificationApiController::class, 'destroy'])->name('api.notifications.destroy');
+        Route::delete('/clear-all', [\App\Http\Controllers\Api\V1\NotificationApiController::class, 'clearAll'])->name('api.notifications.clear-all');
+    });
+
     // ─── Syndic / Admin Operations ────────────────────────────────
     Route::prefix('syndic')
         ->middleware('role:ADMIN_SYNDIC')

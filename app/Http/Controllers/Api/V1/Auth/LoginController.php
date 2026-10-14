@@ -30,18 +30,160 @@ class LoginController extends Controller
             ], 422);
         }
 
-        // 2. Wrong password
-        if (! Hash::check($request->password, $user->password)) {
+        // 2. Check permanent security block (Tier 3: 15+ attempts)
+        if ($user->isBlocked() || $user->status === 'BLOCKED' || $user->blocked_at !== null) {
+            \App\Models\SecurityIncident::log(
+                'BLOCKED_ACCOUNT_ATTEMPT',
+                'HIGH',
+                "محاولة تسجيل دخول عبر التطبيق لحساب محظور أمنياً: {$user->email}",
+                $user->email
+            );
+
             return response()->json([
-                'error_type' => 'INVALID_PASSWORD',
-                'message'    => 'كلمة المرور غير صحيحة. يرجى التأكد من كلمة المرور والمحاولة مرة أخرى.',
-                'errors'     => [
+                'error_type'     => 'ACCOUNT_BLOCKED',
+                'message'        => 'تم حظر هذا الحساب نهائياً لأسباب أمنية لتجاوز الحد الأقصى للمحاولات الخاطئة. لا يمكن فك الحظر إلا من طرف السوبر أدمن عبر لوحة التحكم.',
+                'blocked_at'     => $user->blocked_at?->toIso8601String(),
+                'blocked_reason' => $user->blocked_reason ?? 'تجاوز الحد الأقصى لمحاولات تسجيل الدخول (15 محاولة فاشلة)',
+            ], 403);
+        }
+
+        // 3. Check progressive temporary lockout (5 mins / 10 mins)
+        if ($user->locked_until && $user->locked_until->isFuture()) {
+            $remaining = max(1, (int) ceil(now()->diffInSeconds($user->locked_until) / 60));
+
+            \App\Models\SecurityIncident::log(
+                'LOCKED_ACCOUNT_ATTEMPT',
+                'MEDIUM',
+                "محاولة دخول عبر التطبيق أثناء فترة القفل المؤقت: {$user->email} (متبقي {$remaining} دقيقة)",
+                $user->email
+            );
+
+            return response()->json([
+                'error_type'        => 'ACCOUNT_LOCKED',
+                'message'           => "تم قفل هذا الحساب مؤقتاً لأسباب أمنية نظراً لتكرار محاولات الدخول الخاطئة. يرجى الانتظار لمدة {$remaining} دقيقة قبل المحاولة مجدداً.",
+                'remaining_minutes' => $remaining,
+                'locked_until'      => $user->locked_until->toIso8601String(),
+            ], 423);
+        }
+
+        // 4. Verify password
+        if (! Hash::check($request->password, $user->password)) {
+            $attempts = (int) $user->failed_login_attempts + 1;
+
+            // Tier 3: 15 attempts reached -> Permanent Account Ban
+            if ($attempts >= 15) {
+                $user->update([
+                    'failed_login_attempts' => $attempts,
+                    'status'                => 'BLOCKED',
+                    'blocked_at'            => now(),
+                    'blocked_reason'        => 'تجاوز الحد الأقصى لمحاولات تسجيل الدخول (15 محاولة فاشلة متتالية)',
+                    'locked_until'          => null,
+                ]);
+
+                $user->tokens()->delete();
+
+                \App\Models\SecurityIncident::log(
+                    'ACCOUNT_PERMANENTLY_BLOCKED',
+                    'CRITICAL',
+                    "تم حظر حساب المستخدم {$user->email} نهائياً عبر التطبيق بسبب تجاوز 15 محاولة دخول خاطئة متتالية.",
+                    $user->email
+                );
+
+                \App\Models\AuditLog::record(
+                    actorId: $user->id,
+                    action: 'SECURITY_ACCOUNT_BLOCKED_BRUTE_FORCE',
+                    targetTenantId: $user->tenant_id,
+                    metadata: [
+                        'user_id'  => $user->id,
+                        'email'    => $user->email,
+                        'attempts' => $attempts,
+                        'channel'  => 'mobile_api',
+                    ]
+                );
+
+                return response()->json([
+                    'error_type'     => 'ACCOUNT_BLOCKED',
+                    'message'        => 'تم حظر هذا الحساب نهائياً لأسباب أمنية بعد تسجيل 15 محاولة دخول خاطئة. لا يمكن فك الحظر إلا من طرف السوبر أدمن عبر لوحة التحكم.',
+                    'blocked_at'     => now()->toIso8601String(),
+                    'blocked_reason' => 'تجاوز الحد الأقصى لمحاولات تسجيل الدخول (15 محاولة فاشلة متتالية)',
+                ], 403);
+            }
+
+            // Tier 2: 10 attempts reached -> 10 minutes progressive lockout
+            if ($attempts === 10) {
+                $user->update([
+                    'failed_login_attempts' => $attempts,
+                    'locked_until'          => now()->addMinutes(10),
+                ]);
+
+                \App\Models\SecurityIncident::log(
+                    'LOGIN_LOCKOUT_10MIN',
+                    'HIGH',
+                    "تم قفل الحساب {$user->email} مؤقتاً لمدة 10 دقائق بعد تسجيل 10 محاولات دخول فاشلة عبر التطبيق.",
+                    $user->email
+                );
+
+                return response()->json([
+                    'error_type'        => 'ACCOUNT_LOCKED',
+                    'message'           => 'تم استنفاد 10 محاولات دخول خاطئة. تم قفل الحساب مؤقتاً لمدة 10 دقائق للحماية القصوى. تنبيه: عند الوصول إلى 15 محاولة سيتم حظر الحساب نهائياً.',
+                    'remaining_minutes' => 10,
+                    'locked_until'      => now()->addMinutes(10)->toIso8601String(),
+                ], 423);
+            }
+
+            // Tier 1: 5 attempts reached -> 5 minutes lockout
+            if ($attempts === 5) {
+                $user->update([
+                    'failed_login_attempts' => $attempts,
+                    'locked_until'          => now()->addMinutes(5),
+                ]);
+
+                \App\Models\SecurityIncident::log(
+                    'LOGIN_LOCKOUT_5MIN',
+                    'MEDIUM',
+                    "تم قفل الحساب {$user->email} مؤقتاً لمدة 5 دقائق بعد تسجيل 5 محاولات دخول فاشلة عبر التطبيق.",
+                    $user->email
+                );
+
+                return response()->json([
+                    'error_type'        => 'ACCOUNT_LOCKED',
+                    'message'           => 'تم استنفاد 5 محاولات دخول خاطئة. تم قفل الحساب مؤقتاً لمدة 5 دقائق للحماية. يرجى الانتظار والمحاولة لاحقاً.',
+                    'remaining_minutes' => 5,
+                    'locked_until'      => now()->addMinutes(5)->toIso8601String(),
+                ], 423);
+            }
+
+            // Other attempt numbers: 1..4, 6..9, 11..14
+            $user->update(['failed_login_attempts' => $attempts]);
+            $remainingForLock = $attempts < 5 ? (5 - $attempts) : ($attempts < 10 ? (10 - $attempts) : (15 - $attempts));
+            $nextStage = $attempts < 5 ? 'قفل مؤقت لمدة 5 دقائق' : ($attempts < 10 ? 'قفل مؤقت لمدة 10 دقائق' : 'الحظر النهائي للحساب');
+
+            \App\Models\SecurityIncident::log(
+                'FAILED_LOGIN',
+                'LOW',
+                "محاولة دخول فاشلة بكلمة مرور خاطئة للمستخدم {$user->email} (المحاولة {$attempts}/15)",
+                $user->email
+            );
+
+            return response()->json([
+                'error_type'         => 'INVALID_PASSWORD',
+                'message'            => "كلمة المرور غير صحيحة. المحاولة ({$attempts}/15). بقي لديك {$remainingForLock} محاولات قبل {$nextStage}.",
+                'attempts'           => $attempts,
+                'remaining_attempts' => $remainingForLock,
+                'next_stage'         => $nextStage,
+                'errors'             => [
                     'password' => ['كلمة المرور غير صحيحة.'],
                 ],
             ], 422);
         }
 
-        // 3. Block inactive or pending accounts (except Super Admins)
+        // 5. Password matches -> Reset failed counters & check account active status
+        $user->update([
+            'failed_login_attempts' => 0,
+            'locked_until'          => null,
+        ]);
+
+        // 6. Block inactive or pending accounts (except Super Admins)
         if ($user->status !== 'ACTIVE' && ! $user->isSuperAdmin()) {
             if ($user->isResident()) {
                 $apartment = $user->apartments()->with('building')->first();

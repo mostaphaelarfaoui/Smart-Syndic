@@ -7,6 +7,7 @@ import '../../../core/services/api_service.dart';
 import '../../../models/payment_model.dart';
 import '../../../providers/syndic_provider.dart';
 import '../../../widgets/empty_state.dart';
+import '../../../widgets/confirm_action_dialog.dart';
 import '../dialogs/record_payment_dialog.dart';
 
 class SyndicPaymentsTab extends StatefulWidget {
@@ -146,37 +147,14 @@ class _SyndicPaymentsTabState extends State<SyndicPaymentsTab> {
   }
 
   Future<void> _deletePaymentDialog(PaymentModel payment) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            const Icon(Icons.delete_forever, color: Colors.red),
-            const SizedBox(width: 8),
-            Text('حذف مسودة الوصل', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.red)),
-          ],
-        ),
-        content: Text(
-          'هل تريد حذف هذه المسودة نهائياً؟',
-          style: GoogleFonts.cairo(fontSize: 14),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text('إلغاء', style: GoogleFonts.cairo(color: AppColors.textSecondary)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text('حذف', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
+    final confirmed = await ConfirmActionDialog.show(
+      context,
+      title: 'حذف مسودة الوصل',
+      message: 'هل أنت متأكد من حذف هذه المسودة المالية نهائياً؟ هذا الإجراء لا يمكن التراجع عنه.',
+      confirmText: 'تأكيد الحذف',
+      type: ConfirmDialogType.danger,
+      requiresPassword: true,
+      passwordHint: 'لحماية السجلات المالية، يرجى إدخال كلمة مرور حسابك لتأكيد الحذف',
     );
 
     if (confirmed == true && mounted) {

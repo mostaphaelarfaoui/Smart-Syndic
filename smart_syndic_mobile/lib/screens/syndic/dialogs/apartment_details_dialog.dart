@@ -9,6 +9,7 @@ import '../../../models/apartment_model.dart';
 import '../../../providers/syndic_provider.dart';
 import 'edit_apartment_dialog.dart';
 import 'record_payment_dialog.dart';
+import '../../../widgets/confirm_action_dialog.dart';
 
 class ApartmentDetailsDialog extends StatelessWidget {
   final ApartmentModel apartment;
@@ -118,45 +119,16 @@ class ApartmentDetailsDialog extends StatelessWidget {
   Future<void> _vacateApartment(BuildContext context) async {
     final resident = apartment.resident;
     final residentName = resident?['name'] ?? 'الساكن';
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.person_remove_rounded, color: AppColors.danger),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'إخلاء الشقة وحذف الساكن',
-                style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-            ),
-          ],
-        ),
-        content: Text(
-          'هل أنت متأكد من رغبتك في إخلاء الشقة ${apartment.unitNumber} وحذف حساب $residentName؟\n\n'
+    final confirm = await ConfirmActionDialog.show(
+      context,
+      title: 'إخلاء الشقة وحذف حساب الساكن',
+      message: 'هل أنت متأكد من رغبتك في إخلاء الشقة ${apartment.unitNumber} وحذف حساب $residentName؟\n\n'
           '• سيتم حذف حساب الساكن نهائياً لتصبح الشقة شاغرة وقابلة لربط شخص آخر بها.\n'
           '• سيتم تصفير وإرجاع الحسابات والمبالغ للصيغة الأولى (0 درهم متأخرات).',
-          style: GoogleFonts.cairo(fontSize: 13, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text('إلغاء', style: GoogleFonts.cairo(color: AppColors.textSecondary)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.danger,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              'تأكيد الإخلاء والحذف',
-              style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: Colors.white),
-            ),
-          ),
-        ],
-      ),
+      confirmText: 'تأكيد الإخلاء والحذف',
+      type: ConfirmDialogType.danger,
+      requiresPassword: true,
+      passwordHint: 'عملية حساسة: يرجى إدخال كلمة مرور حساب السانديك لتأكيد الحذف والإخلاء',
     );
 
     if (confirm == true && context.mounted) {
@@ -705,27 +677,15 @@ class ApartmentDetailsDialog extends StatelessWidget {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           ),
                           onPressed: () async {
-                            final confirm = await showDialog<bool>(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: Text('تأكيد حذف الشقة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
-                                content: Text(
-                                  'هل أنت متأكد من رغبتك في حذف الشقة ${apartment.unitNumber}؟\n\n'
+                            final confirm = await ConfirmActionDialog.show(
+                              context,
+                              title: 'تأكيد حذف الشقة نهائياً',
+                              message: 'هل أنت متأكد من رغبتك في حذف الشقة ${apartment.unitNumber}؟\n\n'
                                   '⚠️ تنبيه: سيتم مباشرة حذف حساب الساكن المرتبط بها، بالإضافة إلى كافة إيصالاتها ومستحقاتها المالية.',
-                                  style: GoogleFonts.cairo(fontSize: 13, height: 1.5),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx, false),
-                                    child: Text('إلغاء', style: GoogleFonts.cairo()),
-                                  ),
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
-                                    onPressed: () => Navigator.pop(ctx, true),
-                                    child: Text('تأكيد الحذف', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: Colors.white)),
-                                  ),
-                                ],
-                              ),
+                              confirmText: 'تأكيد الحذف النهائي',
+                              type: ConfirmDialogType.danger,
+                              requiresPassword: true,
+                              passwordHint: 'لحماية بيانات الإقامة، يرجى إدخال كلمة مرور حسابك لتأكيد الحذف',
                             );
                             if (confirm == true && context.mounted) {
                               final syndic = context.read<SyndicProvider>();
