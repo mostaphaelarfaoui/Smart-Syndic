@@ -258,7 +258,11 @@
         <div class="modal-dialog" style="max-width:550px;" @click.away="editModalOpen = false">
             <div class="modal-header">
                 <h3 class="modal-title">⚙️ تعديل باقة واشتراك الإقامة</h3>
-                <button type="button" class="modal-close" @click="editModalOpen = false">&times;</button>
+                <button type="button" class="modal-close" @click="editModalOpen = false" title="إغلاق">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
             </div>
             <form :action="'{{ url('platform/subscriptions') }}/' + (selectedTenant ? selectedTenant.id : '') + '/update'" method="POST">
                 @csrf
@@ -311,7 +315,11 @@
         <div class="modal-dialog" style="max-width:500px;" @click.away="extendModalOpen = false">
             <div class="modal-header">
                 <h3 class="modal-title">➕ تمديد اشتراك الإقامة السريع</h3>
-                <button type="button" class="modal-close" @click="extendModalOpen = false">&times;</button>
+                <button type="button" class="modal-close" @click="extendModalOpen = false" title="إغلاق">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
             </div>
             <form :action="'{{ url('platform/subscriptions') }}/' + (selectedTenant ? selectedTenant.id : '') + '/extend'" method="POST">
                 @csrf

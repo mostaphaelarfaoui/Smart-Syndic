@@ -229,7 +229,11 @@
         <div class="modal-dialog" style="max-width:620px;" @click.away="createModalOpen = false">
             <div class="modal-header">
                 <h3 class="modal-title">📢 إنشاء وبث إعلان جماعي للمنصة</h3>
-                <button type="button" class="modal-close" @click="createModalOpen = false">&times;</button>
+                <button type="button" class="modal-close" @click="createModalOpen = false" title="إغلاق">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
             </div>
             <form method="POST" action="{{ route('superadmin.announcements.store') }}">
                 @csrf

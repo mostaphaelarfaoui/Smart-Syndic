@@ -200,23 +200,34 @@
                         </tr>
 
                         {{-- Password Reset Modal --}}
-                        <div id="modal-reset-{{ $user->id }}" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
-                            <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:16px; padding:2rem; min-width:350px; max-width:450px; box-shadow:0 20px 60px rgba(0,0,0,0.4);">
-                                <h3 style="margin:0 0 0.5rem; color:var(--text-primary);">🔑 تغيير كلمة المرور</h3>
-                                <p style="color:var(--text-muted); font-size:0.875rem; margin-bottom:1.5rem;">تغيير كلمة مرور <strong>{{ $user->full_name }}</strong></p>
+                        <div id="modal-reset-{{ $user->id }}" style="display:none;" class="modal-backdrop">
+                            <div class="modal-dialog" style="max-width:440px;">
+                                <div class="modal-header">
+                                    <h3 class="modal-title">🔑 تغيير كلمة المرور</h3>
+                                    <button type="button" class="modal-close" onclick="document.getElementById('modal-reset-{{ $user->id }}').style.display='none'" title="إغلاق">
+                                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
                                 <form method="POST" action="{{ route('superadmin.users.reset-password', $user->id) }}">
                                     @csrf
-                                    <div style="margin-bottom:1rem;">
-                                        <label style="font-size:0.85rem; color:var(--text-muted); display:block; margin-bottom:0.4rem;">كلمة المرور الجديدة (6 أحرف على الأقل)</label>
-                                        <input type="password" name="new_password" required minlength="6"
-                                            class="form-input" style="width:100%;" placeholder="••••••••">
+                                    <div class="modal-body" style="padding:1.5rem;">
+                                        <p style="color:var(--text-muted); font-size:0.875rem; margin-bottom:1.25rem;">
+                                            أدخل كلمة المرور الجديدة للمستخدم: <strong>{{ $user->full_name }}</strong>
+                                        </p>
+                                        <div>
+                                            <label class="form-label" style="font-size:0.85rem; margin-bottom:0.4rem;">كلمة المرور الجديدة (6 أحرف على الأقل)</label>
+                                            <input type="password" name="new_password" required minlength="6"
+                                                class="form-input" placeholder="••••••••">
+                                        </div>
                                     </div>
-                                    <div style="display:flex; gap:0.75rem; justify-content:flex-end;">
-                                        <button type="button" class="btn btn-secondary btn-sm"
+                                    <div class="modal-footer" style="padding:1rem 1.5rem;">
+                                        <button type="button" class="btn btn-secondary"
                                             onclick="document.getElementById('modal-reset-{{ $user->id }}').style.display='none'">
                                             إلغاء
                                         </button>
-                                        <button type="submit" class="btn btn-primary btn-sm">حفظ كلمة المرور</button>
+                                        <button type="submit" class="btn btn-primary" style="padding:0.6rem 1.25rem;">حفظ كلمة المرور</button>
                                     </div>
                                 </form>
                             </div>

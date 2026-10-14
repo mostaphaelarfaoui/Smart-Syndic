@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'إدارة المنصة') — Smart Syndic Platform</title>
 
-    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}?v={{ file_exists(public_path('css/dashboard.css')) ? filemtime(public_path('css/dashboard.css')) : time() }}">
     <script src="{{ asset('js/alpine.min.js') }}" defer></script>
     <script src="{{ asset('js/chart.min.js') }}"></script>
 

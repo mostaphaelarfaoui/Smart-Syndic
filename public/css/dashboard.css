@@ -28,6 +28,7 @@
     --bg-app: #f8fafc;
     --bg-surface: #ffffff;
     --bg-surface-elevated: #ffffff;
+    --bg-card: #ffffff;
     --bg-sidebar: #0f172a;
     --bg-sidebar-hover: rgba(255, 255, 255, 0.08);
     --bg-sidebar-active: rgba(13, 148, 136, 0.2);
@@ -35,6 +36,7 @@
     --border-subtle: #f1f5f9;
     
     --text-primary: #0f172a;
+    --text-main: #0f172a;
     --text-secondary: #475569;
     --text-muted: #94a3b8;
     --text-inverse: #ffffff;
@@ -62,6 +64,7 @@
     --bg-app: #090d16;
     --bg-surface: #111827;
     --bg-surface-elevated: #1f2937;
+    --bg-card: #111827;
     --bg-sidebar: #0b1120;
     --bg-sidebar-hover: rgba(255, 255, 255, 0.06);
     --bg-sidebar-active: rgba(13, 148, 136, 0.25);
@@ -69,6 +72,7 @@
     --border-subtle: #162032;
     
     --text-primary: #f8fafc;
+    --text-main: #f8fafc;
     --text-secondary: #cbd5e1;
     --text-muted: #64748b;
     --text-inverse: #ffffff;
@@ -732,7 +736,7 @@ a {
 
 .search-box input {
     width: 100%;
-    padding: 0.65rem 2.6rem 0.65rem 1rem;
+    padding: 0.65rem 2.85rem 0.65rem 1rem !important;
     border-radius: var(--radius-md);
     border: 1px solid var(--border-color);
     background-color: var(--bg-surface);
@@ -809,10 +813,21 @@ a {
 .btn-secondary {
     background-color: var(--bg-app);
     color: var(--text-primary);
-    border-color: var(--border-color);
+    border: 1px solid var(--border-color);
 }
 .btn-secondary:hover {
     background-color: var(--border-color);
+}
+
+[data-theme="dark"] .btn-secondary {
+    background-color: #1e293b;
+    color: #f8fafc;
+    border: 1px solid #334155;
+}
+[data-theme="dark"] .btn-secondary:hover {
+    background-color: #334155;
+    border-color: #475569;
+    color: #ffffff;
 }
 
 .btn-sm {
@@ -882,8 +897,26 @@ a {
     color: var(--text-primary);
 }
 
-.form-control, .form-select {
-    width: 100%;
+/* Unified Form Controls */
+.form-control,
+.form-select,
+.form-input,
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="date"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="tel"],
+input[type="search"],
+select.form-control,
+select.form-select,
+select.form-input,
+textarea.form-control,
+textarea.form-input {
+    width: 100% !important;
+    max-width: 100%;
     padding: 0.75rem 1rem;
     border-radius: var(--radius-md);
     border: 1px solid var(--border-color);
@@ -891,48 +924,183 @@ a {
     color: var(--text-primary);
     font-family: inherit;
     font-size: 0.95rem;
-    transition: all var(--transition-fast);
+    line-height: 1.5;
+    box-sizing: border-box;
+    display: block;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
 }
 
-.form-control:focus, .form-select:focus {
-    outline: none;
-    border-color: var(--brand-primary);
-    box-shadow: 0 0 0 3px var(--brand-primary-light);
+/* Dark mode specific form control background and borders */
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select,
+[data-theme="dark"] .form-input,
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] input[type="password"],
+[data-theme="dark"] input[type="email"],
+[data-theme="dark"] input[type="number"],
+[data-theme="dark"] input[type="date"],
+[data-theme="dark"] input[type="datetime-local"],
+[data-theme="dark"] input[type="month"],
+[data-theme="dark"] input[type="tel"],
+[data-theme="dark"] input[type="search"],
+[data-theme="dark"] select.form-control,
+[data-theme="dark"] select.form-select,
+[data-theme="dark"] select.form-input,
+[data-theme="dark"] textarea.form-control,
+[data-theme="dark"] textarea.form-input {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+    color-scheme: dark !important;
+}
+
+[data-theme="light"] .form-control,
+[data-theme="light"] .form-select,
+[data-theme="light"] .form-input {
+    background-color: #ffffff;
+    border-color: #cbd5e1;
+    color: #0f172a;
+    color-scheme: light;
+}
+
+.form-control:focus,
+.form-select:focus,
+.form-input:focus,
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
+input[type="datetime-local"]:focus,
+input[type="month"]:focus,
+input[type="tel"]:focus,
+input[type="search"]:focus,
+select.form-control:focus,
+select.form-select:focus,
+select.form-input:focus,
+textarea.form-control:focus,
+textarea.form-input:focus {
+    outline: none !important;
+    border-color: var(--brand-secondary, #6366f1) !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25) !important;
+}
+
+/* Placeholder styling */
+::placeholder {
+    color: var(--text-muted);
+    opacity: 0.75;
+}
+
+/* Select specific styling */
+select.form-control,
+select.form-select,
+select.form-input {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: left 0.85rem center;
+    background-repeat: no-repeat;
+    background-size: 1.25em 1.25em;
+    padding-left: 2.5rem !important;
+    padding-right: 1rem !important;
+    cursor: pointer;
+}
+
+select option {
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
+    padding: 0.6rem 1rem;
+}
+
+[data-theme="light"] select option {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+}
+
+/* Textarea specific */
+textarea.form-control,
+textarea.form-input {
+    min-height: 95px;
+    resize: vertical;
+}
+
+/* Checkbox & Radio styling */
+input[type="checkbox"],
+input[type="radio"] {
+    accent-color: var(--brand-secondary, #6366f1);
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+/* Date & Time Picker Calendar Icons */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="month"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    filter: invert(0.85);
+    opacity: 0.85;
+    transition: opacity 0.2s;
+    margin-left: 0.25rem;
+}
+
+[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="light"] input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+[data-theme="light"] input[type="month"]::-webkit-calendar-picker-indicator {
+    filter: none;
+    opacity: 0.65;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover,
+input[type="month"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
 }
 
 /* ==========================================================================
    Modals
    ========================================================================== */
-.modal-overlay {
+.modal-overlay,
+.modal-backdrop {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(3, 7, 18, 0.78);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 100;
-    padding: 1.5rem;
+    z-index: 9999;
+    padding: 1.25rem;
+    overflow-y: auto;
 }
 
 .modal-dialog {
-    background-color: var(--bg-surface);
-    border-radius: var(--radius-xl);
+    background-color: var(--bg-surface, #111827);
+    border-radius: var(--radius-xl, 18px);
     width: 100%;
     max-width: 580px;
-    box-shadow: var(--shadow-xl);
-    border: 1px solid var(--border-color);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border-color, #1e293b);
     overflow: hidden;
-    animation: modalPopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    margin: auto;
+    animation: modalPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="dark"] .modal-dialog {
+    background-color: #111827;
+    border-color: #1e293b;
 }
 
 @keyframes modalPopIn {
     from {
         opacity: 0;
-        transform: scale(0.95) translateY(10px);
+        transform: scale(0.96) translateY(12px);
     }
     to {
         opacity: 1;
@@ -946,28 +1114,62 @@ a {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    background-color: var(--bg-surface, #111827);
 }
 
 .modal-title {
-    font-size: 1.2rem;
+    font-size: 1.15rem;
     font-weight: 800;
     color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.modal-close {
+    background: transparent !important;
+    border: none !important;
+    color: var(--text-muted, #94a3b8) !important;
+    font-size: 1.6rem !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all var(--transition-fast) !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+}
+
+.modal-close:hover {
+    background-color: rgba(239, 68, 68, 0.15) !important;
+    color: #ef4444 !important;
 }
 
 .modal-body {
     padding: 1.75rem;
     max-height: 75vh;
     overflow-y: auto;
+    background-color: var(--bg-surface, #111827);
 }
 
 .modal-footer {
     padding: 1.25rem 1.75rem;
     border-top: 1px solid var(--border-color);
-    background-color: var(--bg-app);
+    background-color: var(--bg-app, #090d16);
     display: flex;
     align-items: center;
     justify-content: flex-end;
     gap: 0.75rem;
+}
+
+[data-theme="dark"] .modal-footer {
+    background-color: #0b1120;
+    border-top-color: #1e293b;
 }
 
 /* ==========================================================================

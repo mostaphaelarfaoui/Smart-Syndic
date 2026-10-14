@@ -7,7 +7,7 @@
     <title>@yield('title', 'Smart Syndic') — لوحة التسيير</title>
 
     {{-- Design System CSS --}}
-    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}?v={{ file_exists(public_path('css/dashboard.css')) ? filemtime(public_path('css/dashboard.css')) : time() }}">
 
     {{-- Local Scripts --}}
     <script src="{{ asset('js/alpine.min.js') }}" defer></script>
