@@ -41,7 +41,8 @@ class NotificationService
         string $message,
         string $type = 'info',
         ?string $url = null,
-        ?string $icon = null
+        ?string $icon = null,
+        array $extra = []
     ): void {
         $syndics = User::where('tenant_id', $tenantId)
             ->whereIn('role', ['ADMIN_SYNDIC', 'SYNDIC'])
@@ -49,7 +50,50 @@ class NotificationService
             ->get();
 
         foreach ($syndics as $syndic) {
-            $this->send($syndic, $title, $message, $type, $url, $icon);
+            $this->send($syndic, $title, $message, $type, $url, $icon, $extra);
+        }
+    }
+
+    /**
+     * Send notification to all active residents of a tenant.
+     */
+    public function sendToTenantResidents(
+        string $tenantId,
+        string $title,
+        string $message,
+        string $type = 'info',
+        ?string $url = null,
+        ?string $icon = null,
+        array $extra = []
+    ): void {
+        $residents = User::where('tenant_id', $tenantId)
+            ->where('role', 'RESIDENT')
+            ->where('status', 'ACTIVE')
+            ->get();
+
+        foreach ($residents as $resident) {
+            $this->send($resident, $title, $message, $type, $url, $icon, $extra);
+        }
+    }
+
+    /**
+     * Send notification to all active members of a tenant (syndics + residents).
+     */
+    public function sendToTenantAll(
+        string $tenantId,
+        string $title,
+        string $message,
+        string $type = 'info',
+        ?string $url = null,
+        ?string $icon = null,
+        array $extra = []
+    ): void {
+        $users = User::where('tenant_id', $tenantId)
+            ->where('status', 'ACTIVE')
+            ->get();
+
+        foreach ($users as $user) {
+            $this->send($user, $title, $message, $type, $url, $icon, $extra);
         }
     }
 
@@ -61,14 +105,15 @@ class NotificationService
         string $message,
         string $type = 'info',
         ?string $url = null,
-        ?string $icon = null
+        ?string $icon = null,
+        array $extra = []
     ): void {
         $admins = User::where('role', 'SUPER_ADMIN')
             ->where('status', 'ACTIVE')
             ->get();
 
         foreach ($admins as $admin) {
-            $this->send($admin, $title, $message, $type, $url, $icon);
+            $this->send($admin, $title, $message, $type, $url, $icon, $extra);
         }
     }
 
@@ -131,17 +176,22 @@ class NotificationService
             $data = is_array($n->data) ? $n->data : json_decode($n->data, true);
             $createdAt = Carbon::parse($n->created_at);
 
+            $extra = is_array($data['extra'] ?? null) ? $data['extra'] : [];
+
             return [
-                'id'         => $n->id,
-                'title'      => $data['title'] ?? 'إشعار جديد',
-                'message'    => $data['message'] ?? '',
-                'type'       => $data['type'] ?? 'info',
-                'icon'       => $data['icon'] ?? '🔔',
-                'url'        => $data['url'] ?? null,
-                'is_read'    => ! is_null($n->read_at),
-                'read_at'    => $n->read_at?->toIso8601String(),
-                'time_ago'   => $createdAt->locale('ar')->diffForHumans(),
-                'created_at' => $createdAt->toIso8601String(),
+                'id'            => $n->id,
+                'title'         => $data['title'] ?? 'إشعار جديد',
+                'message'       => $data['message'] ?? '',
+                'type'          => $data['type'] ?? 'info',
+                'icon'          => $data['icon'] ?? '🔔',
+                'url'           => $data['url'] ?? null,
+                'target_screen' => $data['target_screen'] ?? ($extra['target_screen'] ?? null),
+                'target_id'     => $data['target_id'] ?? ($extra['target_id'] ?? null),
+                'extra'         => $extra,
+                'is_read'       => ! is_null($n->read_at),
+                'read_at'       => $n->read_at?->toIso8601String(),
+                'time_ago'      => $createdAt->locale('ar')->diffForHumans(),
+                'created_at'    => $createdAt->toIso8601String(),
             ];
         });
 

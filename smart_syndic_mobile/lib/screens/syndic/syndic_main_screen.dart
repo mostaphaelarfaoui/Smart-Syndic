@@ -13,6 +13,7 @@ import 'tabs/syndic_apartments_tab.dart';
 import 'tabs/syndic_payments_tab.dart';
 import 'tabs/syndic_expenses_tab.dart';
 import 'tabs/syndic_community_tab.dart';
+import '../../models/notification_model.dart';
 import '../../providers/notification_provider.dart';
 import '../notifications/notifications_screen.dart';
 
@@ -56,6 +57,27 @@ class _SyndicMainScreenState extends State<SyndicMainScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _communityKey.currentState?.switchToSubTab(subIndex);
       });
+    }
+  }
+
+  void _handleNotificationNavigation(NotificationModel notif) {
+    final target = (notif.targetScreen ?? '').toLowerCase();
+    final url = (notif.url ?? '').toLowerCase();
+
+    if (target == 'payments' || url.contains('payments')) {
+      _navigateTab(2); // Payments tab
+    } else if (target == 'apartments' || url.contains('apartments')) {
+      _navigateTab(1); // Apartments tab
+    } else if (target == 'expenses' || url.contains('expenses')) {
+      _navigateTab(3); // Expenses tab
+    } else if (target == 'community' || target == 'suggestions' || target == 'complaints' || url.contains('community')) {
+      _navigateTab(4, 0); // Community tab -> Complaints & Suggestions
+    } else if (target == 'polls' || url.contains('polls')) {
+      _navigateTab(4, 1); // Community tab -> Polls
+    } else if (target == 'pending_residents' || url.contains('residents')) {
+      _navigateTab(4, 2); // Community tab -> Pending Residents
+    } else {
+      _navigateTab(0); // Dashboard
     }
   }
 
@@ -121,10 +143,15 @@ class _SyndicMainScreenState extends State<SyndicMainScreen> {
                   IconButton(
                     icon: const Icon(Icons.notifications_none_rounded, color: AppColors.primary),
                     tooltip: 'الإشعارات',
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-                    ),
+                    onPressed: () async {
+                      final selectedNotif = await Navigator.push<NotificationModel>(
+                        context,
+                        MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                      );
+                      if (selectedNotif != null) {
+                        _handleNotificationNavigation(selectedNotif);
+                      }
+                    },
                   ),
                   if (notifProv.unreadCount > 0)
                     Positioned(

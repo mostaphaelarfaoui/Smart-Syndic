@@ -13,18 +13,19 @@ class NotifySyndicOfNewResident implements ShouldQueue
     {
         $resident = $event->resident;
         $apartment = $resident->apartments()->first();
+        $aptNumber = $apartment ? " (شقة {$apartment->number})" : '';
 
-        // Find the Syndic admin for this tenant
-        $syndic = \App\Models\User::where('tenant_id', $resident->tenant_id)
-            ->where('role', 'ADMIN_SYNDIC')
-            ->where('status', 'ACTIVE')
-            ->first();
-
-        if (! $syndic) {
-            return;
-        }
-
-        // TODO: Send push notification to Syndic
-        // TODO: Send email notification to Syndic
+        app(\App\Services\NotificationService::class)->sendToTenantSyndics(
+            tenantId: $resident->tenant_id,
+            title: 'طلب انضمام ساكن جديد 👤',
+            message: "سجل ساكن جديد باسم {$resident->full_name}{$aptNumber} في انتظار موافقتكم واعتماده.",
+            type: 'warning',
+            url: route('portal.residents.index'),
+            icon: '📋',
+            extra: [
+                'target_screen' => 'pending_residents',
+                'target_id'     => $resident->id,
+            ]
+        );
     }
 }

@@ -10,11 +10,17 @@ class ResidentCommunityTab extends StatefulWidget {
   const ResidentCommunityTab({super.key});
 
   @override
-  State<ResidentCommunityTab> createState() => _ResidentCommunityTabState();
+  State<ResidentCommunityTab> createState() => ResidentCommunityTabState();
 }
 
-class _ResidentCommunityTabState extends State<ResidentCommunityTab> with SingleTickerProviderStateMixin {
+class ResidentCommunityTabState extends State<ResidentCommunityTab> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+
+  void switchToSubTab(int index) {
+    if (index >= 0 && index < _tabController.length) {
+      _tabController.animateTo(index);
+    }
+  }
   final Map<String, String> _selectedOptions = {}; // pollId -> optionId
   final Map<String, String> _voteComments = {}; // pollId -> comment text
   final Map<String, bool> _voteIsAnonymous = {}; // pollId -> isAnonymous

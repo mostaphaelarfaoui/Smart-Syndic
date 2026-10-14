@@ -14,15 +14,17 @@ class NotifyResidentsOfNewPoll implements ShouldQueue
         $poll     = $event->poll;
         $tenantId = $poll->tenant_id;
 
-        $residents = \App\Models\User::where('tenant_id', $tenantId)
-            ->where('role', 'RESIDENT')
-            ->where('status', 'ACTIVE')
-            ->whereNotNull('fcm_device_token')
-            ->get();
-
-        foreach ($residents as $resident) {
-            // TODO: Send FCM push notification
-            // "A new community vote has been opened: {$poll->title}. Cast your ballot."
-        }
+        app(\App\Services\NotificationService::class)->sendToTenantResidents(
+            tenantId: $tenantId,
+            title: 'استطلاع رأي وتصويت جديد 📊',
+            message: "تم طرح تصويت جديد في الإقامة: \"{$poll->title}\". شارك بصوتك الآن!",
+            type: 'info',
+            url: route('portal.community.index', ['tab' => 'polls']),
+            icon: '🗳️',
+            extra: [
+                'target_screen' => 'polls',
+                'target_id'     => $poll->id,
+            ]
+        );
     }
 }

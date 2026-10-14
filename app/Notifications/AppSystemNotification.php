@@ -36,13 +36,15 @@ class AppSystemNotification extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'title'      => $this->title,
-            'message'    => $this->message,
-            'type'       => $this->type,
-            'url'        => $this->url,
-            'icon'       => $this->icon ?? $this->defaultIcon($this->type),
-            'extra'      => $this->extra,
-            'created_at' => now()->toIso8601String(),
+            'title'         => $this->title,
+            'message'       => $this->message,
+            'type'          => $this->type,
+            'url'           => $this->url,
+            'icon'          => $this->icon ?? $this->defaultIcon($this->type),
+            'target_screen' => $this->extra['target_screen'] ?? null,
+            'target_id'     => $this->extra['target_id'] ?? null,
+            'extra'         => $this->extra,
+            'created_at'    => now()->toIso8601String(),
         ];
     }
 

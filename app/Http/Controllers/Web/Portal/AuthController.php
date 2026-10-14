@@ -163,6 +163,19 @@ class AuthController extends Controller
                     ]
                 );
 
+                // Notify Super Admins
+                app(\App\Services\NotificationService::class)->sendToSuperAdmins(
+                    title: 'حظر حساب مستخدم أمنياً 🚨',
+                    message: "تم حظر الحساب ({$user->email}) نهائياً لتجاوزه 15 محاولة دخول خاطئة متتالية.",
+                    type: 'danger',
+                    url: route('superadmin.users.index'),
+                    icon: '🛡️',
+                    extra: [
+                        'target_screen' => 'users',
+                        'target_id'     => $user->id,
+                    ]
+                );
+
                 return back()->withErrors([
                     'email' => 'تم حظر هذا الحساب نهائياً لأسباب أمنية بعد تسجيل 15 محاولة دخول خاطئة. لا يمكن فك الحظر إلا من طرف السوبر أدمن عبر لوحة التحكم.',
                 ])->onlyInput('email');

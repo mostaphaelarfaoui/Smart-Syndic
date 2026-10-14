@@ -42,6 +42,33 @@ class CommunityController extends Controller
 
         $suggestion->update($validated);
 
+        if ($suggestion->user) {
+            $statusLabels = [
+                'IN_PROGRESS' => 'قيد المعالجة',
+                'RESOLVED'    => 'تمت معالجتها بنجاح',
+                'REJECTED'    => 'تم رفضها',
+                'PENDING'     => 'قيد المراجعة',
+            ];
+            $type = match($validated['status']) {
+                'RESOLVED' => 'success',
+                'REJECTED' => 'danger',
+                default    => 'info',
+            };
+
+            app(\App\Services\NotificationService::class)->send(
+                user: $suggestion->user,
+                title: 'تحديث بخصوص مقترحك / ملاحظتك 💬',
+                message: "تم تحديث حالة المقترح \"{$suggestion->title}\" إلى: " . ($statusLabels[$validated['status']] ?? $validated['status']),
+                type: $type,
+                url: route('portal.dashboard'),
+                icon: '💬',
+                extra: [
+                    'target_screen' => 'community',
+                    'target_id'     => $suggestion->id,
+                ]
+            );
+        }
+
         return back()->with('success', 'تم تحديث حالة الملاحظة / الشكاية بنجاح.');
     }
 
@@ -57,7 +84,7 @@ class CommunityController extends Controller
             'options.*'   => ['required', 'string', 'max:255'],
         ]);
 
-        DB::transaction(function () use ($tenantId, $validated) {
+        $poll = DB::transaction(function () use ($tenantId, $validated) {
             $poll = Poll::create([
                 'tenant_id'   => $tenantId,
                 'created_by'  => auth()->id(),
@@ -74,7 +101,23 @@ class CommunityController extends Controller
                     ]);
                 }
             }
+
+            return $poll;
         });
+
+        // Notify all active residents in the tenant
+        app(\App\Services\NotificationService::class)->sendToTenantResidents(
+            tenantId: $tenantId,
+            title: 'استطلاع رأي وتصويت جديد 📊',
+            message: "تم طرح تصويت جديد في الإقامة: \"{$poll->title}\". شارك بصوتك الآن!",
+            type: 'info',
+            url: route('portal.community.index', ['tab' => 'polls']),
+            icon: '🗳️',
+            extra: [
+                'target_screen' => 'polls',
+                'target_id'     => $poll->id,
+            ]
+        );
 
         return back()->with('success', 'تم إنشاء استطلاع الرأي وطرحه للسكان بنجاح.');
     }

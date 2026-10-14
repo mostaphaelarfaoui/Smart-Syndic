@@ -33,6 +33,18 @@ class SendPaymentNotification implements ShouldQueue
             $message,
         );
 
-        // TODO: Send FCM push notification
+        // In-app notification to resident
+        app(\App\Services\NotificationService::class)->send(
+            user: $resident,
+            title: 'وصل أداء واجبات السنديك 🧾',
+            message: "تم تسجيل دفعة مالية بقيمة {$payment->amount_paid} درهم برقم وصل: {$payment->receipt_number}.",
+            type: 'success',
+            url: route('receipts.download', $payment->id),
+            icon: '💰',
+            extra: [
+                'target_screen' => 'payments',
+                'target_id'     => $payment->id,
+            ]
+        );
     }
 }

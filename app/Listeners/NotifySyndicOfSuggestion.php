@@ -13,16 +13,17 @@ class NotifySyndicOfSuggestion implements ShouldQueue
     {
         $suggestion = $event->suggestion;
 
-        $syndic = \App\Models\User::where('tenant_id', $suggestion->tenant_id)
-            ->where('role', 'ADMIN_SYNDIC')
-            ->where('status', 'ACTIVE')
-            ->first();
-
-        if (! $syndic) {
-            return;
-        }
-
-        // TODO: Send FCM push notification to Syndic
-        // "New private suggestion received: {$suggestion->title}"
+        app(\App\Services\NotificationService::class)->sendToTenantSyndics(
+            tenantId: $suggestion->tenant_id,
+            title: 'مقترح أو شكوى جديدة 💡',
+            message: "تم تقديم مقترح جديد بعنوان: \"{$suggestion->title}\"",
+            type: 'info',
+            url: route('portal.community.index', ['tab' => 'suggestions']),
+            icon: '💡',
+            extra: [
+                'target_screen' => 'community',
+                'target_id'     => $suggestion->id,
+            ]
+        );
     }
 }

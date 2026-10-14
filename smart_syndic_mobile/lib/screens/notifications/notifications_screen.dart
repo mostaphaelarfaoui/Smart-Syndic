@@ -275,6 +275,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           if (!item.isRead) {
             notifProv.markAsRead(item.id);
           }
+          Navigator.pop(context, item);
         },
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

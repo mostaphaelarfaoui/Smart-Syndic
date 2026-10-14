@@ -741,6 +741,7 @@ function notificationDropdown() {
                 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
                 const response = await fetch(`/portal/notifications/${notificationId}/read`, {
                     method: 'POST',
+                    keepalive: true,
                     headers: {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json',
@@ -769,6 +770,7 @@ function notificationDropdown() {
                 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
                 const response = await fetch('/portal/notifications/mark-all-read', {
                     method: 'POST',
+                    keepalive: true,
                     headers: {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json',
@@ -788,10 +790,10 @@ function notificationDropdown() {
 
         async handleItemClick(item) {
             if (!item.is_read) {
-                await this.markAsRead(item.id);
+                this.markAsRead(item.id);
             }
 
-            if (item.url) {
+            if (item.url && item.url !== '#' && item.url.trim() !== '') {
                 window.location.href = item.url;
             }
         },

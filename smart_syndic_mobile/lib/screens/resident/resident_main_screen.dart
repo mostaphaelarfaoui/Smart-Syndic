@@ -13,6 +13,7 @@ import 'tabs/resident_transparency_tab.dart';
 import 'tabs/resident_community_tab.dart';
 import '../../providers/notification_provider.dart';
 import '../notifications/notifications_screen.dart';
+import '../../models/notification_model.dart';
 
 class ResidentMainScreen extends StatefulWidget {
   const ResidentMainScreen({super.key});
@@ -23,6 +24,7 @@ class ResidentMainScreen extends StatefulWidget {
 
 class _ResidentMainScreenState extends State<ResidentMainScreen> {
   int _currentIndex = 0;
+  final GlobalKey<ResidentCommunityTabState> _communityKey = GlobalKey<ResidentCommunityTabState>();
 
   @override
   void initState() {
@@ -46,8 +48,30 @@ class _ResidentMainScreenState extends State<ResidentMainScreen> {
     notif.startSilentPolling();
   }
 
-  void _navigateTab(int index) {
+  void _navigateTab(int index, [int? subIndex]) {
     setState(() => _currentIndex = index);
+    if (index == 3 && subIndex != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _communityKey.currentState?.switchToSubTab(subIndex);
+      });
+    }
+  }
+
+  void _handleNotificationNavigation(NotificationModel notif) {
+    final target = (notif.targetScreen ?? '').toLowerCase();
+    final url = (notif.url ?? '').toLowerCase();
+
+    if (target == 'payments' || target == 'receipt' || url.contains('payments') || url.contains('receipt')) {
+      _navigateTab(1); // Payments tab
+    } else if (target == 'transparency' || url.contains('transparency') || target == 'expenses' || url.contains('expenses')) {
+      _navigateTab(2); // Transparency ledger tab
+    } else if (target == 'polls' || url.contains('polls')) {
+      _navigateTab(3, 0); // Community tab -> Polls & voting
+    } else if (target == 'community' || target == 'suggestions' || target == 'complaints' || url.contains('community') || url.contains('suggestions')) {
+      _navigateTab(3, 1); // Community tab -> Suggestions & complaints
+    } else {
+      _navigateTab(0); // Home tab
+    }
   }
 
   Future<void> _handleLogout() async {
@@ -108,10 +132,15 @@ class _ResidentMainScreenState extends State<ResidentMainScreen> {
                   IconButton(
                     icon: const Icon(Icons.notifications_none_rounded, color: AppColors.primary),
                     tooltip: 'الإشعارات',
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-                    ),
+                    onPressed: () async {
+                      final selectedNotif = await Navigator.push<NotificationModel>(
+                        context,
+                        MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                      );
+                      if (selectedNotif != null) {
+                        _handleNotificationNavigation(selectedNotif);
+                      }
+                    },
                   ),
                   if (notifProv.unreadCount > 0)
                     Positioned(
@@ -190,7 +219,7 @@ class _ResidentMainScreenState extends State<ResidentMainScreen> {
           ResidentHomeTab(onNavigateTab: _navigateTab),
           const ResidentPaymentsTab(),
           const ResidentTransparencyTab(),
-          const ResidentCommunityTab(),
+          ResidentCommunityTab(key: _communityKey),
         ],
       ),
       bottomNavigationBar: NavigationBar(

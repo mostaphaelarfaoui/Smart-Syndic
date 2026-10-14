@@ -83,6 +83,21 @@ class SuggestionPollController extends Controller
 
         $suggestion->markAccepted($request->input('notes'));
 
+        if ($suggestion->user) {
+            app(\App\Services\NotificationService::class)->send(
+                user: $suggestion->user,
+                title: 'تمت الموافقة على اقتراحك 🎉',
+                message: "وافق السانديك على مقترحك: \"{$suggestion->title}\"",
+                type: 'success',
+                url: route('portal.dashboard'),
+                icon: '✅',
+                extra: [
+                    'target_screen' => 'community',
+                    'target_id'     => $suggestion->id,
+                ]
+            );
+        }
+
         return response()->json([
             'message'    => 'تمت الموافقة على الاقتراح بنجاح',
             'suggestion' => $suggestion,
@@ -98,6 +113,22 @@ class SuggestionPollController extends Controller
             ->findOrFail($id);
 
         $suggestion->markRejected($request->input('notes'));
+
+        if ($suggestion->user) {
+            $notesMsg = $request->input('notes') ? " (ملاحظة: {$request->input('notes')})" : '';
+            app(\App\Services\NotificationService::class)->send(
+                user: $suggestion->user,
+                title: 'تحديث حول اقتراحك ℹ️',
+                message: "تم رفض المقترح: \"{$suggestion->title}\"{$notesMsg}",
+                type: 'warning',
+                url: route('portal.dashboard'),
+                icon: 'ℹ️',
+                extra: [
+                    'target_screen' => 'community',
+                    'target_id'     => $suggestion->id,
+                ]
+            );
+        }
 
         return response()->json([
             'message'    => 'تم رفض الاقتراح',

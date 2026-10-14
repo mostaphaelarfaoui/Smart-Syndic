@@ -104,7 +104,11 @@ class PaymentController extends Controller
             message: "تم استخلاص دفعة بقيمة {$payment->amount_paid} درهم برقم وصل {$payment->receipt_number}.",
             type: 'success',
             url: route('portal.payments.index'),
-            icon: '💰'
+            icon: '💰',
+            extra: [
+                'target_screen' => 'payments',
+                'target_id'     => $payment->id,
+            ]
         );
 
         return back()->with('success', "تم تسجيل واستخلاص الدفعة بنجاح برقم وصل: {$payment->receipt_number}");
