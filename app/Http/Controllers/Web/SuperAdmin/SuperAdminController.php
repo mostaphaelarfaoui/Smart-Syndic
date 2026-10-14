@@ -58,6 +58,10 @@ class SuperAdminController extends Controller
         $blockedIpsCount = BlockedIp::count();
         $recentIncidents = SecurityIncident::latest('created_at')->limit(6)->get();
 
+        // Blocked accounts due to security/brute-force
+        $blockedUsers = User::where('status', 'BLOCKED')->with('tenant')->latest('blocked_at')->get();
+        $blockedUsersCount = $blockedUsers->count();
+
         // Fraud heuristic alerts
         $fraudAlerts = $fraudDetector->scan();
 
@@ -77,6 +81,8 @@ class SuperAdminController extends Controller
             'openIncidentsCount',
             'criticalIncidentsCount',
             'blockedIpsCount',
+            'blockedUsers',
+            'blockedUsersCount',
             'recentIncidents',
             'fraudAlerts'
         ));
@@ -199,6 +205,42 @@ class SuperAdminController extends Controller
         );
 
         return back()->with('success', "تم تغيير كلمة المرور للمستخدم {$user->full_name} بنجاح.");
+    }
+
+    public function unblockUser($id)
+    {
+        $user = User::findOrFail($id);
+
+        $prevAttempts = $user->failed_login_attempts;
+        $user->update([
+            'status'                => 'ACTIVE',
+            'failed_login_attempts' => 0,
+            'locked_until'          => null,
+            'blocked_at'            => null,
+            'blocked_reason'        => null,
+        ]);
+
+        AuditLog::record(
+            actorId: auth()->id(),
+            action: 'SUPERADMIN_SECURITY_USER_UNBLOCK',
+            targetTenantId: $user->tenant_id,
+            metadata: [
+                'unblocked_user_id' => $user->id,
+                'user_email'        => $user->email,
+                'user_name'         => $user->full_name,
+                'previous_attempts' => $prevAttempts,
+                'unblocked_by'      => auth()->user()->full_name,
+            ]
+        );
+
+        SecurityIncident::log(
+            'ACCOUNT_UNBLOCKED',
+            'LOW',
+            "تم فك الحظر الأمني عن حساب {$user->email} وإعادة تفعيله وتصفير محاولات الدخول بواسطة السوبر أدمن: " . auth()->user()->full_name,
+            $user->email
+        );
+
+        return back()->with('success', "تم فك الحظر الأمني بنجاح عن حساب {$user->full_name} ({$user->email}) وتصفير عداد المحاولات وإعادته للعمل.");
     }
 
     public function approveTenant($id)
@@ -519,14 +561,17 @@ class SuperAdminController extends Controller
 
         $blockedIps = BlockedIp::with('blocker')->latest('created_at')->paginate(15, ['*'], 'ips_page');
 
+        $blockedUsers = User::where('status', 'BLOCKED')->with('tenant')->latest('blocked_at')->get();
+
         $counts = [
-            'total'    => SecurityIncident::count(),
-            'open'     => SecurityIncident::where('status', 'OPEN')->count(),
-            'critical' => SecurityIncident::where('severity', 'CRITICAL')->count(),
-            'blocked'  => BlockedIp::count(),
+            'total'         => SecurityIncident::count(),
+            'open'          => SecurityIncident::where('status', 'OPEN')->count(),
+            'critical'      => SecurityIncident::where('severity', 'CRITICAL')->count(),
+            'blocked'       => BlockedIp::count(),
+            'blocked_users' => $blockedUsers->count(),
         ];
 
-        return view('superadmin.security.index', compact('fraudAlerts', 'incidents', 'blockedIps', 'counts'));
+        return view('superadmin.security.index', compact('fraudAlerts', 'incidents', 'blockedIps', 'blockedUsers', 'counts'));
     }
 
     public function resolveIncident($id)

@@ -76,6 +76,7 @@
                     <option value="">كل الحالات</option>
                     <option value="ACTIVE" {{ request('status') === 'ACTIVE' ? 'selected' : '' }}>نشط</option>
                     <option value="SUSPENDED" {{ request('status') === 'SUSPENDED' ? 'selected' : '' }}>موقوف</option>
+                    <option value="BLOCKED" {{ request('status') === 'BLOCKED' ? 'selected' : '' }}>محظور أمنياً (15 محاولة)</option>
                     <option value="PENDING_APPROVAL" {{ request('status') === 'PENDING_APPROVAL' ? 'selected' : '' }}>في الانتظار</option>
                     <option value="REJECTED" {{ request('status') === 'REJECTED' ? 'selected' : '' }}>مرفوض</option>
                 </select>
@@ -148,6 +149,10 @@
                                     <span class="badge badge-success">نشط ✓</span>
                                 @elseif($user->status === 'SUSPENDED')
                                     <span class="badge badge-danger">موقوف ⏸</span>
+                                @elseif($user->status === 'BLOCKED')
+                                    <span class="badge badge-danger" style="background:rgba(239,68,68,0.2); color:#ef4444; border:1px solid #ef4444;" title="{{ $user->blocked_reason ?? 'محظور أمنياً' }}">
+                                        ⛔ محظور أمنياً ({{ $user->failed_login_attempts }} محاولة)
+                                    </span>
                                 @elseif($user->status === 'PENDING_APPROVAL')
                                     <span class="badge badge-warning">في الانتظار ⏳</span>
                                 @else
@@ -160,19 +165,32 @@
                             <td>
                                 <div style="display:flex; gap:0.4rem; flex-wrap:wrap; align-items:center;">
                                     @if($user->role !== 'SUPER_ADMIN')
-                                        {{-- Toggle status --}}
-                                        <form method="POST" action="{{ route('superadmin.users.toggle-status', $user->id) }}"
-                                              onsubmit="return confirm('{{ $user->status === 'ACTIVE' ? 'هل تريد توقيف حساب ' . $user->full_name . '؟' : 'هل تريد تنشيط حساب ' . $user->full_name . '؟' }}')">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm"
-                                                style="padding:0.25rem 0.6rem; font-size:0.75rem;
-                                                {{ $user->status === 'ACTIVE'
-                                                    ? 'background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.25);'
-                                                    : 'background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.25);' }}"
-                                                title="{{ $user->status === 'ACTIVE' ? 'توقيف الحساب' : 'تنشيط الحساب' }}">
-                                                {{ $user->status === 'ACTIVE' ? '⏸ توقيف' : '▶ تنشيط' }}
-                                            </button>
-                                        </form>
+                                        {{-- If blocked due to 15 attempts, provide direct Unblock action --}}
+                                        @if($user->status === 'BLOCKED')
+                                            <form method="POST" action="{{ route('superadmin.users.unblock', $user->id) }}"
+                                                  onsubmit="return confirm('هل تؤكد فك الحظر الأمني عن حساب {{ $user->full_name }} وتصفير عداد المحاولات؟')">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-success"
+                                                    style="padding:0.25rem 0.6rem; font-size:0.75rem; font-weight:700;"
+                                                    title="فك الحظر وتصفير عداد المحاولات الفاشلة">
+                                                    🔓 فك الحظر
+                                                </button>
+                                            </form>
+                                        @else
+                                            {{-- Toggle status --}}
+                                            <form method="POST" action="{{ route('superadmin.users.toggle-status', $user->id) }}"
+                                                  onsubmit="return confirm('{{ $user->status === 'ACTIVE' ? 'هل تريد توقيف حساب ' . $user->full_name . '؟' : 'هل تريد تنشيط حساب ' . $user->full_name . '؟' }}')">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm"
+                                                    style="padding:0.25rem 0.6rem; font-size:0.75rem;
+                                                    {{ $user->status === 'ACTIVE'
+                                                        ? 'background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.25);'
+                                                        : 'background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.25);' }}"
+                                                    title="{{ $user->status === 'ACTIVE' ? 'توقيف الحساب' : 'تنشيط الحساب' }}">
+                                                    {{ $user->status === 'ACTIVE' ? '⏸ توقيف' : '▶ تنشيط' }}
+                                                </button>
+                                            </form>
+                                        @endif
 
                                         {{-- Impersonate user --}}
                                         @if($user->status === 'ACTIVE')

@@ -30,8 +30,35 @@
         <a href="{{ route('superadmin.server.index') }}" class="btn btn-secondary">
             <span>🖥️ فحص السيرفر</span>
         </a>
+
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('modal-blocked-accounts').style.display='flex'" style="border-color:{{ $blockedUsersCount > 0 ? '#ef4444' : 'var(--border-color)' }}; color:{{ $blockedUsersCount > 0 ? '#ef4444' : 'inherit' }}; font-weight:700;">
+            <span>🔒 الحسابات المحظورة ({{ $blockedUsersCount }})</span>
+        </button>
     </div>
 </div>
+
+{{-- Urgent Blocked Accounts Banner if any user is locked out due to 15 failed attempts --}}
+@if($blockedUsersCount > 0)
+    <div style="background:rgba(239, 68, 68, 0.12); border:1px solid rgba(239, 68, 68, 0.4); border-radius:var(--radius-lg); padding:1.25rem 1.5rem; margin-bottom:1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+        <div style="display:flex; align-items:center; gap:0.75rem;">
+            <div style="background:#ef4444; color:#fff; width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.4rem; box-shadow:0 0 15px rgba(239,68,68,0.5);">
+                🔒
+            </div>
+            <div>
+                <div style="font-weight:800; font-size:1.1rem; color:#ef4444;">
+                    تنبيه أمني: يوجد {{ $blockedUsersCount }} حساب محظور بسبب تجاوز 15 محاولة دخول خاطئة
+                </div>
+                <div style="font-size:0.875rem; color:var(--text-secondary);">
+                    بصفتك السوبر أدمن، يمكنك مراجعة الحسابات المحظورة وفك الحظر عنها وتصفير محاولات الدخول فوراً.
+                </div>
+            </div>
+        </div>
+        <button type="button" class="btn btn-danger" onclick="document.getElementById('modal-blocked-accounts').style.display='flex'" style="display:flex; align-items:center; gap:0.5rem; font-weight:700; padding:0.6rem 1.25rem; box-shadow:0 4px 12px rgba(239,68,68,0.3);">
+            <span>🔓 فتح نافذة فك الحظر</span>
+            <span>&larr;</span>
+        </button>
+    </div>
+@endif
 
 {{-- Real-time Fraud Alerts Banner if anomalies detected --}}
 @if(!empty($fraudAlerts) && count($fraudAlerts) > 0)
@@ -339,6 +366,101 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+</div>
+
+{{-- ─── Dedicated Modal Window: Blocked Accounts Unban Center ────────────────── --}}
+<div id="modal-blocked-accounts" style="display:none;" class="modal-backdrop">
+    <div class="modal-dialog" style="max-width:820px; width:95%;">
+        <div class="modal-header" style="background:rgba(239,68,68,0.06); border-bottom:1px solid rgba(239,68,68,0.2); padding:1.25rem 1.5rem;">
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+                <div style="background:rgba(239,68,68,0.15); color:#ef4444; width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.3rem;">
+                    🛡️
+                </div>
+                <div>
+                    <h3 class="modal-title" style="color:#ef4444; font-size:1.2rem; margin:0; font-weight:800;">
+                        نافذة فك الحظر الأمني عن الحسابات
+                    </h3>
+                    <div style="font-size:0.82rem; color:var(--text-muted); margin-top:0.2rem;">
+                        إدارة الحسابات المحظورة أوتوماتيكياً بسبب تجاوز 15 محاولة دخول فاشلة متتالية (خاص بالسوبر أدمن فقط)
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="modal-close" onclick="document.getElementById('modal-blocked-accounts').style.display='none'" title="إغلاق">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body" style="padding:1.5rem; max-height:70vh; overflow-y:auto;">
+            @if($blockedUsers->isEmpty())
+                <div style="text-align:center; padding:3rem 1.5rem;">
+                    <div style="font-size:3rem; margin-bottom:0.75rem;">✓ 🛡️</div>
+                    <h4 style="color:var(--text-primary); font-weight:800; font-size:1.15rem; margin-bottom:0.35rem;">لا توجد أي حسابات محظورة حالياً</h4>
+                    <p style="color:var(--text-muted); font-size:0.9rem; margin:0;">
+                        كافة حسابات المشرفين، السانديك، والسكان تعمل بانتظام وأمان تام دون أي حظر أمني.
+                    </p>
+                </div>
+            @else
+                <div style="margin-bottom:1rem; padding:0.75rem 1rem; border-radius:8px; background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.2); font-size:0.85rem; color:var(--text-secondary);">
+                    💡 <strong>توضيح أمني:</strong> عند الضغط على "فك الحظر"، سيتم فوراً إعادة تفعيل الحساب وتصفير عداد المحاولات الفاشلة (`failed_login_attempts = 0`) مع إزالة قفل الدخول وتسجيل العملية في سجل التدقيق الأمني.
+                </div>
+                <div style="display:flex; flex-direction:column; gap:0.9rem;">
+                    @foreach($blockedUsers as $bUser)
+                        <div style="background:var(--bg-main); border:1px solid rgba(239,68,68,0.25); border-right:4px solid #ef4444; border-radius:var(--radius-md); padding:1.1rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                            <div style="flex:1; min-width:260px;">
+                                <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.4rem;">
+                                    <span style="font-weight:800; font-size:1.05rem; color:var(--text-primary);">{{ $bUser->full_name }}</span>
+                                    @if($bUser->role === 'ADMIN_SYNDIC')
+                                        <span class="badge badge-warning" style="font-size:0.72rem;">👔 سانديك</span>
+                                    @elseif($bUser->role === 'SUPER_ADMIN')
+                                        <span class="badge badge-danger" style="font-size:0.72rem;">⭐ سوبر أدمن</span>
+                                    @else
+                                        <span class="badge badge-info" style="font-size:0.72rem;">🏠 ساكن</span>
+                                    @endif
+                                    <span class="badge badge-danger" style="font-size:0.72rem; background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3);">
+                                        ⛔ {{ $bUser->failed_login_attempts }} محاولة فاشلة
+                                    </span>
+                                </div>
+                                <div style="font-size:0.85rem; color:var(--text-muted); font-family:monospace; margin-bottom:0.3rem;">
+                                    📧 {{ $bUser->email }} • 📱 {{ $bUser->phone }}
+                                </div>
+                                <div style="font-size:0.82rem; color:var(--text-secondary); line-height:1.4;">
+                                    الإقامة التابع لها: <strong>{{ $bUser->tenant?->name ?? 'غير مرتبط بإقامة (إدارة عليا)' }}</strong>
+                                    @if($bUser->blocked_at)
+                                        <br>
+                                        <span style="color:#ef4444;">تاريخ الحظر:</span> {{ $bUser->blocked_at->format('Y-m-d H:i') }} ({{ $bUser->blocked_at->diffForHumans() }})
+                                    @endif
+                                </div>
+                                @if($bUser->blocked_reason)
+                                    <div style="font-size:0.78rem; color:#ef4444; margin-top:0.35rem; font-weight:600;">
+                                        ⚠️ السبب: {{ $bUser->blocked_reason }}
+                                    </div>
+                                @endif
+                            </div>
+                            <div>
+                                <form method="POST" action="{{ route('superadmin.users.unblock', $bUser->id) }}" onsubmit="return confirm('هل تؤكد فك الحظر الأمني عن حساب {{ $bUser->full_name }} وتصفير محاولات الدخول؟')">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-success" style="display:flex; align-items:center; gap:0.45rem; padding:0.55rem 1.1rem; font-weight:700; font-size:0.875rem; box-shadow:0 3px 10px rgba(16,185,129,0.35);">
+                                        <span>🔓</span>
+                                        <span>فك الحظر وإعادة التفعيل</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+        <div class="modal-footer" style="padding:1rem 1.5rem; display:flex; justify-content:space-between; align-items:center; background:var(--bg-main);">
+            <div style="font-size:0.82rem; color:var(--text-muted); display:flex; align-items:center; gap:0.4rem;">
+                <span>🔒</span>
+                <span>حق فك الحظر الأمني محصور بالسوبر أدمن حصراً وفقاً للبروتوكول الأمني.</span>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('modal-blocked-accounts').style.display='none'">
+                إغلاق النافذة
+            </button>
         </div>
     </div>
 </div>

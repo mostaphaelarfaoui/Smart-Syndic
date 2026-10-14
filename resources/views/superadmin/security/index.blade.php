@@ -45,12 +45,23 @@
 
     <div class="kpi-card" style="border-top:3px solid #6366f1;">
         <div class="kpi-header">
-            <span class="kpi-label">عناوين IP محظورة بالجدار الناري</span>
+            <span class="kpi-label">عناوين IP محظورة بالجدار</span>
             <span class="badge badge-info">Active Bans</span>
         </div>
         <div class="kpi-value">{{ $counts['blocked'] }}</div>
         <div class="kpi-sub">
-            تم منعهم نهائياً من الوصول إلى السيرفر
+            عناوين ممنوعة نهائياً من الاتصال
+        </div>
+    </div>
+
+    <div class="kpi-card" style="border-top:3px solid #dc2626;">
+        <div class="kpi-header">
+            <span class="kpi-label">حسابات محظورة (15 محاولة)</span>
+            <span class="badge badge-danger">Locked Users</span>
+        </div>
+        <div class="kpi-value" style="color:#dc2626;">{{ $counts['blocked_users'] }}</div>
+        <div class="kpi-sub">
+            حظر دائم بسبب تخمين كلمات المرور
         </div>
     </div>
 
@@ -264,6 +275,79 @@
                     {{ $incidents->links() }}
                 </div>
             @endif
+        </div>
+    </div>
+{{-- Blocked User Accounts Section (15+ failed attempts) --}}
+<div class="card" style="margin-bottom:1.5rem; border-color:rgba(220,38,38,0.3);">
+    <div class="card-header" style="background:rgba(220,38,38,0.06); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+        <div>
+            <h3 class="card-title" style="color:#ef4444; display:flex; align-items:center; gap:0.5rem;">
+                <span>🔒</span>
+                <span>الحسابات المحظورة أمنياً بسبب تجاوز 15 محاولة دخول خاطئة</span>
+            </h3>
+            <p class="card-subtitle">تطبيق الحظر الأوتوماتيكي وحصر حق فك الحظر للسوبر أدمن فقط</p>
+        </div>
+        <span class="badge {{ $blockedUsers->count() > 0 ? 'badge-danger' : 'badge-success' }}">
+            {{ $blockedUsers->count() }} حساب محظور
+        </span>
+    </div>
+    <div class="card-body" style="padding:0;">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>المستخدم</th>
+                        <th>الإقامة</th>
+                        <th>الدور</th>
+                        <th>عدد المحاولات</th>
+                        <th>تاريخ وسبب الحظر</th>
+                        <th>الإجراء الأمني</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($blockedUsers as $bUser)
+                        <tr>
+                            <td>
+                                <div style="font-weight:700;">{{ $bUser->full_name }}</div>
+                                <div style="font-size:0.75rem; color:var(--text-muted); font-family:monospace;">{{ $bUser->email }} • {{ $bUser->phone }}</div>
+                            </td>
+                            <td>
+                                {{ $bUser->tenant?->name ?? 'إدارة النظام' }}
+                            </td>
+                            <td>
+                                @if($bUser->role === 'ADMIN_SYNDIC')
+                                    <span class="badge badge-warning" style="font-size:0.75rem;">👔 سانديك</span>
+                                @else
+                                    <span class="badge badge-info" style="font-size:0.75rem;">🏠 ساكن</span>
+                                @endif
+                            </td>
+                            <td>
+                                <span class="badge badge-danger" style="font-size:0.75rem;">
+                                    ⛔ {{ $bUser->failed_login_attempts }} محاولة
+                                </span>
+                            </td>
+                            <td>
+                                <div style="font-size:0.8rem; color:var(--text-muted);">{{ $bUser->blocked_at ? $bUser->blocked_at->format('Y-m-d H:i') : '—' }}</div>
+                                <div style="font-size:0.75rem; color:#ef4444;">{{ $bUser->blocked_reason ?? 'تجاوز 15 محاولة فاشلة' }}</div>
+                            </td>
+                            <td>
+                                <form method="POST" action="{{ route('superadmin.users.unblock', $bUser->id) }}" onsubmit="return confirm('هل تؤكد فك الحظر الأمني عن حساب {{ $bUser->full_name }} وتصفير محاولات الدخول؟')">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-success" style="padding:0.3rem 0.75rem; font-size:0.8rem; font-weight:700;">
+                                        🔓 فك الحظر
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted);">
+                                ✓ لا توجد أي حسابات محظورة حالياً. جميع الحسابات تعمل بسلامة تامة.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 </div>

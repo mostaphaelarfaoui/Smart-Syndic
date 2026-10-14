@@ -34,6 +34,10 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasDefau
         'theme_preference',
         'status',
         'fcm_device_token',
+        'failed_login_attempts',
+        'locked_until',
+        'blocked_at',
+        'blocked_reason',
     ];
 
     protected $hidden = [
@@ -45,7 +49,10 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasDefau
     protected function casts(): array
     {
         return [
-            'password' => 'hashed',
+            'password'              => 'hashed',
+            'locked_until'          => 'datetime',
+            'blocked_at'            => 'datetime',
+            'failed_login_attempts' => 'integer',
         ];
     }
 
@@ -165,6 +172,25 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasDefau
     public function isActive(): bool
     {
         return $this->status === 'ACTIVE';
+    }
+
+    public function isBlocked(): bool
+    {
+        return $this->status === 'BLOCKED';
+    }
+
+    public function isLockedOut(): bool
+    {
+        return $this->locked_until !== null && $this->locked_until->isFuture();
+    }
+
+    public function lockoutRemainingMinutes(): int
+    {
+        if (! $this->isLockedOut()) {
+            return 0;
+        }
+
+        return (int) ceil(now()->diffInSeconds($this->locked_until) / 60);
     }
 
     // ─── Accessors & Filament Contracts ──────────────────────────────

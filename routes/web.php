@@ -73,7 +73,7 @@ Route::get('/receipts/{payment}/download', function (Payment $payment) {
 // ─── Portal Authentication Routes ────────────────────────────────────────
 Route::get('/portal/login', [AuthController::class, 'showLogin'])->name('portal.login');
 Route::post('/portal/login', [AuthController::class, 'login'])
-    ->middleware('throttle:5,1')
+    ->middleware('throttle:60,1')
     ->name('portal.login.submit');
 Route::post('/portal/logout', [AuthController::class, 'logout'])->name('portal.logout');
 
@@ -140,6 +140,7 @@ Route::middleware(['auth:web', 'role:SUPER_ADMIN'])->prefix('platform')->name('s
     Route::get('/users', [SuperAdminController::class, 'users'])->name('users.index');
     Route::post('/users/{id}/toggle-status', [SuperAdminController::class, 'toggleUserStatus'])->name('users.toggle-status');
     Route::post('/users/{id}/reset-password', [SuperAdminController::class, 'resetUserPassword'])->name('users.reset-password');
+    Route::post('/users/{id}/unblock', [SuperAdminController::class, 'unblockUser'])->name('users.unblock');
 
     // Server & Database Health
     Route::get('/server', [SuperAdminController::class, 'server'])->name('server.index');
