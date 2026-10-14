@@ -84,8 +84,12 @@ class ResidentController extends Controller
         return back()->with('success', "تم تجديد كود انضمام السكان إلى: {$newCode}");
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
+        if ($error = $this->verifySensitivePassword($request, 'حذف حساب الساكن وتفريغ الشقة')) {
+            return $error;
+        }
+
         $tenantId = auth()->user()->tenant_id;
 
         $user = User::where('tenant_id', $tenantId)

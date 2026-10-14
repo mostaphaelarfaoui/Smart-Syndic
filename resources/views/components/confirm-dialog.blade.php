@@ -29,6 +29,34 @@
         <h3 class="smart-confirm-title" id="smart-confirm-title">تأكيد الإجراء</h3>
         <p class="smart-confirm-message" id="smart-confirm-message">هل أنت متأكد من تنفيذ هذا الإجراء؟</p>
 
+        {{-- Sensitive Password Confirmation Section --}}
+        <div class="smart-confirm-password-wrap" id="smart-confirm-password-wrap" style="display:none;">
+            <label for="smart-confirm-password-input" class="smart-confirm-password-label">
+                <span class="smart-confirm-lock-icon">🔒</span>
+                <span>تأكيد الهوية: أدخل كلمة المرور لحسابك للمتابعة</span>
+            </label>
+            <div class="smart-confirm-input-group">
+                <input type="password"
+                       id="smart-confirm-password-input"
+                       class="smart-confirm-password-input"
+                       placeholder="كلمة المرور الحالية للحساب"
+                       autocomplete="current-password" />
+                <button type="button" class="smart-confirm-toggle-pw" id="smart-confirm-toggle-pw" tabindex="-1" title="إظهار / إخفاء كلمة المرور">
+                    <svg id="smart-pw-eye-open" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    <svg id="smart-pw-eye-closed" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="display:none;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                    </svg>
+                </button>
+            </div>
+            <div class="smart-confirm-password-hint">
+                لحماية البيانات ومنع الحذف غير المصرح به، يتطلب هذا الإجراء إدخال الرقم السري لحسابك.
+            </div>
+            <div id="smart-confirm-password-error" class="smart-confirm-password-error" style="display:none;"></div>
+        </div>
+
         {{-- Dialog Actions --}}
         <div class="smart-confirm-actions">
             <button type="button" class="btn btn-secondary smart-confirm-cancel-btn" id="smart-confirm-cancel-btn">
@@ -123,8 +151,105 @@
     font-size: 0.95rem;
     color: var(--text-secondary, #94a3b8);
     line-height: 1.6;
-    margin: 0 0 1.75rem 0;
+    margin: 0 0 1.25rem 0;
     word-break: break-word;
+}
+
+/* Password confirmation section */
+.smart-confirm-password-wrap {
+    margin: 0.5rem 0 1.5rem 0;
+    text-align: right;
+    background: rgba(0, 0, 0, 0.18);
+    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.12));
+    border-radius: var(--radius-md, 12px);
+    padding: 0.9rem 1rem;
+}
+
+.smart-confirm-password-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-primary, #f8fafc);
+    margin-bottom: 0.5rem;
+}
+
+.smart-confirm-lock-icon {
+    font-size: 0.95rem;
+}
+
+.smart-confirm-input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.smart-confirm-password-input {
+    width: 100%;
+    background: var(--bg-main, #0f172a);
+    border: 1.5px solid var(--border-color, rgba(255, 255, 255, 0.2));
+    border-radius: 8px;
+    padding: 0.65rem 2.5rem 0.65rem 0.85rem;
+    color: var(--text-primary, #ffffff);
+    font-size: 0.95rem;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    direction: ltr;
+    text-align: right;
+}
+
+.smart-confirm-password-input:focus {
+    outline: none;
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25);
+}
+
+.smart-confirm-password-input.input-error {
+    border-color: #ef4444 !important;
+    animation: smartShake 0.3s ease-in-out;
+}
+
+.smart-confirm-toggle-pw {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-muted, #94a3b8);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: color 0.15s ease;
+}
+
+.smart-confirm-toggle-pw:hover {
+    color: var(--text-primary, #ffffff);
+}
+
+.smart-confirm-password-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted, #94a3b8);
+    margin-top: 0.4rem;
+    line-height: 1.4;
+}
+
+.smart-confirm-password-error {
+    margin-top: 0.45rem;
+    font-size: 0.8rem;
+    color: #ef4444;
+    font-weight: 700;
+    text-align: right;
+}
+
+@keyframes smartShake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
 }
 
 .smart-confirm-actions {
@@ -210,10 +335,12 @@
 /**
  * Smart Syndic Unified Confirmation Engine
  * Automatically intercepts forms with data-confirm or converts inline confirm()
+ * Supports secure password confirmation for sensitive deletions (data-confirm-password="true")
  */
 (function() {
     let currentResolver = null;
     let pendingForm = null;
+    let isPasswordRequired = false;
 
     const modal = document.getElementById('smart-confirm-modal');
     const titleEl = document.getElementById('smart-confirm-title');
@@ -221,12 +348,51 @@
     const confirmBtn = document.getElementById('smart-confirm-confirm-btn');
     const cancelBtn = document.getElementById('smart-confirm-cancel-btn');
 
+    // Password elements
+    const passwordWrap = document.getElementById('smart-confirm-password-wrap');
+    const passwordInput = document.getElementById('smart-confirm-password-input');
+    const passwordError = document.getElementById('smart-confirm-password-error');
+    const togglePwBtn = document.getElementById('smart-confirm-toggle-pw');
+    const eyeOpen = document.getElementById('smart-pw-eye-open');
+    const eyeClosed = document.getElementById('smart-pw-eye-closed');
+
     const icons = {
         danger: document.getElementById('smart-confirm-icon-danger'),
         warning: document.getElementById('smart-confirm-icon-warning'),
         info: document.getElementById('smart-confirm-icon-info'),
         success: document.getElementById('smart-confirm-icon-success'),
     };
+
+    // Toggle password visibility
+    if (togglePwBtn && passwordInput) {
+        togglePwBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                if (eyeOpen) eyeOpen.style.display = 'none';
+                if (eyeClosed) eyeClosed.style.display = 'block';
+            } else {
+                passwordInput.type = 'password';
+                if (eyeOpen) eyeOpen.style.display = 'block';
+                if (eyeClosed) eyeClosed.style.display = 'none';
+            }
+        });
+    }
+
+    // Submit on Enter key inside password input
+    if (passwordInput) {
+        passwordInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                confirmBtn.click();
+            }
+        });
+        passwordInput.addEventListener('input', function() {
+            passwordInput.classList.remove('input-error');
+            if (passwordError) passwordError.style.display = 'none';
+        });
+    }
 
     function autoDetectType(message, title) {
         const text = (message + ' ' + (title || '')).toLowerCase();
@@ -242,12 +408,13 @@
         return 'warning';
     }
 
-    function openModal({ title, message, type, confirmText, cancelText }) {
+    function openModal({ title, message, type, confirmText, cancelText, requirePassword }) {
         return new Promise((resolve) => {
             currentResolver = resolve;
 
             // Determine type
             const finalType = type || autoDetectType(message, title);
+            isPasswordRequired = !!requirePassword;
 
             // Update text
             titleEl.textContent = title || (finalType === 'danger' ? 'تأكيد الحذف والإلغاء' : (finalType === 'info' ? 'تأكيد المتابعة والدخول' : 'تأكيد الإجراء'));
@@ -266,18 +433,48 @@
             // Set button classes
             confirmBtn.className = 'btn smart-confirm-confirm-btn ' + finalType;
 
+            // Password field handling
+            if (passwordWrap) {
+                if (isPasswordRequired) {
+                    passwordWrap.style.display = 'block';
+                    if (passwordInput) {
+                        passwordInput.value = '';
+                        passwordInput.type = 'password';
+                        passwordInput.classList.remove('input-error');
+                    }
+                    if (eyeOpen) eyeOpen.style.display = 'block';
+                    if (eyeClosed) eyeClosed.style.display = 'none';
+                    if (passwordError) {
+                        passwordError.style.display = 'none';
+                        passwordError.textContent = '';
+                    }
+                } else {
+                    passwordWrap.style.display = 'none';
+                }
+            }
+
             // Show modal
             modal.style.display = 'flex';
             modal.setAttribute('aria-hidden', 'false');
-            confirmBtn.focus();
+
+            if (isPasswordRequired && passwordInput) {
+                setTimeout(() => passwordInput.focus(), 60);
+            } else {
+                confirmBtn.focus();
+            }
         });
     }
 
-    function closeModal(confirmed) {
+    function closeModal(confirmed, passwordVal = null) {
         modal.style.display = 'none';
         modal.setAttribute('aria-hidden', 'true');
+        if (passwordInput) {
+            passwordInput.value = '';
+            passwordInput.classList.remove('input-error');
+            if (passwordError) passwordError.style.display = 'none';
+        }
         if (currentResolver) {
-            currentResolver(confirmed);
+            currentResolver(confirmed ? { confirmed: true, password: passwordVal } : false);
             currentResolver = null;
         }
     }
@@ -286,27 +483,61 @@
     window.smartConfirm = openModal;
 
     // Handle cancel button & backdrop click
-    cancelBtn.addEventListener('click', () => closeModal(false));
+    cancelBtn.addEventListener('click', () => {
+        pendingForm = null;
+        closeModal(false);
+    });
     modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeModal(false);
+        if (e.target === modal) {
+            pendingForm = null;
+            closeModal(false);
+        }
     });
 
     // Handle confirm button
     confirmBtn.addEventListener('click', () => {
+        let passwordVal = null;
+
+        if (isPasswordRequired && passwordInput) {
+            passwordVal = passwordInput.value.trim();
+            if (!passwordVal) {
+                passwordInput.classList.add('input-error');
+                if (passwordError) {
+                    passwordError.textContent = '⚠️ يرجى إدخال كلمة المرور لحسابك لتأكيد هذا الإجراء الحساس.';
+                    passwordError.style.display = 'block';
+                }
+                passwordInput.focus();
+                return;
+            }
+        }
+
         if (pendingForm) {
             const formToSubmit = pendingForm;
             pendingForm = null;
-            closeModal(true);
+
+            if (isPasswordRequired && passwordVal) {
+                let pwHidden = formToSubmit.querySelector('input[name="confirm_password"]');
+                if (!pwHidden) {
+                    pwHidden = document.createElement('input');
+                    pwHidden.type = 'hidden';
+                    pwHidden.name = 'confirm_password';
+                    formToSubmit.appendChild(pwHidden);
+                }
+                pwHidden.value = passwordVal;
+            }
+
+            closeModal(true, passwordVal);
             formToSubmit.__smartConfirmed = true;
             formToSubmit.submit();
         } else {
-            closeModal(true);
+            closeModal(true, passwordVal);
         }
     });
 
     // Handle Escape key
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && modal.style.display === 'flex') {
+            pendingForm = null;
             closeModal(false);
         }
     });
@@ -336,14 +567,18 @@
             const title = form.getAttribute('data-confirm-title');
             const type = form.getAttribute('data-confirm-type');
             const btnText = form.getAttribute('data-confirm-btn');
+            const requirePw = form.getAttribute('data-confirm-password') === 'true'
+                || form.dataset.confirmPassword === 'true'
+                || form.getAttribute('data-require-password') === 'true';
 
             openModal({
                 title: title,
                 message: confirmMsg,
                 type: type,
-                confirmText: btnText
-            }).then(confirmed => {
-                if (!confirmed) {
+                confirmText: btnText,
+                requirePassword: requirePw
+            }).then(result => {
+                if (!result) {
                     pendingForm = null;
                 }
             });

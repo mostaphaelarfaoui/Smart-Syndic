@@ -105,8 +105,12 @@ class ApartmentController extends Controller
         return back()->with('success', 'تم توليد الشقق بنجاح.');
     }
 
-    public function vacate($id)
+    public function vacate(Request $request, $id)
     {
+        if ($error = $this->verifySensitivePassword($request, 'تفريغ الشقة وتصفير السجلات')) {
+            return $error;
+        }
+
         $tenantId = auth()->user()->tenant_id;
 
         $apartment = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))
@@ -144,8 +148,12 @@ class ApartmentController extends Controller
         return back()->with('success', "تم تحديث حالة الشقة {$apartment->unit_number} إلى: {$status}");
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
+        if ($error = $this->verifySensitivePassword($request, 'حذف الشقة نهائياً')) {
+            return $error;
+        }
+
         $tenantId = auth()->user()->tenant_id;
 
         $apartment = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))

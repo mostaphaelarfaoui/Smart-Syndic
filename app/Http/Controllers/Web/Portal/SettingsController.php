@@ -71,8 +71,12 @@ class SettingsController extends Controller
         return back()->with('success', 'تم رفع وتعيين خاتم السانديك بنجاح. سيظهر تلقائياً على كل التوصيلات PDF.');
     }
 
-    public function deleteStamp()
+    public function deleteStamp(Request $request)
     {
+        if ($error = $this->verifySensitivePassword($request, 'حذف خاتم السانديك')) {
+            return $error;
+        }
+
         $tenant = auth()->user()->tenant;
 
         if ($tenant->stamp_image_path) {

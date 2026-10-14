@@ -210,6 +210,7 @@
                                   data-confirm="هل تؤكد حذف هذا المصروف المسجل بمبلغ {{ number_format($expense->amount, 2) }} درهم؟"
                                   data-confirm-title="تأكيد حذف المصروف"
                                   data-confirm-type="danger"
+                                  data-confirm-password="true"
                                   data-confirm-btn="حذف المصروف">
                                 @csrf
                                 @method('DELETE')

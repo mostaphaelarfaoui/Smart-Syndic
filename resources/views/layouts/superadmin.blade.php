@@ -182,6 +182,20 @@
                 </div>
             @endif
 
+            @if(session('error'))
+                <div style="background:var(--color-danger-light, rgba(239,68,68,0.12)); border:1px solid rgba(239,68,68,0.3); color:var(--color-danger, #ef4444); padding:1rem 1.25rem; border-radius:var(--radius-md); font-weight:700; margin-bottom:1.5rem; display:flex; align-items:center; gap:0.5rem;">
+                    <span>⚠</span>
+                    <span>{{ session('error') }}</span>
+                </div>
+            @endif
+
+            @if($errors->any())
+                <div style="background:var(--color-danger-light, rgba(239,68,68,0.12)); border:1px solid rgba(239,68,68,0.3); color:var(--color-danger, #ef4444); padding:1rem 1.25rem; border-radius:var(--radius-md); font-weight:700; margin-bottom:1.5rem; display:flex; align-items:center; gap:0.5rem;">
+                    <span>⚠</span>
+                    <span>{{ $errors->first() }}</span>
+                </div>
+            @endif
+
             @yield('content')
         </div>
     </main>

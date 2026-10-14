@@ -28,6 +28,7 @@
               data-confirm="هل أنت متأكد من رغبتك في تفريغ ومسح ملف سجل الأخطاء بالكامل؟"
               data-confirm-title="مسح سجل الأخطاء"
               data-confirm-type="danger"
+              data-confirm-password="true"
               data-confirm-btn="مسح السجل الآن">
             @csrf
             <button type="submit" class="btn btn-danger" style="border:none;">

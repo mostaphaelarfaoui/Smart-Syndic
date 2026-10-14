@@ -198,6 +198,7 @@
                                           data-confirm="هل أنت متأكد من حذف هذا الإعلان الجماعي نهائياً؟"
                                           data-confirm-title="تأكيد حذف الإعلان"
                                           data-confirm-type="danger"
+                                          data-confirm-password="true"
                                           data-confirm-btn="حذف الإعلان">
                                         @csrf
                                         @method('DELETE')

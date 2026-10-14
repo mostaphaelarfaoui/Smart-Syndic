@@ -93,8 +93,12 @@ class ExpenseController extends Controller
         return back()->with('success', 'تم تسجيل المصروف بنجاح.');
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
+        if ($error = $this->verifySensitivePassword($request, 'حذف المصروف')) {
+            return $error;
+        }
+
         $tenantId = auth()->user()->tenant_id;
 
         $expense = Expense::where('tenant_id', $tenantId)->findOrFail($id);

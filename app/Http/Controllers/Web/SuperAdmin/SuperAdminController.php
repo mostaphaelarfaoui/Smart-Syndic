@@ -328,8 +328,12 @@ class SuperAdminController extends Controller
         return back()->with('success', "تم توقيف إقامة \"{$tenant->name}\" وإيقاف كافة حسابات السانديك والسكان التابعة لها ({$suspendedCount} حساب) عن العمل فوراً.");
     }
 
-    public function destroyTenant($id)
+    public function destroyTenant(Request $request, $id)
     {
+        if ($error = $this->verifySensitivePassword($request, 'حذف إقامة وسانديك نهائياً')) {
+            return $error;
+        }
+
         $tenant = Tenant::findOrFail($id);
         $tenantName = $tenant->name;
 
@@ -641,8 +645,12 @@ class SuperAdminController extends Controller
         return view('superadmin.logs.index', compact('logs', 'fileSize', 'level', 'search'));
     }
 
-    public function clearLogs(LogViewerService $logService)
+    public function clearLogs(Request $request, LogViewerService $logService)
     {
+        if ($error = $this->verifySensitivePassword($request, 'مسح ملف سجلات الأخطاء')) {
+            return $error;
+        }
+
         $logService->clear();
 
         AuditLog::record(
@@ -853,8 +861,12 @@ class SuperAdminController extends Controller
         return back()->with('success', "تم {$statusStr} الإعلان بنجاح.");
     }
 
-    public function destroyAnnouncement($id)
+    public function destroyAnnouncement(Request $request, $id)
     {
+        if ($error = $this->verifySensitivePassword($request, 'حذف إعلان جماعي')) {
+            return $error;
+        }
+
         $announcement = PlatformAnnouncement::findOrFail($id);
         $title = $announcement->title;
         $announcement->delete();

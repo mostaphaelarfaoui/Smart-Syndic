@@ -149,6 +149,7 @@
                                       data-confirm="تحذير شديد: هل أنت متأكد من حذف إقامة {{ $tenant->name }} نهائياً؟ سيتم حذف جميع حسابات السانديك والسكان التابعة لها، وكافة الشقق والدفعات والمصاريف بدون إمكانية استرجاع."
                                       data-confirm-title="حذف الإقامة نهائياً"
                                       data-confirm-type="danger"
+                                      data-confirm-password="true"
                                       data-confirm-btn="حذف نهائي لا رجعة فيه">
                                     @csrf
                                     @method('DELETE')

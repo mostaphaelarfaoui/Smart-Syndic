@@ -209,8 +209,9 @@
                                 @if($apartment->residents->isNotEmpty())
                                     <form method="POST" action="{{ route('portal.apartments.vacate', $apartment->id) }}"
                                           data-confirm="هل تؤكد تفريغ الشقة {{ $apartment->unit_number }}؟ سيتم فك ارتباط الساكن وإعادة ضبط المبالغ والحسابات للصيغة الأولى."
-                                          data-confirm-title="تفريغ الشقة"
+                                          data-confirm-title="تفريغ الشقة وتصفير السجلات"
                                           data-confirm-type="warning"
+                                          data-confirm-password="true"
                                           data-confirm-btn="تفريغ الشقة">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-secondary" style="color:var(--color-warning);" title="تفريغ الشقة وتصفير السجلات">
@@ -220,9 +221,10 @@
                                 @endif
 
                                 <form method="POST" action="{{ route('portal.apartments.destroy', $apartment->id) }}"
-                                      data-confirm="هل أنت متأكد من حذف الشقة رقم {{ $apartment->unit_number }} نهائياً؟"
-                                      data-confirm-title="تأكيد حذف الشقة"
+                                      data-confirm="هل أنت متأكد من حذف الشقة رقم {{ $apartment->unit_number }} نهائياً؟ سيتم حذف كافة السجلات المرتبطة بها."
+                                      data-confirm-title="تأكيد حذف الشقة نهائياً"
                                       data-confirm-type="danger"
+                                      data-confirm-password="true"
                                       data-confirm-btn="حذف الشقة نهائياً">
                                     @csrf
                                     @method('DELETE')

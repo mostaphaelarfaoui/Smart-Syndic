@@ -280,7 +280,12 @@
                                             </form>
                                         @endif
 
-                                        <form method="POST" action="{{ route('superadmin.tenants.destroy', $tenant->id) }}" data-confirm="تحذير شديد: سيتم حذف الإقامة وكافة حسابات السانديك والسكان التابعة لها وجميع بياناتها نهائياً. هل أنت متأكد؟" data-confirm-title="حذف الإقامة نهائياً" data-confirm-type="danger" data-confirm-btn="حذف نهائي لا رجعة فيه">
+                                        <form method="POST" action="{{ route('superadmin.tenants.destroy', $tenant->id) }}"
+                                              data-confirm="تحذير شديد: سيتم حذف الإقامة وكافة حسابات السانديك والسكان التابعة لها وجميع بياناتها نهائياً. هل أنت متأكد؟"
+                                              data-confirm-title="حذف الإقامة نهائياً"
+                                              data-confirm-type="danger"
+                                              data-confirm-password="true"
+                                              data-confirm-btn="حذف نهائي لا رجعة فيه">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm" style="padding:0.25rem 0.5rem; font-size:0.75rem; background:rgba(239,68,68,0.08); color:#ef4444; border:1px solid rgba(239,68,68,0.2);" title="حذف نهائي">

@@ -158,6 +158,7 @@
                                           data-confirm="تحذير: هل تؤكد حذف حساب الساكن {{ $resident->full_name }}؟ سيتم فك ارتباطه بالشقة وإعادتها شاغرة وتصفير الحسابات."
                                           data-confirm-title="تأكيد حذف حساب الساكن"
                                           data-confirm-type="danger"
+                                          data-confirm-password="true"
                                           data-confirm-btn="حذف الحساب">
                                         @csrf
                                         @method('DELETE')

@@ -87,6 +87,7 @@
                       data-confirm="هل تؤكد حذف خاتم السانديك؟ لن يظهر الخاتم على التوصيلات الجديدة بعد الحذف."
                       data-confirm-title="تأكيد حذف الخاتم"
                       data-confirm-type="danger"
+                      data-confirm-password="true"
                       data-confirm-btn="حذف الخاتم">
                     @csrf
                     @method('DELETE')
