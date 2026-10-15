@@ -14,6 +14,33 @@ class FinancialReportController extends Controller
     ) {}
 
     /**
+     * Reports Center landing hub.
+     */
+    public function index(Request $request)
+    {
+        $tenant = auth()->user()->tenant;
+        if (! $tenant) {
+            abort(403, 'غير مصرح: لا توجد إقامة مرتبطة بهذا الحساب.');
+        }
+
+        $currentMonth = now()->format('Y-m');
+        $lastMonth = now()->subMonth()->format('Y-m');
+        $currentYear = now()->format('Y');
+
+        $currentMonthData = $this->reportService->buildReportData($tenant, $currentMonth, $currentMonth, 'both', auth()->user());
+        $lastMonthData    = $this->reportService->buildReportData($tenant, $lastMonth, $lastMonth, 'both', auth()->user());
+
+        return view('portal.reports.index', compact(
+            'tenant',
+            'currentMonth',
+            'lastMonth',
+            'currentYear',
+            'currentMonthData',
+            'lastMonthData'
+        ));
+    }
+
+    /**
      * Generate and stream/download the financial PDF report.
      */
     public function generate(Request $request)

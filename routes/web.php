@@ -113,6 +113,7 @@ Route::middleware(['auth:web', 'role:ADMIN_SYNDIC,SUPER_ADMIN'])->prefix('portal
 
     // Analytics & Financial Reports
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
+    Route::get('/reports', [FinancialReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/financial-pdf', [FinancialReportController::class, 'generate'])->name('reports.financial-pdf');
 
     // Archives & Audit Logs (New!)

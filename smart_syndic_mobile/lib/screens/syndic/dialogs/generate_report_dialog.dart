@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/services/api_service.dart';
 import '../../../providers/syndic_provider.dart';
 
 class GenerateReportDialog extends StatefulWidget {
@@ -102,14 +103,24 @@ class _GenerateReportDialogState extends State<GenerateReportDialog> {
     }
   }
 
-  Future<void> _openReport(String url) async {
+  Future<void> _openReport(String rawUrl) async {
+    final url = ApiService().resolveMediaUrl(rawUrl);
     final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        final launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
+        if (!launched && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('تعذر فتح رابط التقرير: $url')),
+          );
+        }
+      }
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تعذر فتح رابط التقرير')),
+          SnackBar(content: Text('تعذر فتح رابط التقرير: $e')),
         );
       }
     }

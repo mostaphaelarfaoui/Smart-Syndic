@@ -68,6 +68,12 @@
 
         {{-- Action Buttons Launchpad --}}
         <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; padding-top:0.75rem; border-top:1px solid rgba(255,255,255,0.12);">
+            <button type="button" onclick="openFinancialReportModal('both')" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:0.5rem; font-weight:800; background:linear-gradient(135deg, #0d9488 0%, #059669 100%); border:none; box-shadow:0 4px 14px rgba(13,148,136,0.35); padding:0.6rem 1.1rem; border-radius:8px; color:#fff; cursor:pointer;">
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>📑 استخراج تقرير مالي PDF</span>
+            </button>
             <a href="{{ route('portal.payments.index') }}" class="btn btn-success">
                 <span>+ استخلاص دفعة</span>
             </a>
@@ -81,6 +87,39 @@
                 <span>📊 الإحصائيات الكاملة</span>
             </a>
         </div>
+    </div>
+</div>
+
+{{-- 1.5 Financial Report Quick Export Banner --}}
+<div class="card" style="margin-bottom:1.75rem; background:linear-gradient(135deg, rgba(13,148,136,0.07) 0%, rgba(16,185,129,0.03) 100%); border:1px solid rgba(13,148,136,0.22); border-radius:var(--radius-lg); padding:1.25rem 1.5rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1.25rem;">
+    <div style="display:flex; align-items:center; gap:1rem;">
+        <div style="width:48px; height:48px; border-radius:12px; background:linear-gradient(135deg, #0d9488 0%, #059669 100%); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.5rem; box-shadow:0 4px 12px rgba(13,148,136,0.25); flex-shrink:0;">
+            📑
+        </div>
+        <div>
+            <h4 style="margin:0 0 0.25rem 0; font-size:1.05rem; font-weight:800; color:var(--text-primary); display:flex; align-items:center; gap:0.5rem;">
+                <span>التقارير المالية والمحاسبية الرسمية (PDF)</span>
+                <span class="badge badge-success" style="font-size:0.72rem; padding:0.15rem 0.5rem;">جاهز للتحميل والطباعة</span>
+            </h4>
+            <p style="margin:0; font-size:0.875rem; color:var(--text-secondary);">
+                استخرج تقرير مفصل ومعتمد لشهر واحد أو عدة أشهر مع خيارات الفرز (شامل، مداخيل فقط، أو مصاريف فقط) ومختوم بخاتم السانديك.
+            </p>
+        </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:0.65rem; flex-wrap:wrap;">
+        <a href="{{ route('portal.reports.financial-pdf', ['start_month' => date('Y-m'), 'end_month' => date('Y-m'), 'scope' => 'both', 'mode' => 'download']) }}" target="_blank" class="btn btn-secondary" style="font-weight:700; font-size:0.85rem; display:inline-flex; align-items:center; gap:0.4rem;" title="تحميل مباشر للتقرير المالي الشامل للشهر الحالي">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            <span>تحميل تقرير الشهر الجاري</span>
+        </a>
+        <button type="button" onclick="openFinancialReportModal('both')" class="btn btn-primary" style="font-weight:800; font-size:0.85rem; display:inline-flex; align-items:center; gap:0.45rem; background:linear-gradient(135deg, #0d9488 0%, #059669 100%); border:none; box-shadow:0 3px 8px rgba(13,148,136,0.3); color:#fff; cursor:pointer;">
+            <span>⚙️ تخصيص وتنزيل تقرير PDF</span>
+            <span>&larr;</span>
+        </button>
+        <a href="{{ route('portal.reports.index') }}" class="btn btn-secondary" style="font-weight:700; font-size:0.85rem;" title="الانتقال لمركز التقارير الكامل">
+            <span>مركز التقارير 📊</span>
+        </a>
     </div>
 </div>
 

@@ -44,18 +44,29 @@ class ApiService {
   }
 
   String resolveMediaUrl(String? url) {
-    if (url == null || url.isEmpty) return '';
+    if (url == null || url.trim().isEmpty) return '';
+    final trimmedUrl = url.trim();
     try {
       final serverUri = Uri.parse(_baseUrl);
-      final targetUri = Uri.parse(url);
+
+      // Handle relative paths (e.g. /storage/reports/xyz.pdf or storage/reports/xyz.pdf)
+      if (trimmedUrl.startsWith('/') || (!trimmedUrl.startsWith('http://') && !trimmedUrl.startsWith('https://'))) {
+        final path = trimmedUrl.startsWith('/') ? trimmedUrl : '/$trimmedUrl';
+        final portPart = (serverUri.hasPort && serverUri.port != 80 && serverUri.port != 443) ? ':${serverUri.port}' : '';
+        return '${serverUri.scheme}://${serverUri.host}$portPart$path';
+      }
+
+      // Handle absolute URLs pointing to localhost / 127.0.0.1
+      final targetUri = Uri.parse(trimmedUrl);
       if (targetUri.host == 'localhost' || targetUri.host == '127.0.0.1') {
         return targetUri.replace(
+          scheme: serverUri.scheme,
           host: serverUri.host,
-          port: serverUri.port,
+          port: serverUri.hasPort ? serverUri.port : null,
         ).toString();
       }
     } catch (_) {}
-    return url;
+    return trimmedUrl;
   }
 
   Future<void> setToken(String? token) async {

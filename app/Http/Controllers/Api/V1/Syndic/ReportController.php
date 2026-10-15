@@ -49,14 +49,19 @@ class ReportController extends Controller
             actor: $request->user()
         );
 
-        $disk = config('smartsyndic.uploads.storage_disk', 'public');
+        $disk = 'public';
         $filename = 'reports/' . \Illuminate\Support\Str::uuid() . '.pdf';
         \Illuminate\Support\Facades\Storage::disk($disk)->put($filename, $pdf);
+
+        $rawUrl = \Illuminate\Support\Facades\Storage::disk($disk)->url($filename);
+        $downloadUrl = \Illuminate\Support\Str::startsWith($rawUrl, ['http://', 'https://'])
+            ? $rawUrl
+            : url($rawUrl);
 
         return response()->json([
             'message'  => 'تم استخراج التقرير المالي بنجاح',
             'download' => [
-                'url'      => \Illuminate\Support\Facades\Storage::disk($disk)->url($filename),
+                'url'      => $downloadUrl,
                 'filename' => "rapport-financier-{$startMonth}-{$endMonth}.pdf",
                 'scope'    => $scope,
             ],
