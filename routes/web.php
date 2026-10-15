@@ -8,6 +8,7 @@ use App\Http\Controllers\Web\Portal\AuthController;
 use App\Http\Controllers\Web\Portal\CommunityController;
 use App\Http\Controllers\Web\Portal\DashboardController;
 use App\Http\Controllers\Web\Portal\ExpenseController;
+use App\Http\Controllers\Web\Portal\FinancialReportController;
 use App\Http\Controllers\Web\Portal\PaymentController;
 use App\Http\Controllers\Web\Portal\ResidentController;
 use App\Http\Controllers\Web\Portal\SettingsController;
@@ -110,8 +111,9 @@ Route::middleware(['auth:web', 'role:ADMIN_SYNDIC,SUPER_ADMIN'])->prefix('portal
     Route::post('/expenses', [ExpenseController::class, 'store'])->name('expenses.store');
     Route::delete('/expenses/{id}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
 
-    // Analytics (New!)
+    // Analytics & Financial Reports
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
+    Route::get('/reports/financial-pdf', [FinancialReportController::class, 'generate'])->name('reports.financial-pdf');
 
     // Archives & Audit Logs (New!)
     Route::get('/archives', [ArchiveController::class, 'index'])->name('archives.index');

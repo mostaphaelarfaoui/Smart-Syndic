@@ -16,6 +16,7 @@ class GenerateReportDialog extends StatefulWidget {
 class _GenerateReportDialogState extends State<GenerateReportDialog> {
   DateTime _fromDate = DateTime(DateTime.now().year, 1, 1);
   DateTime _toDate = DateTime.now();
+  String _selectedScope = 'both'; // 'both', 'revenues', 'expenses'
   bool _isGenerating = false;
   Map<String, dynamic>? _generatedResult;
   String? _errorMessage;
@@ -85,6 +86,7 @@ class _GenerateReportDialogState extends State<GenerateReportDialog> {
     final result = await syndic.generateFinancialReport(
       from: fromStr,
       to: toStr,
+      scope: _selectedScope,
       format: 'pdf',
     );
 
@@ -175,6 +177,48 @@ class _GenerateReportDialogState extends State<GenerateReportDialog> {
                 ],
               ),
               const Divider(height: 24),
+
+              // Scope selector (Both / Revenues / Expenses)
+              Text(
+                'نوع محتوى التقرير المالي:',
+                style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: ChoiceChip(
+                      label: Text('⚖️ تقرير شامل (مداخيل ومصاريف)', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold)),
+                      selected: _selectedScope == 'both',
+                      selectedColor: AppColors.primary.withAlpha(40),
+                      onSelected: (val) => setState(() => _selectedScope = 'both'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Expanded(
+                    child: ChoiceChip(
+                      label: Text('📈 المداخيل فقط', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold)),
+                      selected: _selectedScope == 'revenues',
+                      selectedColor: Colors.green.withAlpha(40),
+                      onSelected: (val) => setState(() => _selectedScope = 'revenues'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ChoiceChip(
+                      label: Text('📉 المصاريف فقط', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold)),
+                      selected: _selectedScope == 'expenses',
+                      selectedColor: Colors.red.withAlpha(40),
+                      onSelected: (val) => setState(() => _selectedScope = 'expenses'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
 
               // Quick period buttons
               Text(

@@ -10,15 +10,24 @@
         <p class="page-subtitle">تحليل أداء المداخيل والمصاريف عبر الشهور والسنوات، ومتابعة نسب الامتثال والتحصيل</p>
     </div>
 
-    {{-- Year Selector --}}
-    <form method="GET" action="{{ route('portal.analytics.index') }}" style="display:flex; align-items:center; gap:0.75rem;">
-        <label style="font-weight:700; font-size:0.9rem; color:var(--text-secondary);">السنة المالية:</label>
-        <select name="year" class="form-select" onchange="this.form.submit()" style="width:auto; min-width:130px; font-weight:800;" class="num">
-            @for($y = now()->year; $y >= now()->year - 4; $y--)
-                <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
-            @endfor
-        </select>
-    </form>
+    <div style="display:flex; align-items:center; gap:0.75rem;">
+        <button type="button" class="btn btn-primary" onclick="openFinancialReportModal('both')" style="display:inline-flex; align-items:center; gap:0.5rem; font-weight:800;">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span>📑 تحميل تقرير مالي (PDF)</span>
+        </button>
+
+        {{-- Year Selector --}}
+        <form method="GET" action="{{ route('portal.analytics.index') }}" style="display:flex; align-items:center; gap:0.5rem;">
+            <label style="font-weight:700; font-size:0.9rem; color:var(--text-secondary);">السنة:</label>
+            <select name="year" class="form-select" onchange="this.form.submit()" style="width:auto; min-width:110px; font-weight:800;" class="num">
+                @for($y = now()->year; $y >= now()->year - 4; $y--)
+                    <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
+                @endfor
+            </select>
+        </form>
+    </div>
 </div>
 
 {{-- Annual KPI Cards --}}

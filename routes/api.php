@@ -135,6 +135,8 @@ Route::middleware(['auth:sanctum', 'tenant.scope', 'tenant.active'])->group(func
             // ─── Financial Reports ────────────────────────────────
             Route::get('/reports/export', [ReportController::class, 'export'])
                 ->name('syndic.reports.export');
+            Route::get('/reports/financial-pdf', [\App\Http\Controllers\Api\V1\Syndic\FinancialReportApiController::class, 'generate'])
+                ->name('syndic.reports.financial-pdf');
 
             // ─── Suggestions & Polls ──────────────────────────────
             Route::get('/suggestions', [SuggestionPollController::class, 'suggestions'])

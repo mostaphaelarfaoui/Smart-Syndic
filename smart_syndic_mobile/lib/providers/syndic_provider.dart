@@ -583,6 +583,7 @@ class SyndicProvider extends ChangeNotifier {
   Future<Map<String, dynamic>?> generateFinancialReport({
     required String from,
     required String to,
+    String scope = 'both',
     String format = 'pdf',
   }) async {
     _isLoading = true;
@@ -591,7 +592,7 @@ class SyndicProvider extends ChangeNotifier {
 
     try {
       final response = await _api.get(
-        '${ApiConstants.syndicReportsExport}?from=$from&to=$to&format=$format',
+        '${ApiConstants.syndicReportsExport}?from=$from&to=$to&scope=$scope&format=$format',
       );
       _isLoading = false;
       notifyListeners();
