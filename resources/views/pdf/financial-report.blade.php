@@ -232,6 +232,51 @@
             color: #0f3460;
         }
 
+        .badge-paid {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 7.5px;
+            font-weight: bold;
+            background-color: #dcfce7;
+            color: #15803d;
+            border: 1px solid #86efac;
+        }
+
+        .badge-partial {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 7.5px;
+            font-weight: bold;
+            background-color: #fef3c7;
+            color: #b45309;
+            border: 1px solid #fde68a;
+        }
+
+        .badge-unpaid {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 7.5px;
+            font-weight: bold;
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fca5a5;
+        }
+
+        .data-table tr.row-paid td {
+            background-color: #f0fdf4;
+        }
+
+        .data-table tr.row-partial td {
+            background-color: #fffbeb;
+        }
+
+        .data-table tr.row-unpaid td {
+            background-color: #fff5f5;
+        }
+
         /* ─── Breakdown & Mini Tables ───────────────── */
         .mini-tables-wrap {
             width: 100%;
@@ -370,6 +415,109 @@
         </tr>
     </table>
 
+    {{-- SECTION: APARTMENTS PAYMENT STATUS (PAID & UNPAID) --}}
+    @if(($scope === 'both' || $scope === 'revenues') && !empty($apartments_status))
+        <div class="section-heading" style="background-color: #0d9488; color: #ffffff;">
+            🏢 كشف وضعية استخلاص اشتراكات الشقق (الخالصين وغير الخالصين) — État des Cotisations
+        </div>
+
+        {{-- Collection KPI Mini Bar --}}
+        <table style="width: 100%; border-collapse: separate; border-spacing: 4px; margin-bottom: 8px;">
+            <tr>
+                <td style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px 8px; text-align: center; width: 25%;">
+                    <div style="font-size: 8px; color: #64748b; font-weight: bold;">إجمالي الشقق المطالبة:</div>
+                    <div style="font-size: 11px; font-weight: bold; color: #0f3460;" class="num">{{ $total_billable_apartments }} شقة</div>
+                    <div style="font-size: 7.5px; color: #64748b;">المجموع المستحق: <span class="num font-bold">{{ number_format($total_expected_subscriptions, 2) }}</span> د.م</div>
+                </td>
+                <td style="background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 4px; padding: 6px 8px; text-align: center; width: 25%;">
+                    <div style="font-size: 8px; color: #047857; font-weight: bold;">الشقق الخالصة (سددت):</div>
+                    <div style="font-size: 11px; font-weight: bold; color: #047857;" class="num">{{ $paid_apartments_count }} شقة ({{ $collection_rate }}%)</div>
+                    <div style="font-size: 7.5px; color: #047857;">المحصل: <span class="num font-bold">{{ number_format($total_collected_subscriptions, 2) }}</span> د.م</div>
+                </td>
+                <td style="background-color: #fffbeb; border: 1px solid #fde68a; border-radius: 4px; padding: 6px 8px; text-align: center; width: 25%;">
+                    <div style="font-size: 8px; color: #b45309; font-weight: bold;">أداء جزئي:</div>
+                    <div style="font-size: 11px; font-weight: bold; color: #b45309;" class="num">{{ $partial_apartments_count }} شقة</div>
+                    <div style="font-size: 7.5px; color: #b45309;">سداد غير مكتمل للفترة</div>
+                </td>
+                <td style="background-color: #fff1f2; border: 1px solid #fecdd3; border-radius: 4px; padding: 6px 8px; text-align: center; width: 25%;">
+                    <div style="font-size: 8px; color: #be123c; font-weight: bold;">الشقق غير الخالصة (متأخرات):</div>
+                    <div style="font-size: 11px; font-weight: bold; color: #be123c;" class="num">{{ $unpaid_apartments_count }} شقة</div>
+                    <div style="font-size: 7.5px; color: #be123c;">المتأخرات: <span class="num font-bold">{{ number_format($total_remaining_arrears, 2) }}</span> د.م</div>
+                </td>
+            </tr>
+        </table>
+
+        {{-- Detailed Apartments Table --}}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 4%;">#</th>
+                    <th style="width: 14%;">الشقة / العمارة</th>
+                    <th style="width: 22%;">الساكن / المالك الرئيسي</th>
+                    <th style="width: 13%;">الهاتف</th>
+                    <th style="width: 11%;">الواجب (د.م)</th>
+                    <th style="width: 11%;">المؤدى (د.م)</th>
+                    <th style="width: 11%;">الباقي (د.م)</th>
+                    <th style="width: 14%;">الوضعية</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($apartments_status as $idx => $row)
+                    @php
+                        $rowClass = match($row['status']) {
+                            'PAID'    => 'row-paid',
+                            'PARTIAL' => 'row-partial',
+                            default   => 'row-unpaid',
+                        };
+                    @endphp
+                    <tr class="{{ $rowClass }}">
+                        <td class="text-center">{{ $idx + 1 }}</td>
+                        <td class="text-center font-bold">
+                            شقة {{ $row['unit_number'] }}
+                            @if($row['building_name'] && $row['building_name'] !== '—')
+                                <small style="color: #64748b; font-weight: normal;">({{ $row['building_name'] }})</small>
+                            @endif
+                        </td>
+                        <td>{{ $row['resident_name'] }}</td>
+                        <td class="text-center num" style="font-size: 8px;">{{ $row['phone'] }}</td>
+                        <td class="text-left num">{{ number_format($row['expected_fee'], 2) }}</td>
+                        <td class="text-left num font-bold" style="color: {{ $row['paid_amount'] > 0 ? '#047857' : '#64748b' }};">
+                            {{ number_format($row['paid_amount'], 2) }}
+                        </td>
+                        <td class="text-left num font-bold" style="color: {{ $row['remaining_due'] > 0 ? '#be123c' : '#047857' }};">
+                            {{ number_format($row['remaining_due'], 2) }}
+                        </td>
+                        <td class="text-center">
+                            @if($row['status'] === 'PAID')
+                                <span class="badge-paid">✓ خالص</span>
+                                @if(!empty($row['receipts']))
+                                    <div style="font-size: 7px; color: #047857; margin-top: 1px;">وصل: {{ $row['receipts'][0] }}</div>
+                                @endif
+                            @elseif($row['status'] === 'PARTIAL')
+                                <span class="badge-partial">⏳ أداء جزئي</span>
+                                @if(!empty($row['receipts']))
+                                    <div style="font-size: 7px; color: #b45309; margin-top: 1px;">وصل: {{ $row['receipts'][0] }}</div>
+                                @endif
+                            @else
+                                <span class="badge-unpaid">✗ غير خالص</span>
+                            @endif
+                        </td>
+                    </tr>
+                @endforeach
+                <tr class="total-row">
+                    <td colspan="4" class="text-right font-bold" style="padding-right: 10px;">
+                        <strong>المجموع الإجمالي لاشتراكات الشقق ({{ $total_billable_apartments }} شقة):</strong>
+                    </td>
+                    <td class="text-left num font-bold">{{ number_format($total_expected_subscriptions, 2) }} د.م</td>
+                    <td class="text-left num font-bold" style="color: #047857;">{{ number_format($total_collected_subscriptions, 2) }} د.م</td>
+                    <td class="text-left num font-bold" style="color: #be123c;">{{ number_format($total_remaining_arrears, 2) }} د.م</td>
+                    <td class="text-center font-bold" style="color: #0f3460;">{{ $collection_rate }}% تحصيل</td>
+                </tr>
+            </tbody>
+        </table>
+        <div style="margin-bottom: 14px;"></div>
+    @endif
+
     {{-- SECTION 1: DETAILED REVENUES TABLE --}}
     @if($scope === 'both' || $scope === 'revenues')
         <div class="section-heading green">
@@ -406,7 +554,7 @@
                             <td class="text-center font-bold" style="font-weight: bold; color: #0f3460;">{{ $payment->receipt_number }}</td>
                             <td class="text-center num">{{ \Carbon\Carbon::parse($payment->payment_date)->format('d/m/Y') }}</td>
                             <td class="text-center">
-                                شقة {{ $apt?->number ?? '-' }}
+                                شقة {{ $apt?->unit_number ?? $apt?->number ?? '-' }}
                                 @if($apt?->building)
                                     <small style="color: #64748b;">({{ $apt->building->name }})</small>
                                 @endif

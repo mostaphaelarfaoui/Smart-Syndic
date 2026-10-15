@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Apartment;
 use App\Models\Expense;
 use App\Models\Payment;
 use App\Models\Tenant;
@@ -172,6 +173,92 @@ class FinancialReportService
             }
         }
 
+        // 1.5 Calculate Apartments Payment Status (Paid vs Unpaid for the period)
+        $periodMonths = [];
+        $curMonth = Carbon::createFromFormat('Y-m', $startMonth);
+        $endMonthC = Carbon::createFromFormat('Y-m', $endMonth);
+        while ($curMonth <= $endMonthC) {
+            $periodMonths[] = $curMonth->format('Y-m');
+            $curMonth->addMonth();
+        }
+
+        $apartmentsStatus = [];
+        $paidApartmentsCount = 0;
+        $unpaidApartmentsCount = 0;
+        $partialApartmentsCount = 0;
+        $totalExpectedSubscriptions = 0.0;
+        $totalCollectedSubscriptions = 0.0;
+        $totalRemainingArrears = 0.0;
+
+        if ($scope === 'both' || $scope === 'revenues') {
+            $billableApartments = Apartment::where('tenant_id', $tenant->id)
+                ->orWhereHas('building', fn($q) => $q->where('tenant_id', $tenant->id))
+                ->where('is_billable', true)
+                ->with(['building', 'residents'])
+                ->orderBy('building_id')
+                ->orderBy('unit_number')
+                ->get();
+
+            $allTenantPayments = Payment::where('tenant_id', $tenant->id)
+                ->where('status', '!=', 'DRAFT')
+                ->get();
+
+            foreach ($billableApartments as $apt) {
+                $aptPayments = $allTenantPayments->where('apartment_id', $apt->id);
+
+                // Payments matching the selected period
+                $matchedPayments = $aptPayments->filter(function ($p) use ($periodMonths, $startDate, $endDate) {
+                    $covered = is_array($p->covered_months) ? $p->covered_months : [];
+                    $coversMonth = ! empty(array_intersect($covered, $periodMonths));
+                    $inDateRange = $p->payment_date && ($p->payment_date >= $startDate->toDateString() && $p->payment_date <= $endDate->toDateString());
+                    return $coversMonth || $inDateRange;
+                });
+
+                $expectedFee = (float) $apt->monthly_fee * $monthsCount;
+                $paidAmount = (float) $matchedPayments->sum('amount_paid');
+                $remainingDue = max(0, $expectedFee - $paidAmount);
+                $receipts = $matchedPayments->pluck('receipt_number')->filter()->unique()->values()->all();
+                $coveredMonthsList = $matchedPayments->flatMap(fn($p) => is_array($p->covered_months) ? $p->covered_months : [])->unique()->values()->all();
+
+                $primaryResident = $apt->residents->first();
+
+                if ($paidAmount >= $expectedFee && $expectedFee > 0) {
+                    $status = 'PAID';
+                    $paidApartmentsCount++;
+                } elseif ($paidAmount > 0) {
+                    $status = 'PARTIAL';
+                    $partialApartmentsCount++;
+                } else {
+                    $status = 'UNPAID';
+                    $unpaidApartmentsCount++;
+                }
+
+                $totalExpectedSubscriptions += $expectedFee;
+                $totalCollectedSubscriptions += $paidAmount;
+                $totalRemainingArrears += $remainingDue;
+
+                $apartmentsStatus[] = [
+                    'apartment'       => $apt,
+                    'unit_number'     => $apt->unit_number,
+                    'building_name'   => $apt->building?->name ?? '—',
+                    'resident_name'   => $primaryResident?->full_name ?? 'بدون ساكن مسجل',
+                    'phone'           => $primaryResident?->phone ?? '—',
+                    'monthly_fee'     => (float) $apt->monthly_fee,
+                    'expected_fee'    => $expectedFee,
+                    'paid_amount'     => $paidAmount,
+                    'remaining_due'   => $remainingDue,
+                    'status'          => $status, // PAID, PARTIAL, UNPAID
+                    'receipts'        => $receipts,
+                    'covered_months'  => $coveredMonthsList,
+                ];
+            }
+        }
+
+        $totalBillableApartments = count($apartmentsStatus);
+        $collectionRate = $totalBillableApartments > 0
+            ? round(($paidApartmentsCount / $totalBillableApartments) * 100, 1)
+            : 0;
+
         // 3. Balance Calculations
         $netBalance = $totalRevenues - $totalExpenses;
         $balanceStatus = $netBalance >= 0 ? 'SURPLUS' : 'DEFICIT';
@@ -190,39 +277,50 @@ class FinancialReportService
         $apartmentsCount = $tenant->apartments()->count();
 
         return [
-            'tenant'               => $tenant,
-            'actor'                => $actor,
-            'scope'                => $scope,
-            'start_month'          => $startMonth,
-            'end_month'            => $endMonth,
-            'months_count'         => $monthsCount,
-            'period_title'         => $periodTitle,
-            'period_subtitle'      => $periodSubtitle,
-            'start_date'           => $startDate,
-            'end_date'             => $endDate,
-            'generated_at'         => now(),
-            'reference_number'     => $referenceNumber,
+            'tenant'                        => $tenant,
+            'actor'                         => $actor,
+            'scope'                         => $scope,
+            'start_month'                   => $startMonth,
+            'end_month'                     => $endMonth,
+            'period_months'                 => $periodMonths,
+            'months_count'                  => $monthsCount,
+            'period_title'                  => $periodTitle,
+            'period_subtitle'               => $periodSubtitle,
+            'start_date'                    => $startDate,
+            'end_date'                      => $endDate,
+            'generated_at'                  => now(),
+            'reference_number'              => $referenceNumber,
             // Financial Data
-            'payments'             => $payments,
-            'total_revenues'       => $totalRevenues,
-            'total_revenues_words' => $totalRevenuesWords,
-            'revenues_by_method'   => $revenuesByMethod,
-            'payments_count'       => $payments->count(),
+            'payments'                      => $payments,
+            'total_revenues'                => $totalRevenues,
+            'total_revenues_words'          => $totalRevenuesWords,
+            'revenues_by_method'            => $revenuesByMethod,
+            'payments_count'                => $payments->count(),
+            // Apartments Subscriptions Status (Paid vs Unpaid)
+            'apartments_status'             => $apartmentsStatus,
+            'total_billable_apartments'     => $totalBillableApartments,
+            'paid_apartments_count'         => $paidApartmentsCount,
+            'partial_apartments_count'      => $partialApartmentsCount,
+            'unpaid_apartments_count'       => $unpaidApartmentsCount,
+            'total_expected_subscriptions'  => $totalExpectedSubscriptions,
+            'total_collected_subscriptions' => $totalCollectedSubscriptions,
+            'total_remaining_arrears'       => $totalRemainingArrears,
+            'collection_rate'               => $collectionRate,
             // Expenses Data
-            'expenses'             => $expenses,
-            'total_expenses'       => $totalExpenses,
-            'total_expenses_words' => $totalExpensesWords,
-            'expenses_by_category' => $expensesByCategory,
-            'expenses_by_method'   => $expensesByMethod,
-            'expenses_count'       => $expenses->count(),
+            'expenses'                      => $expenses,
+            'total_expenses'                => $totalExpenses,
+            'total_expenses_words'          => $totalExpensesWords,
+            'expenses_by_category'          => $expensesByCategory,
+            'expenses_by_method'            => $expensesByMethod,
+            'expenses_count'                => $expenses->count(),
             // Synthesis
-            'net_balance'          => $netBalance,
-            'net_balance_words'    => $netBalanceWords,
-            'balance_status'       => $balanceStatus,
+            'net_balance'                   => $netBalance,
+            'net_balance_words'             => $netBalanceWords,
+            'balance_status'                => $balanceStatus,
             // Stamp & Property
-            'stamp_base64'         => $stampBase64,
-            'buildings_count'      => $buildingsCount,
-            'apartments_count'     => $apartmentsCount,
+            'stamp_base64'                  => $stampBase64,
+            'buildings_count'               => $buildingsCount,
+            'apartments_count'              => $apartmentsCount,
         ];
     }
 

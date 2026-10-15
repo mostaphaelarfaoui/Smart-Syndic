@@ -73,11 +73,20 @@
         </div>
 
         {{-- Net Balance --}}
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0.85rem; background:rgba(13,148,136,0.06); border-radius:8px; margin-bottom:1.25rem; font-size:0.85rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0.85rem; background:rgba(13,148,136,0.06); border-radius:8px; margin-bottom:0.75rem; font-size:0.85rem;">
             <span style="color:var(--text-secondary);">الفارق الصافي للشهر:</span>
             <strong class="num" style="font-size:0.95rem; color:{{ $currentMonthData['net_balance'] >= 0 ? '#10b981' : '#f43f5e' }};">
                 {{ ($currentMonthData['net_balance'] >= 0 ? '+' : '') . number_format($currentMonthData['net_balance'], 2) }} د.م
             </strong>
+        </div>
+
+        {{-- Apartment Collection Status --}}
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.5rem 0.85rem; background:rgba(15,23,42,0.03); border-radius:8px; margin-bottom:1.25rem; font-size:0.8rem;">
+            <span style="color:var(--text-secondary);">🏢 حالة أداء الشقق:</span>
+            <div style="display:flex; gap:0.4rem; align-items:center;">
+                <span class="badge badge-success" style="font-size:0.75rem;">{{ $currentMonthData['paid_apartments_count'] }} خالصة ✓</span>
+                <span class="badge badge-danger" style="font-size:0.75rem;">{{ $currentMonthData['unpaid_apartments_count'] }} متأخرة ✗</span>
+            </div>
         </div>
 
         {{-- Actions --}}
@@ -128,11 +137,20 @@
         </div>
 
         {{-- Net Balance --}}
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0.85rem; background:rgba(99,102,241,0.06); border-radius:8px; margin-bottom:1.25rem; font-size:0.85rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0.85rem; background:rgba(99,102,241,0.06); border-radius:8px; margin-bottom:0.75rem; font-size:0.85rem;">
             <span style="color:var(--text-secondary);">الفارق الصافي للشهر:</span>
             <strong class="num" style="font-size:0.95rem; color:{{ $lastMonthData['net_balance'] >= 0 ? '#10b981' : '#f43f5e' }};">
                 {{ ($lastMonthData['net_balance'] >= 0 ? '+' : '') . number_format($lastMonthData['net_balance'], 2) }} د.م
             </strong>
+        </div>
+
+        {{-- Apartment Collection Status --}}
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.5rem 0.85rem; background:rgba(15,23,42,0.03); border-radius:8px; margin-bottom:1.25rem; font-size:0.8rem;">
+            <span style="color:var(--text-secondary);">🏢 حالة أداء الشقق:</span>
+            <div style="display:flex; gap:0.4rem; align-items:center;">
+                <span class="badge badge-success" style="font-size:0.75rem;">{{ $lastMonthData['paid_apartments_count'] }} خالصة ✓</span>
+                <span class="badge badge-danger" style="font-size:0.75rem;">{{ $lastMonthData['unpaid_apartments_count'] }} متأخرة ✗</span>
+            </div>
         </div>
 
         {{-- Actions --}}
@@ -201,6 +219,87 @@
     </div>
 
 </div>
+
+{{-- Current Month Apartments Status Overview (Paid & Unpaid) --}}
+@if(!empty($currentMonthData['apartments_status']))
+<div class="card" style="padding:1.5rem; border-radius:var(--radius-lg); margin-bottom:2rem; border:1px solid var(--border-color);">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.25rem;">
+        <div>
+            <h3 style="margin:0; font-size:1.15rem; font-weight:800; color:var(--text-primary); display:flex; align-items:center; gap:0.5rem;">
+                <span>🏢 كشف وضعية أداء الشقق لشهر {{ $currentMonthData['period_title'] }}</span>
+                <span class="badge badge-neutral" style="font-size:0.75rem;">نسبة التحصيل: {{ $currentMonthData['collection_rate'] }}%</span>
+            </h3>
+            <p style="margin:0.25rem 0 0 0; font-size:0.85rem; color:var(--text-secondary);">
+                كشف حي يوضح الشقق التي سددت واجباتها والشقق المتأخرة عن الأداء (مضمن بالتقرير الرسمي PDF)
+            </p>
+        </div>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <span class="badge badge-success" style="font-size:0.8rem; padding:0.35rem 0.75rem;">
+                {{ $currentMonthData['paid_apartments_count'] }} شقة خالصة ✓
+            </span>
+            @if($currentMonthData['partial_apartments_count'] > 0)
+                <span class="badge badge-warning" style="font-size:0.8rem; padding:0.35rem 0.75rem;">
+                    {{ $currentMonthData['partial_apartments_count'] }} أداء جزئي ⏳
+                </span>
+            @endif
+            <span class="badge badge-danger" style="font-size:0.8rem; padding:0.35rem 0.75rem;">
+                {{ $currentMonthData['unpaid_apartments_count'] }} شقة غير خالصة ✗
+            </span>
+            <a href="{{ route('portal.reports.financial-pdf', ['start_month' => $currentMonth, 'end_month' => $currentMonth, 'scope' => 'revenues', 'mode' => 'download']) }}" target="_blank" class="btn btn-sm btn-secondary" style="font-weight:700;">
+                <span>تحميل هذا الكشف PDF 📥</span>
+            </a>
+        </div>
+    </div>
+
+    <div style="overflow-x:auto;">
+        <table class="table" style="width:100%; border-collapse:collapse; font-size:0.875rem;">
+            <thead>
+                <tr style="border-bottom:2px solid var(--border-color); text-align:right;">
+                    <th style="padding:0.65rem 0.75rem;">#</th>
+                    <th style="padding:0.65rem 0.75rem;">الشقة / العمارة</th>
+                    <th style="padding:0.65rem 0.75rem;">الساكن / المالك الرئيسي</th>
+                    <th style="padding:0.65rem 0.75rem;">الهاتف</th>
+                    <th style="padding:0.65rem 0.75rem;">الواجب</th>
+                    <th style="padding:0.65rem 0.75rem;">المؤدى</th>
+                    <th style="padding:0.65rem 0.75rem;">المتبقي</th>
+                    <th style="padding:0.65rem 0.75rem; text-align:center;">الوضعية</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($currentMonthData['apartments_status'] as $idx => $row)
+                    <tr style="border-bottom:1px solid var(--border-color); background: {{ $row['status'] === 'PAID' ? 'rgba(16,185,129,0.04)' : ($row['status'] === 'PARTIAL' ? 'rgba(245,158,11,0.04)' : 'rgba(244,63,94,0.04)') }};">
+                        <td style="padding:0.65rem 0.75rem;">{{ $idx + 1 }}</td>
+                        <td style="padding:0.65rem 0.75rem; font-weight:700;">
+                            شقة {{ $row['unit_number'] }}
+                            @if($row['building_name'] && $row['building_name'] !== '—')
+                                <small style="color:var(--text-secondary); font-weight:normal;">({{ $row['building_name'] }})</small>
+                            @endif
+                        </td>
+                        <td style="padding:0.65rem 0.75rem;">{{ $row['resident_name'] }}</td>
+                        <td style="padding:0.65rem 0.75rem;" class="num">{{ $row['phone'] }}</td>
+                        <td style="padding:0.65rem 0.75rem;" class="num">{{ number_format($row['expected_fee'], 2) }} د.م</td>
+                        <td style="padding:0.65rem 0.75rem; font-weight:700; color:{{ $row['paid_amount'] > 0 ? '#10b981' : 'inherit' }};" class="num">
+                            {{ number_format($row['paid_amount'], 2) }} د.م
+                        </td>
+                        <td style="padding:0.65rem 0.75rem; font-weight:700; color:{{ $row['remaining_due'] > 0 ? '#f43f5e' : '#10b981' }};" class="num">
+                            {{ number_format($row['remaining_due'], 2) }} د.م
+                        </td>
+                        <td style="padding:0.65rem 0.75rem; text-align:center;">
+                            @if($row['status'] === 'PAID')
+                                <span class="badge badge-success">✓ خالص</span>
+                            @elseif($row['status'] === 'PARTIAL')
+                                <span class="badge badge-warning">⏳ جزئي</span>
+                            @else
+                                <span class="badge badge-danger">✗ غير خالص</span>
+                            @endif
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+@endif
 
 {{-- Features & Legal Info Banner --}}
 <div class="card" style="padding:1.5rem 1.75rem; border-radius:var(--radius-lg); background:linear-gradient(135deg, rgba(13,148,136,0.05) 0%, rgba(99,102,241,0.03) 100%); border:1px solid rgba(13,148,136,0.18);">

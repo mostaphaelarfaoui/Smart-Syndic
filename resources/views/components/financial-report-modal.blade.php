@@ -28,7 +28,7 @@
                                 <div class="fin-scope-icon">⚖️</div>
                                 <div class="fin-scope-text">
                                     <div class="fin-scope-title">تقرير مالي شامل (موصى به)</div>
-                                    <div class="fin-scope-desc">المداخيل والاشتراكات + جدول المصاريف التفصيلي + الخلاصة والمركز المالي</div>
+                                    <div class="fin-scope-desc">كشف وضعية الشقق (الخالصين والمتأخرين) + جدول المداخيل والمصاريف + المركز المالي</div>
                                 </div>
                                 <span class="fin-scope-tag recommended">شامل</span>
                             </div>
@@ -41,7 +41,7 @@
                                 <div class="fin-scope-icon">📈</div>
                                 <div class="fin-scope-text">
                                     <div class="fin-scope-title">المداخيل والتحصيلات فقط</div>
-                                    <div class="fin-scope-desc">جدول دفعات ووصولات الشقق، الشهور المغطاة، وتفصيل طرق الدفع</div>
+                                    <div class="fin-scope-desc">كشف الشقق التي سددت والتي لم تسدد + جدول دفعات ووصولات الشقق وتفصيل التحصيل</div>
                                 </div>
                                 <span class="fin-scope-tag green">مداخيل</span>
                             </div>
