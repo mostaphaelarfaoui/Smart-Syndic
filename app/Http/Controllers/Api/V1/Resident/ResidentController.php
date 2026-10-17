@@ -155,18 +155,73 @@ class ResidentController extends Controller
     {
         $tenant = $request->user()->tenant;
 
-        if (! $tenant->is_transparency_enabled) {
+        if (! $tenant || ! $tenant->is_transparency_enabled) {
             return response()->json([
-                'enabled' => false,
-                'message' => __('resident.transparency_disabled'),
+                'enabled'              => false,
+                'transparency_enabled' => false,
+                'message'              => __('resident.transparency_disabled'),
             ]);
         }
 
         $currentMonth = now()->format('Y-m');
 
-        // Get all apartments and their payment status for current month (mask personal details)
+        // Total payments collected this month or covering this month (excluding drafts)
+        $monthInflow = (float) Payment::where('tenant_id', $tenant->id)
+            ->where('status', '!=', 'DRAFT')
+            ->where(function ($q) use ($currentMonth) {
+                $q->where(function ($sq) {
+                    $sq->whereMonth('payment_date', now()->month)
+                       ->whereYear('payment_date', now()->year);
+                })->orWhereJsonContains('covered_months', $currentMonth);
+            })
+            ->sum('amount_paid');
+
+        // Total expenses this month
+        $monthOutflow = (float) Expense::where('tenant_id', $tenant->id)
+            ->whereMonth('expense_date', now()->month)
+            ->whereYear('expense_date', now()->year)
+            ->sum('amount');
+
+        // If this month has no expenses yet, get overall all-time expenses sum or month outflow
+        $allTimeOutflow = (float) Expense::where('tenant_id', $tenant->id)->sum('amount');
+        $displayOutflow = $monthOutflow > 0 ? $monthOutflow : $allTimeOutflow;
+
+        $allTimeInflow = (float) Payment::where('tenant_id', $tenant->id)
+            ->where('status', '!=', 'DRAFT')
+            ->sum('amount_paid');
+        $displayInflow = $monthInflow > 0 ? $monthInflow : $allTimeInflow;
+
+        $balance = $displayInflow - $displayOutflow;
+
+        // Detailed expenses list for resident transparency
+        $expenses = Expense::where('tenant_id', $tenant->id)
+            ->with('building')
+            ->orderByDesc('expense_date')
+            ->limit(50)
+            ->get()
+            ->map(function ($e) {
+                return [
+                    'id'           => $e->id,
+                    'title'        => $e->title,
+                    'amount'       => (float) $e->amount,
+                    'category'     => $e->category,
+                    'expense_date' => $e->expense_date?->format('Y-m-d') ?? $e->created_at?->format('Y-m-d'),
+                    'building'     => $e->building?->name,
+                    'invoice_url'  => $e->invoice_proof_url,
+                ];
+            });
+
+        // Expense breakdown by category
+        $expenseBreakdown = Expense::where('tenant_id', $tenant->id)
+            ->selectRaw('category, SUM(amount) as total')
+            ->groupBy('category')
+            ->get();
+
+        // Get all apartments and their payment status for current month (mask personal details for privacy)
         $apartments = \App\Models\Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenant->id))
             ->with('building')
+            ->orderBy('building_id')
+            ->orderBy('floor')
             ->get()
             ->map(function ($apt) use ($currentMonth) {
                 $isPaid = Payment::where('apartment_id', $apt->id)
@@ -175,25 +230,33 @@ class ResidentController extends Controller
                     ->exists();
 
                 return [
-                    'unit'     => $apt->unit_number,
-                    'building' => $apt->building->name,
-                    'floor'    => $apt->floor,
-                    'status'   => $isPaid ? 'PAID' : 'OUTSTANDING',
+                    'unit'        => $apt->unit_number,
+                    'building'    => $apt->building?->name,
+                    'floor'       => $apt->floor,
+                    'status'      => $isPaid ? 'PAID' : 'OUTSTANDING',
+                    'is_billable' => (bool) $apt->is_billable,
                 ];
             });
 
-        // Expense breakdown for donut chart
-        $monthExpenses = Expense::where('tenant_id', $tenant->id)
-            ->whereMonth('expense_date', now()->month)
-            ->whereYear('expense_date', now()->year)
-            ->selectRaw('category, SUM(amount) as total')
-            ->groupBy('category')
-            ->get();
+        $totalApartments = $apartments->count();
+        $paidApartmentsCount = $apartments->where('status', 'PAID')->count();
+        $collectionRate = $totalApartments > 0 ? round(($paidApartmentsCount / $totalApartments) * 100, 1) : 0;
 
         return response()->json([
-            'enabled'           => true,
-            'collection_status' => $apartments,
-            'expense_breakdown' => $monthExpenses,
+            'enabled'                => true,
+            'transparency_enabled'   => true,
+            'total_inflow'           => $displayInflow,
+            'total_outflow'          => $displayOutflow,
+            'balance'                => $balance,
+            'month_inflow'           => $monthInflow,
+            'month_outflow'          => $monthOutflow,
+            'expenses'               => $expenses,
+            'expense_breakdown'      => $expenseBreakdown,
+            'collection_status'      => $apartments,
+            'collection_rate'        => $collectionRate,
+            'paid_apartments_count'  => $paidApartmentsCount,
+            'total_apartments_count' => $totalApartments,
+            'current_month'          => $currentMonth,
         ]);
     }
 

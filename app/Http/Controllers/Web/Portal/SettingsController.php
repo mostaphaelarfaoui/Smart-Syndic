@@ -35,7 +35,7 @@ class SettingsController extends Controller
             'name'                    => $validated['name'],
             'property_type'           => $validated['property_type'],
             'bank_rib'                => $validated['bank_rib'] ?? null,
-            'is_transparency_enabled' => $request->boolean('is_transparency_enabled', true),
+            'is_transparency_enabled' => $request->boolean('is_transparency_enabled'),
         ];
 
         // Only update initial balances if not locked yet

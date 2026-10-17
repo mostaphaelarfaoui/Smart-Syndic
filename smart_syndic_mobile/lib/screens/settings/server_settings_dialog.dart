@@ -67,7 +67,7 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                _buildQuickChip('شبكة Wi-Fi الحالية (192.168.11.168)', 'http://192.168.11.168:8000/api/v1'),
+                _buildQuickChip('شبكة Wi-Fi الحالية (192.168.11.182)', 'http://192.168.11.182:8000/api/v1'),
                 _buildQuickChip('حاسوب محلي (127.0.0.1)', 'http://127.0.0.1:8000/api/v1'),
                 _buildQuickChip('محاكي أندرويد (10.0.2.2)', 'http://10.0.2.2:8000/api/v1'),
               ],
@@ -82,14 +82,27 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
         ),
         ElevatedButton(
           onPressed: () async {
-            final url = _controller.text.trim();
+            var url = _controller.text.trim();
             if (url.isNotEmpty) {
+              if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'http://$url';
+              }
+              // If port is not specified and no path given, add default dev port :8000
+              if (!url.contains(':') || (url.startsWith('http://') && url.indexOf(':', 7) == -1)) {
+                if (!url.contains('/')) {
+                  url = '$url:8000';
+                }
+              }
+              // Ensure path ends with /api/v1
+              if (!url.endsWith('/api/v1')) {
+                url = url.endsWith('/') ? '${url}api/v1' : '$url/api/v1';
+              }
               await _api.setBaseUrl(url);
               if (!context.mounted) return;
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('تم حفظ عنوان السيرفر بنجاح', style: GoogleFonts.cairo()),
+                  content: Text('تم حفظ عنوان السيرفر ($url)', style: GoogleFonts.cairo()),
                   backgroundColor: AppColors.success,
                 ),
               );
