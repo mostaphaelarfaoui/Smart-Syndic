@@ -217,46 +217,130 @@ class ResidentController extends Controller
             ->groupBy('category')
             ->get();
 
-        // Get all apartments and their payment status for current month (mask personal details for privacy)
+        // Get all apartments and their payment status with detailed breakdown (masking personal resident details)
         $apartments = \App\Models\Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenant->id))
-            ->with('building')
+            ->with(['building', 'residents'])
             ->orderBy('building_id')
             ->orderBy('floor')
             ->get()
             ->map(function ($apt) use ($currentMonth) {
-                $isPaid = Payment::where('apartment_id', $apt->id)
-                    ->where('status', '!=', 'DRAFT')
-                    ->whereJsonContains('covered_months', $currentMonth)
-                    ->exists();
+                $isBillable = (bool) $apt->is_billable;
+
+                // Expected months calculation
+                $firstResident = $apt->residents()->orderBy('resident_apartments.created_at', 'asc')->first();
+                if ($firstResident && $firstResident->pivot && $firstResident->pivot->created_at) {
+                    $start = \Carbon\Carbon::parse($firstResident->pivot->created_at)->startOfMonth();
+                } else {
+                    $start = $apt->created_at ? $apt->created_at->copy()->startOfMonth() : now()->startOfMonth();
+                }
+                $end = now()->startOfMonth();
+                $expectedMonths = [];
+                while ($start->lte($end)) {
+                    $expectedMonths[] = $start->format('Y-m');
+                    $start->addMonth();
+                }
+
+                // Confirmed payments
+                $payments = $apt->payments()->where('status', '!=', 'DRAFT')->get();
+
+                $fullyPaidMonths = [];
+                $partialMonths = [];
+                $totalPaid = 0.0;
+
+                foreach ($payments as $p) {
+                    $totalPaid += (float) $p->amount_paid;
+                    $covered = is_array($p->covered_months) ? $p->covered_months : [];
+
+                    if ($p->is_partial) {
+                        foreach ($covered as $m) {
+                            $partialMonths[$m] = [
+                                'month'             => $m,
+                                'amount_paid'       => (float) $p->amount_paid,
+                                'remaining_balance' => (float) $p->remaining_balance,
+                            ];
+                        }
+                    } else {
+                        foreach ($covered as $m) {
+                            $fullyPaidMonths[] = $m;
+                        }
+                    }
+                }
+
+                $fullyPaidMonths = array_values(array_unique($fullyPaidMonths));
+                foreach ($fullyPaidMonths as $fpm) {
+                    unset($partialMonths[$fpm]);
+                }
+                $partialMonthsList = array_values($partialMonths);
+
+                $accountedMonths = array_merge($fullyPaidMonths, array_keys($partialMonths));
+                $unpaidMonths = array_values(array_diff($expectedMonths, $accountedMonths));
+                $advancePaidMonths = array_values(array_filter($fullyPaidMonths, fn ($m) => $m > $currentMonth));
+
+                $totalDue = count($expectedMonths) * (float) $apt->monthly_fee;
+                $arrears = max(0, $totalDue - $totalPaid);
+
+                if (! $isBillable) {
+                    $status = 'EXEMPT';
+                    $statusLabel = 'معفية (شاغرة)';
+                } elseif (count($unpaidMonths) === 0 && count($partialMonthsList) === 0) {
+                    $status = 'PAID';
+                    $statusLabel = 'خالصة بالكامل';
+                } elseif (count($partialMonthsList) > 0 && count($unpaidMonths) === 0) {
+                    $status = 'PARTIAL';
+                    $statusLabel = 'أداء جزئي';
+                } elseif (count($partialMonthsList) > 0 && count($unpaidMonths) > 0) {
+                    $status = 'PARTIAL';
+                    $statusLabel = 'جزئي ومتأخرات';
+                } else {
+                    $status = 'ARREARS';
+                    $statusLabel = 'متأخرات';
+                }
 
                 return [
-                    'unit'        => $apt->unit_number,
-                    'building'    => $apt->building?->name,
-                    'floor'       => $apt->floor,
-                    'status'      => $isPaid ? 'PAID' : 'OUTSTANDING',
-                    'is_billable' => (bool) $apt->is_billable,
+                    'id'                  => $apt->id,
+                    'unit'                => $apt->unit_number,
+                    'building'            => $apt->building?->name,
+                    'floor'               => $apt->floor,
+                    'monthly_fee'         => (float) $apt->monthly_fee,
+                    'total_paid'          => $totalPaid,
+                    'arrears'             => $arrears,
+                    'status'              => $status, // 'PAID', 'PARTIAL', 'ARREARS', 'EXEMPT'
+                    'status_label'        => $statusLabel,
+                    'is_billable'         => $isBillable,
+                    'has_residents'       => $apt->residents->isNotEmpty(),
+                    'paid_months'         => $fullyPaidMonths,
+                    'partial_months'      => $partialMonthsList,
+                    'unpaid_months'       => $unpaidMonths,
+                    'advance_paid_months' => $advancePaidMonths,
+                    'expected_months'     => $expectedMonths,
                 ];
             });
 
         $totalApartments = $apartments->count();
         $paidApartmentsCount = $apartments->where('status', 'PAID')->count();
+        $partialApartmentsCount = $apartments->where('status', 'PARTIAL')->count();
+        $arrearsApartmentsCount = $apartments->where('status', 'ARREARS')->count();
+        $exemptApartmentsCount = $apartments->where('status', 'EXEMPT')->count();
         $collectionRate = $totalApartments > 0 ? round(($paidApartmentsCount / $totalApartments) * 100, 1) : 0;
 
         return response()->json([
-            'enabled'                => true,
-            'transparency_enabled'   => true,
-            'total_inflow'           => $displayInflow,
-            'total_outflow'          => $displayOutflow,
-            'balance'                => $balance,
-            'month_inflow'           => $monthInflow,
-            'month_outflow'          => $monthOutflow,
-            'expenses'               => $expenses,
-            'expense_breakdown'      => $expenseBreakdown,
-            'collection_status'      => $apartments,
-            'collection_rate'        => $collectionRate,
-            'paid_apartments_count'  => $paidApartmentsCount,
-            'total_apartments_count' => $totalApartments,
-            'current_month'          => $currentMonth,
+            'enabled'                  => true,
+            'transparency_enabled'     => true,
+            'total_inflow'             => $displayInflow,
+            'total_outflow'            => $displayOutflow,
+            'balance'                  => $balance,
+            'month_inflow'             => $monthInflow,
+            'month_outflow'            => $monthOutflow,
+            'expenses'                 => $expenses,
+            'expense_breakdown'        => $expenseBreakdown,
+            'collection_status'        => $apartments,
+            'collection_rate'          => $collectionRate,
+            'paid_apartments_count'    => $paidApartmentsCount,
+            'partial_apartments_count' => $partialApartmentsCount,
+            'arrears_apartments_count' => $arrearsApartmentsCount,
+            'exempt_apartments_count'  => $exemptApartmentsCount,
+            'total_apartments_count'   => $totalApartments,
+            'current_month'            => $currentMonth,
         ]);
     }
 

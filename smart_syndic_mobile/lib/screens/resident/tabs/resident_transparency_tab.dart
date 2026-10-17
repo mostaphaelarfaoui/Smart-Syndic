@@ -16,6 +16,747 @@ class ResidentTransparencyTab extends StatefulWidget {
 class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
   int _selectedView = 0; // 0 = Expenses, 1 = Apartments Collection Status
 
+  String _formatMonthArabic(String yyyyMm) {
+    final parts = yyyyMm.split('-');
+    if (parts.length != 2) return yyyyMm;
+    const monthNames = {
+      '01': 'يناير',
+      '02': 'فبراير',
+      '03': 'مارس',
+      '04': 'أبريل',
+      '05': 'مايو',
+      '06': 'يونيو',
+      '07': 'يوليوز',
+      '08': 'غشت',
+      '09': 'شتنبر',
+      '10': 'أكتوبر',
+      '11': 'نونبر',
+      '12': 'دجنبر',
+    };
+    final monthName = monthNames[parts[1]] ?? parts[1];
+    return '$monthName ${parts[0]}';
+  }
+
+  String _formatUnpaidMonthsSummary(List<String> months) {
+    if (months.isEmpty) return '';
+    if (months.length == 1) {
+      return 'شهر ${_formatMonthArabic(months.first)}';
+    } else if (months.length <= 3) {
+      return '${months.length} أشهر (${months.map((m) => _formatMonthArabic(m).split(' ').first).join('، ')})';
+    } else {
+      return '${months.length} أشهر متأخرة';
+    }
+  }
+
+  void _showApartmentDetails(BuildContext context, Map<String, dynamic> apt) {
+    final unit = apt['unit'] ?? '';
+    final building = apt['building'] ?? '';
+    final floor = apt['floor'] ?? '';
+    final status = apt['status'] ?? 'ARREARS';
+    final isBillable = apt['is_billable'] != false;
+    final monthlyFee = parseDouble(apt['monthly_fee']);
+    final totalPaid = parseDouble(apt['total_paid']);
+    final arrears = parseDouble(apt['arrears']);
+
+    final paidMonths = apt['paid_months'] != null ? List<String>.from(apt['paid_months']) : <String>[];
+    final unpaidMonths = apt['unpaid_months'] != null ? List<String>.from(apt['unpaid_months']) : <String>[];
+    final partialMonths = apt['partial_months'] != null ? List<Map<String, dynamic>>.from(apt['partial_months']) : <Map<String, dynamic>>[];
+    final advanceMonths = apt['advance_paid_months'] != null ? List<String>.from(apt['advance_paid_months']) : <String>[];
+
+    Color statusColor;
+    String statusTitle;
+    IconData statusIcon;
+
+    if (!isBillable) {
+      statusColor = Colors.grey;
+      statusTitle = 'معفية (شاغرة)';
+      statusIcon = Icons.block;
+    } else if (status == 'PAID') {
+      statusColor = AppColors.success;
+      statusTitle = 'خالصة بالكامل ✓';
+      statusIcon = Icons.check_circle_outline;
+    } else if (status == 'PARTIAL') {
+      statusColor = AppColors.warning;
+      statusTitle = 'أداء جزئي ⚠️';
+      statusIcon = Icons.timelapse;
+    } else {
+      statusColor = AppColors.danger;
+      statusTitle = 'عليها متأخرات ⏳';
+      statusIcon = Icons.schedule;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.88,
+        ),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            // Handle bar
+            const SizedBox(height: 12),
+            Container(
+              width: 48,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // Modal Header: Apartment Info & Status Badge
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: statusColor.withAlpha(25),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: statusColor.withAlpha(60)),
+                    ),
+                    child: Icon(statusIcon, color: statusColor, size: 26),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          unit,
+                          style: GoogleFonts.cairo(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          '$building • الطابق $floor',
+                          style: GoogleFonts.cairo(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: statusColor.withAlpha(20),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: statusColor.withAlpha(70), width: 1.2),
+                    ),
+                    child: Text(
+                      statusTitle,
+                      style: GoogleFonts.cairo(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: statusColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            const Divider(height: 1),
+
+            // 🏷️ بطاقة مبلغ الاشتراك الشهري - بارزة وواضحة جداً
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.primary.withAlpha(16),
+                    AppColors.primary.withAlpha(6),
+                  ],
+                  begin: Alignment.topRight,
+                  end: Alignment.bottomLeft,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.primary.withAlpha(45), width: 1.2),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withAlpha(40),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.receipt_long_rounded,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'مبلغ الاشتراك الشهري',
+                          style: GoogleFonts.cairo(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          'الواجب الشهري المحدد للشقة',
+                          style: GoogleFonts.cairo(
+                            fontSize: 11,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            monthlyFee.toStringAsFixed(0),
+                            style: GoogleFonts.cairo(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'د.م',
+                            style: GoogleFonts.cairo(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        'شهرياً',
+                        style: GoogleFonts.cairo(
+                          fontSize: 10,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Financial Summary Row: المتأخرات vs مجموع المؤدى
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  // 1. المتأخرات
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: arrears > 0 ? AppColors.danger.withAlpha(12) : AppColors.success.withAlpha(12),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: arrears > 0 ? AppColors.danger.withAlpha(45) : AppColors.success.withAlpha(45),
+                          width: 1.2,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                arrears > 0 ? Icons.error_outline : Icons.check_circle_outline,
+                                color: arrears > 0 ? AppColors.danger : AppColors.success,
+                                size: 15,
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                arrears > 0 ? 'إجمالي المتأخرات' : 'المتأخرات',
+                                style: GoogleFonts.cairo(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: arrears > 0 ? AppColors.danger : AppColors.success,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${arrears.toStringAsFixed(0)} د.م',
+                            style: GoogleFonts.cairo(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              color: arrears > 0 ? AppColors.danger : AppColors.success,
+                            ),
+                          ),
+                          Text(
+                            arrears > 0
+                                ? '${unpaidMonths.length + partialMonths.length} شهر غير مكتمل'
+                                : 'لا توجد متأخرات ✓',
+                            style: GoogleFonts.cairo(
+                              fontSize: 10,
+                              color: arrears > 0 ? AppColors.danger : AppColors.success,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  // 2. مجموع المؤدى
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppColors.border, width: 1.2),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.account_balance_wallet_outlined,
+                                color: AppColors.textSecondary,
+                                size: 15,
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                'مجموع المؤدى',
+                                style: GoogleFonts.cairo(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${totalPaid.toStringAsFixed(0)} د.م',
+                            style: GoogleFonts.cairo(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            '${paidMonths.length} شهر مؤدى',
+                            style: GoogleFonts.cairo(
+                              fontSize: 10,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Scrollable Breakdown (الأشهر غير المؤداة، المؤداة جزئياً، المؤداة)
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  // 1. Unpaid Months (الأشهر غير المؤداة المستحقة)
+                  if (unpaidMonths.isNotEmpty) ...[
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: AppColors.danger.withAlpha(15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.event_busy, color: AppColors.danger, size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'الأشهر غير المؤداة المستحقة (${unpaidMonths.length})',
+                              style: GoogleFonts.cairo(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.danger,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.danger,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'واجبة الأداء',
+                              style: GoogleFonts.cairo(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    ...unpaidMonths.map((m) {
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: AppColors.danger.withAlpha(8),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AppColors.danger.withAlpha(50), width: 1.2),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppColors.danger.withAlpha(20),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.calendar_today, color: AppColors.danger, size: 16),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _formatMonthArabic(m),
+                                    style: GoogleFonts.cairo(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  Text(
+                                    'اشتراك شهر غير مؤدى ($m)',
+                                    style: GoogleFonts.cairo(
+                                      fontSize: 11,
+                                      color: AppColors.danger,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  '${monthlyFee.toStringAsFixed(0)} د.م',
+                                  style: GoogleFonts.cairo(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.danger,
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.danger.withAlpha(20),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    'غير مؤدى ⏳',
+                                    style: GoogleFonts.cairo(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.danger,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 8),
+                  ],
+
+                  // 2. Partial Months (الأشهر ذات الأداء الجزئي)
+                  if (partialMonths.isNotEmpty) ...[
+                    Container(
+                      margin: const EdgeInsets.only(top: 4, bottom: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: AppColors.warning.withAlpha(15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.timelapse, color: AppColors.warning, size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'أشهر فيها أداء جزئي (${partialMonths.length})',
+                              style: GoogleFonts.cairo(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.warning,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    ...partialMonths.map((pm) {
+                      final monthStr = pm['month'] ?? '';
+                      final paid = parseDouble(pm['amount_paid']);
+                      final rem = parseDouble(pm['remaining_balance']);
+                      final progress = monthlyFee > 0 ? (paid / monthlyFee).clamp(0.0, 1.0) : 0.5;
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.warning.withAlpha(10),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AppColors.warning.withAlpha(50), width: 1.2),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.warning.withAlpha(20),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.pie_chart_outline, color: AppColors.warning, size: 16),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _formatMonthArabic(monthStr),
+                                        style: GoogleFonts.cairo(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                      Text(
+                                        'أُدّي: ${paid.toStringAsFixed(0)} د.م من أصل ${monthlyFee.toStringAsFixed(0)} د.م',
+                                        style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.danger.withAlpha(15),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: AppColors.danger.withAlpha(40)),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        'المتبقي',
+                                        style: GoogleFonts.cairo(fontSize: 9, color: AppColors.danger),
+                                      ),
+                                      Text(
+                                        '${rem.toStringAsFixed(0)} د.م',
+                                        style: GoogleFonts.cairo(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.danger,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: progress,
+                                minHeight: 5,
+                                backgroundColor: AppColors.warning.withAlpha(30),
+                                color: AppColors.success,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 8),
+                  ],
+
+                  // 3. Paid Months (الأشهر المؤداة بالكامل)
+                  if (paidMonths.isNotEmpty) ...[
+                    Container(
+                      margin: const EdgeInsets.only(top: 4, bottom: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withAlpha(15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.check_circle_outline, color: AppColors.success, size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'الأشهر المؤداة بالكامل (${paidMonths.length})',
+                              style: GoogleFonts.cairo(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.success,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: paidMonths.map((m) {
+                        final isAdvance = advanceMonths.contains(m);
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isAdvance ? AppColors.secondary.withAlpha(15) : AppColors.success.withAlpha(12),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: isAdvance ? AppColors.secondary.withAlpha(50) : AppColors.success.withAlpha(40),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                isAdvance ? Icons.rocket_launch : Icons.check,
+                                color: isAdvance ? AppColors.secondary : AppColors.success,
+                                size: 14,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${_formatMonthArabic(m)}${isAdvance ? " (مسبقاً)" : ""}',
+                                style: GoogleFonts.cairo(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: isAdvance ? AppColors.secondary : AppColors.success,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
+                  // Success celebration banner if fully paid with no arrears
+                  if (unpaidMonths.isEmpty && partialMonths.isEmpty && paidMonths.isNotEmpty) ...[
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withAlpha(12),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.success.withAlpha(50)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.verified, color: AppColors.success, size: 30),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'الشقة خالصة بالكامل ✓',
+                                  style: GoogleFonts.cairo(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.success,
+                                  ),
+                                ),
+                                Text(
+                                  'تم أداء جميع اشتراكات الشقة ولا توجد أي متأخرات مستحقة.',
+                                  style: GoogleFonts.cairo(
+                                    fontSize: 11,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  // If empty state for this apartment
+                  if (paidMonths.isEmpty && unpaidMonths.isEmpty && partialMonths.isEmpty) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      child: Center(
+                        child: Text(
+                          !isBillable ? 'هذه الشقة معفية من أداء الواجبات الشهرية.' : 'لا توجد حركات مالية مسجلة لهذه الشقة بعد.',
+                          style: GoogleFonts.cairo(color: AppColors.textSecondary, fontSize: 12),
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final resident = context.watch<ResidentProvider>();
@@ -37,6 +778,8 @@ class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
     final balance = parseDouble(data?['balance']);
     final collectionRate = parseDouble(data?['collection_rate']);
     final paidCount = data?['paid_apartments_count'] ?? 0;
+    final partialCount = data?['partial_apartments_count'] ?? 0;
+    final arrearsCount = data?['arrears_apartments_count'] ?? 0;
     final totalCount = data?['total_apartments_count'] ?? 0;
 
     final expensesList = data?['expenses'] != null
@@ -187,7 +930,7 @@ class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'نسبة استخلاص مساهمات الشهر',
+                                'نسبة استخلاص مساهمات الإقامة',
                                 style: GoogleFonts.cairo(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
@@ -213,6 +956,34 @@ class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
                               backgroundColor: AppColors.border,
                               color: AppColors.primary,
                             ),
+                          ),
+                          const SizedBox(height: 10),
+                          // Stats chips: Paid, Partial, Arrears
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppColors.success, shape: BoxShape.circle)),
+                                  const SizedBox(width: 4),
+                                  Text('خالصة: $paidCount', style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary)),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppColors.warning, shape: BoxShape.circle)),
+                                  const SizedBox(width: 4),
+                                  Text('جزئي: $partialCount', style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary)),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppColors.danger, shape: BoxShape.circle)),
+                                  const SizedBox(width: 4),
+                                  Text('متأخرات: $arrearsCount', style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary)),
+                                ],
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -349,7 +1120,20 @@ class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
                         );
                       }),
                   ] else ...[
-                    // Apartments Collection Status Section
+                    // Apartments Collection Status Section (Clickable Cards)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.touch_app_outlined, size: 16, color: AppColors.textSecondary),
+                          const SizedBox(width: 4),
+                          Text(
+                            'اضغط على أي شقة لمعرفة الأشهر المؤداة والمتأخرة بالتفصيل',
+                            style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
                     if (collectionList.isEmpty)
                       const Padding(
                         padding: EdgeInsets.symmetric(vertical: 28),
@@ -362,95 +1146,162 @@ class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
                         final unit = apt['unit'] ?? '';
                         final building = apt['building'] ?? '';
                         final floor = apt['floor'] ?? '';
-                        final status = apt['status'] ?? 'OUTSTANDING';
+                        final status = apt['status'] ?? 'ARREARS';
                         final isBillable = apt['is_billable'] != false;
-                        final isPaid = status == 'PAID';
+                        final monthlyFee = parseDouble(apt['monthly_fee']);
+                        final arrears = parseDouble(apt['arrears']);
+
+                        final paidMonths = apt['paid_months'] != null ? List<String>.from(apt['paid_months']) : <String>[];
+                        final unpaidMonths = apt['unpaid_months'] != null ? List<String>.from(apt['unpaid_months']) : <String>[];
+                        final partialMonths = apt['partial_months'] != null ? List<Map<String, dynamic>>.from(apt['partial_months']) : <Map<String, dynamic>>[];
+
+                        Color cardColor;
+                        String badgeText;
+                        Color badgeColor;
+                        IconData icon;
+                        String subtitle;
+
+                        if (!isBillable) {
+                          cardColor = Colors.grey;
+                          badgeText = 'معفية (شاغرة)';
+                          badgeColor = Colors.grey;
+                          icon = Icons.block;
+                          subtitle = 'شقة شاغرة معفية من الواجبات';
+                        } else if (status == 'PAID') {
+                          cardColor = AppColors.success;
+                          badgeText = 'خالصة بالكامل ✓';
+                          badgeColor = AppColors.success;
+                          icon = Icons.check_circle_outline;
+                          subtitle = 'مؤداة بالكامل (${paidMonths.length} أشهر)';
+                        } else if (status == 'PARTIAL') {
+                          cardColor = AppColors.warning;
+                          badgeText = 'أداء جزئي ⚠️';
+                          badgeColor = AppColors.warning;
+                          icon = Icons.timelapse;
+                          subtitle = 'أداء جزئي (${partialMonths.length} أشهر) • متبقي: ${arrears.toStringAsFixed(0)} د.م';
+                        } else {
+                          cardColor = AppColors.danger;
+                          badgeText = 'متأخرات ⏳';
+                          badgeColor = AppColors.danger;
+                          icon = Icons.schedule;
+                          final unpaidDesc = _formatUnpaidMonthsSummary(unpaidMonths);
+                          subtitle = unpaidDesc.isNotEmpty
+                              ? 'متأخرات: ${arrears.toStringAsFixed(0)} د.م ($unpaidDesc)'
+                              : 'متأخرات: ${arrears.toStringAsFixed(0)} د.م (${unpaidMonths.length} أشهر)';
+                        }
 
                         return Container(
                           margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(14),
                             border: Border.all(color: AppColors.border),
                           ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: !isBillable
-                                      ? Colors.grey.withAlpha(30)
-                                      : isPaid
-                                          ? AppColors.success.withAlpha(25)
-                                          : AppColors.warning.withAlpha(25),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Icon(
-                                  !isBillable
-                                      ? Icons.block
-                                      : isPaid
-                                          ? Icons.check_circle_outline
-                                          : Icons.schedule,
-                                  color: !isBillable
-                                      ? Colors.grey
-                                      : isPaid
-                                          ? AppColors.success
-                                          : AppColors.warning,
-                                  size: 18,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                          child: Material(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(14),
+                            child: InkWell(
+                              onTap: () => _showApartmentDetails(context, apt),
+                              borderRadius: BorderRadius.circular(14),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                child: Row(
                                   children: [
-                                    Text(
-                                      unit,
-                                      style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.bold),
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: cardColor.withAlpha(20),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(icon, color: cardColor, size: 22),
                                     ),
-                                    Text(
-                                      '$building • الطابق $floor',
-                                      style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textLight),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Text(
+                                                unit,
+                                                style: GoogleFonts.cairo(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppColors.textPrimary,
+                                                ),
+                                              ),
+                                              if (isBillable) ...[
+                                                const SizedBox(width: 8),
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                                  decoration: BoxDecoration(
+                                                    color: AppColors.primary.withAlpha(15),
+                                                    borderRadius: BorderRadius.circular(6),
+                                                  ),
+                                                  child: Text(
+                                                    '${monthlyFee.toStringAsFixed(0)} د.م/شهر',
+                                                    style: GoogleFonts.cairo(
+                                                      fontSize: 10,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: AppColors.primary,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                          Text(
+                                            '$building • الطابق $floor',
+                                            style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textLight),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            subtitle,
+                                            style: GoogleFonts.cairo(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                              color: cardColor,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                          decoration: BoxDecoration(
+                                            color: badgeColor.withAlpha(20),
+                                            borderRadius: BorderRadius.circular(20),
+                                            border: Border.all(color: badgeColor.withAlpha(60)),
+                                          ),
+                                          child: Text(
+                                            badgeText,
+                                            style: GoogleFonts.cairo(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              color: badgeColor,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              'التفاصيل',
+                                              style: GoogleFonts.cairo(fontSize: 10, color: AppColors.textSecondary),
+                                            ),
+                                            const Icon(Icons.chevron_left, size: 14, color: AppColors.textSecondary),
+                                          ],
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: !isBillable
-                                      ? Colors.grey.shade100
-                                      : isPaid
-                                          ? AppColors.success.withAlpha(20)
-                                          : AppColors.warning.withAlpha(20),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: !isBillable
-                                        ? Colors.grey.shade300
-                                        : isPaid
-                                            ? AppColors.success.withAlpha(60)
-                                            : AppColors.warning.withAlpha(60),
-                                  ),
-                                ),
-                                child: Text(
-                                  !isBillable
-                                      ? 'معفية (شاغرة)'
-                                      : isPaid
-                                          ? 'تم الأداء ✓'
-                                          : 'غير مؤداة ⏳',
-                                  style: GoogleFonts.cairo(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: !isBillable
-                                        ? Colors.grey.shade600
-                                        : isPaid
-                                            ? AppColors.success
-                                            : AppColors.warning,
-                                  ),
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         );
                       }),
