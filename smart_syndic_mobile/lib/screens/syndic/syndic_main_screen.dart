@@ -8,6 +8,7 @@ import '../../core/services/api_service.dart';
 import '../settings/server_settings_dialog.dart';
 import '../settings/profile_settings_screen.dart';
 import '../settings/stamp_settings_screen.dart'; // Feature 1
+import '../settings/residence_settings_screen.dart';
 import 'tabs/syndic_dashboard_tab.dart';
 import 'tabs/syndic_apartments_tab.dart';
 import 'tabs/syndic_payments_tab.dart';
@@ -179,6 +180,14 @@ class _SyndicMainScreenState extends State<SyndicMainScreen> {
                 ],
               );
             },
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined, color: AppColors.primary),
+            tooltip: 'إعدادات الإقامة والسانديك',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ResidenceSettingsScreen()),
+            ),
           ),
           IconButton(
             icon: const Icon(Icons.person_outline, color: AppColors.primary),

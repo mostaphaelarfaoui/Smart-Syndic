@@ -30,6 +30,7 @@ class Tenant extends Model implements HasName
         'subscription_expires_at',
         'invitation_code',
         'bank_rib',
+        'default_monthly_fee',
         'is_transparency_enabled',
         // Feature 1 — Syndic stamp image
         'stamp_image_path',
@@ -47,6 +48,7 @@ class Tenant extends Model implements HasName
         'trial_ends_at'            => 'datetime',
         'subscription_expires_at'  => 'datetime',
         'is_transparency_enabled'  => 'boolean',
+        'default_monthly_fee'      => 'decimal:2',
         'initial_treasury_balance' => 'decimal:2',
         'initial_bank_balance'     => 'decimal:2',
         'initial_balance_locked'   => 'boolean',

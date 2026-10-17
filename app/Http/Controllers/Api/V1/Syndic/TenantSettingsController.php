@@ -28,13 +28,16 @@ class TenantSettingsController extends Controller
                 'name'                      => $tenant->name,
                 'property_type'             => $tenant->property_type,
                 'bank_rib'                  => $tenant->bank_rib,
-                'is_transparency_enabled'   => $tenant->is_transparency_enabled,
+                'default_monthly_fee'       => (float) ($tenant->default_monthly_fee ?? 200.0),
+                'is_transparency_enabled'   => (bool) $tenant->is_transparency_enabled,
                 'stamp_url'                 => $tenant->stamp_url, // Feature 1
                 'has_stamp'                 => ! empty($tenant->stamp_image_path),
                 'initial_treasury_balance'  => (float) $tenant->initial_treasury_balance, // Feature 9
                 'initial_bank_balance'      => (float) $tenant->initial_bank_balance,     // Feature 9
-                'initial_balance_locked'    => $tenant->initial_balance_locked,           // Feature 9
+                'initial_balance_locked'    => (bool) $tenant->initial_balance_locked,    // Feature 9
                 'invitation_code'           => $tenant->invitation_code,
+                'total_apartments'          => $tenant->apartments()->count(),
+                'contact_info'              => $tenant->contact_info,
             ],
         ]);
     }
@@ -87,7 +90,7 @@ class TenantSettingsController extends Controller
     /**
      * PUT /api/v1/syndic/settings
      *
-     * Update general tenant settings (bank RIB, transparency toggle, etc.).
+     * Update general tenant settings (bank RIB, default monthly fee, transparency toggle, name, etc.).
      * Initial treasury balance can only be set if not yet locked (Feature 9).
      */
     public function update(Request $request): JsonResponse
@@ -95,8 +98,13 @@ class TenantSettingsController extends Controller
         $tenant = $request->user()->tenant;
 
         $rules = [
-            'bank_rib'                => ['sometimes', 'nullable', 'string', 'max:34'],
-            'is_transparency_enabled' => ['sometimes', 'boolean'],
+            'name'                         => ['sometimes', 'string', 'min:2', 'max:255'],
+            'bank_rib'                     => ['sometimes', 'nullable', 'string', 'max:34'],
+            'default_monthly_fee'          => ['sometimes', 'numeric', 'min:0'],
+            'apply_to_existing_apartments' => ['sometimes', 'boolean'],
+            'is_transparency_enabled'      => ['sometimes', 'boolean'],
+            'contact_phone'                => ['sometimes', 'nullable', 'string'],
+            'contact_email'                => ['sometimes', 'nullable', 'email'],
         ];
 
         // Feature 9 — Only allow setting initial balances if not yet locked
@@ -107,7 +115,14 @@ class TenantSettingsController extends Controller
 
         $request->validate($rules);
 
-        $updateData = $request->only(['bank_rib', 'is_transparency_enabled']);
+        $updateData = $request->only(['name', 'bank_rib', 'default_monthly_fee', 'is_transparency_enabled']);
+
+        if ($request->has('contact_phone') || $request->has('contact_email')) {
+            $currentContact = is_array($tenant->contact_info) ? $tenant->contact_info : [];
+            if ($request->has('contact_phone')) $currentContact['phone'] = $request->contact_phone;
+            if ($request->has('contact_email')) $currentContact['email'] = $request->contact_email;
+            $updateData['contact_info'] = $currentContact;
+        }
 
         // Feature 9 — Set and lock initial balances
         if (! $tenant->initial_balance_locked) {
@@ -124,14 +139,31 @@ class TenantSettingsController extends Controller
 
         $tenant->update($updateData);
 
+        // Apply new default monthly fee to existing billable apartments if requested
+        $updatedApartmentsCount = 0;
+        if ($request->boolean('apply_to_existing_apartments') && $request->has('default_monthly_fee')) {
+            $newFee = (float) $request->default_monthly_fee;
+            $buildingIds = $tenant->buildings()->pluck('id');
+            $updatedApartmentsCount = \App\Models\Apartment::whereIn('building_id', $buildingIds)
+                ->where('is_billable', true)
+                ->update(['monthly_fee' => $newFee]);
+        }
+
+        $fresh = $tenant->fresh();
+
         return response()->json([
-            'message' => 'تم تحديث الإعدادات بنجاح.',
-            'tenant'  => [
-                'bank_rib'                  => $tenant->fresh()->bank_rib,
-                'is_transparency_enabled'   => $tenant->is_transparency_enabled,
-                'initial_treasury_balance'  => (float) $tenant->initial_treasury_balance,
-                'initial_bank_balance'      => (float) $tenant->initial_bank_balance,
-                'initial_balance_locked'    => $tenant->initial_balance_locked,
+            'message'                  => 'تم تحديث وحفظ إعدادات الإقامة بنجاح.',
+            'updated_apartments_count' => $updatedApartmentsCount,
+            'tenant'                   => [
+                'id'                        => $fresh->id,
+                'name'                      => $fresh->name,
+                'bank_rib'                  => $fresh->bank_rib,
+                'default_monthly_fee'       => (float) ($fresh->default_monthly_fee ?? 200.0),
+                'is_transparency_enabled'   => (bool) $fresh->is_transparency_enabled,
+                'initial_treasury_balance'  => (float) $fresh->initial_treasury_balance,
+                'initial_bank_balance'      => (float) $fresh->initial_bank_balance,
+                'initial_balance_locked'    => (bool) $fresh->initial_balance_locked,
+                'contact_info'              => $fresh->contact_info,
             ],
         ]);
     }

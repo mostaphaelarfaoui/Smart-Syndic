@@ -56,9 +56,10 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
   final _singleTotalUnitsController = TextEditingController();
   final _singleFeeController = TextEditingController();
 
-  // Feature 9 — Initial balances (Cash & Bank)
+  // Feature 9 — Initial balances (Cash & Bank) & RIB
   final _initialTreasuryBalanceController = TextEditingController();
   final _initialBankBalanceController = TextEditingController();
+  final _bankRibController = TextEditingController();
 
   // Multi Building Complex List (starts with 1 empty building)
   final List<_BuildingConfig> _complexBuildings = [
@@ -80,6 +81,7 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
     _singleFeeController.dispose();
     _initialTreasuryBalanceController.dispose();
     _initialBankBalanceController.dispose();
+    _bankRibController.dispose();
     for (var b in _complexBuildings) {
       b.dispose();
     }
@@ -145,6 +147,9 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
       propertyType: _propertyType,
       totalUnits: totalUnits,
       defaultMonthlyFee: defaultFee,
+      bankRib: _bankRibController.text.trim().isNotEmpty
+          ? _bankRibController.text.trim().replaceAll(RegExp(r'\s+'), '')
+          : null,
       initialTreasuryBalance: initialTreasury,
       initialBankBalance: initialBank,
       buildings: buildingsPayload,
@@ -417,8 +422,15 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
                           labelText: 'الواجب الشهري للشقة (درهم)',
                           hintText: 'مثلاً: 200',
                           prefixIcon: Icon(Icons.payments_outlined),
+                          helperText: 'الواجب الأساسي لاحتساب استخلاصات الشقق، كشف الأداءات والمتأخرات تلقائياً (يمكن تعديله لاحقاً)',
+                          helperMaxLines: 2,
                         ),
-                        validator: (v) => (double.tryParse(v ?? '') ?? 0) < 0 ? 'الواجب غير صحيح' : null,
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return 'الرجاء إدخال الواجب الشهري للشقق';
+                          final val = double.tryParse(v.trim());
+                          if (val == null || val <= 0) return 'الرجاء إدخال مبلغ صحيح أكبر من 0';
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 12),
                       Builder(builder: (_) {
@@ -624,6 +636,28 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
                         if (v != null && v.trim().isNotEmpty) {
                           if (double.tryParse(v.trim()) == null || double.parse(v.trim()) < 0) {
                             return 'يرجى إدخال مبلغ صحيح';
+                          }
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 14),
+                    TextFormField(
+                      controller: _bankRibController,
+                      keyboardType: TextInputType.number,
+                      maxLength: 24,
+                      decoration: const InputDecoration(
+                        labelText: 'رقم الحساب البنكي للإقامة (RIB - اختياري)',
+                        hintText: '24 رقماً (مثلاً: 007780000123456789012345)',
+                        prefixIcon: Icon(Icons.credit_card_outlined, color: Colors.blueGrey),
+                        helperText: 'يُعرض لسكان الإقامة لتسهيل التحويلات البنكية (يمكن إضافته أو تعديله لاحقاً)',
+                        helperMaxLines: 2,
+                      ),
+                      validator: (v) {
+                        if (v != null && v.trim().isNotEmpty) {
+                          final clean = v.trim().replaceAll(RegExp(r'\s+'), '');
+                          if (clean.length != 24 || !RegExp(r'^\d+$').hasMatch(clean)) {
+                            return 'يجب أن يتكون رقم الـ RIB من 24 رقماً';
                           }
                         }
                         return null;

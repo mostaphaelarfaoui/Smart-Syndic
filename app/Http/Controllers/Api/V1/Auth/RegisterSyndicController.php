@@ -30,6 +30,8 @@ class RegisterSyndicController extends Controller
                 'status'                    => 'PENDING_APPROVAL',
                 'invitation_code'           => Tenant::generateInvitationCode(),
                 'trial_ends_at'             => now()->addDays(30),
+                'default_monthly_fee'       => (float) ($request->default_monthly_fee ?? 200.0),
+                'bank_rib'                  => $request->bank_rib,
                 // Feature 9 — Opening treasury & bank balance (set at registration, locked after)
                 'initial_treasury_balance'  => (float) ($request->initial_treasury_balance ?? 0),
                 'initial_bank_balance'      => (float) ($request->initial_bank_balance ?? 0),

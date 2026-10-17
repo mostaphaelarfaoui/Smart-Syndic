@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../providers/syndic_provider.dart';
+import '../../../providers/auth_provider.dart';
 
 class AddApartmentDialog extends StatefulWidget {
   const AddApartmentDialog({super.key});
@@ -18,6 +19,14 @@ class _AddApartmentDialogState extends State<AddApartmentDialog> {
   final _monthlyFeeController = TextEditingController();
   String? _selectedBuildingId;
   bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final defaultFee = auth.tenant?.defaultMonthlyFee ?? 200.0;
+    _monthlyFeeController.text = defaultFee.toStringAsFixed(0);
+  }
 
   @override
   void dispose() {
