@@ -282,9 +282,12 @@ class ResidentController extends Controller
                 if (! $isBillable) {
                     $status = 'EXEMPT';
                     $statusLabel = 'معفية (شاغرة)';
-                } elseif (count($unpaidMonths) === 0 && count($partialMonthsList) === 0) {
+                    $arrears = 0.0;
+                    $unpaidMonths = [];
+                } elseif ($arrears <= 0 && count($partialMonthsList) === 0) {
                     $status = 'PAID';
                     $statusLabel = 'خالصة بالكامل';
+                    $unpaidMonths = [];
                 } elseif (count($partialMonthsList) > 0 && count($unpaidMonths) === 0) {
                     $status = 'PARTIAL';
                     $statusLabel = 'أداء جزئي';

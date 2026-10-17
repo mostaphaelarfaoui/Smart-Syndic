@@ -16,6 +16,16 @@ class ResidentTransparencyTab extends StatefulWidget {
 class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
   int _selectedView = 0; // 0 = Expenses, 1 = Apartments Collection Status
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<ResidentProvider>().fetchTransparencyLedger();
+      }
+    });
+  }
+
   String _formatMonthArabic(String yyyyMm) {
     final parts = yyyyMm.split('-');
     if (parts.length != 2) return yyyyMm;
@@ -52,7 +62,6 @@ class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
     final unit = apt['unit'] ?? '';
     final building = apt['building'] ?? '';
     final floor = apt['floor'] ?? '';
-    final status = apt['status'] ?? 'ARREARS';
     final isBillable = apt['is_billable'] != false;
     final monthlyFee = parseDouble(apt['monthly_fee']);
     final totalPaid = parseDouble(apt['total_paid']);
@@ -62,6 +71,33 @@ class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
     final unpaidMonths = apt['unpaid_months'] != null ? List<String>.from(apt['unpaid_months']) : <String>[];
     final partialMonths = apt['partial_months'] != null ? List<Map<String, dynamic>>.from(apt['partial_months']) : <Map<String, dynamic>>[];
     final advanceMonths = apt['advance_paid_months'] != null ? List<String>.from(apt['advance_paid_months']) : <String>[];
+
+    // Accurate arrears computation with safety fallback
+    double computedArrears = arrears;
+    if (computedArrears <= 0 && isBillable) {
+      if (unpaidMonths.isNotEmpty) {
+        computedArrears = unpaidMonths.length * monthlyFee;
+      }
+      for (final pm in partialMonths) {
+        computedArrears += parseDouble(pm['remaining_balance']);
+      }
+    }
+    if (!isBillable) {
+      computedArrears = 0.0;
+    }
+
+    String status = apt['status'] ?? 'ARREARS';
+    if (!isBillable) {
+      status = 'EXEMPT';
+    } else if (computedArrears <= 0 && unpaidMonths.isEmpty && partialMonths.isEmpty) {
+      status = 'PAID';
+    } else if (partialMonths.isNotEmpty && unpaidMonths.isEmpty) {
+      status = 'PARTIAL';
+    } else if (partialMonths.isNotEmpty && unpaidMonths.isNotEmpty) {
+      status = 'PARTIAL';
+    } else {
+      status = 'ARREARS';
+    }
 
     Color statusColor;
     String statusTitle;
@@ -276,15 +312,15 @@ class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  // 1. المتأخرات
+                  // 1. المتأخرات المستحقة
                   Expanded(
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                       decoration: BoxDecoration(
-                        color: arrears > 0 ? AppColors.danger.withAlpha(12) : AppColors.success.withAlpha(12),
+                        color: computedArrears > 0 ? AppColors.danger.withAlpha(12) : AppColors.success.withAlpha(12),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: arrears > 0 ? AppColors.danger.withAlpha(45) : AppColors.success.withAlpha(45),
+                          color: computedArrears > 0 ? AppColors.danger.withAlpha(45) : AppColors.success.withAlpha(45),
                           width: 1.2,
                         ),
                       ),
@@ -294,37 +330,37 @@ class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
                           Row(
                             children: [
                               Icon(
-                                arrears > 0 ? Icons.error_outline : Icons.check_circle_outline,
-                                color: arrears > 0 ? AppColors.danger : AppColors.success,
+                                computedArrears > 0 ? Icons.error_outline : Icons.check_circle_outline,
+                                color: computedArrears > 0 ? AppColors.danger : AppColors.success,
                                 size: 15,
                               ),
                               const SizedBox(width: 5),
                               Text(
-                                arrears > 0 ? 'إجمالي المتأخرات' : 'المتأخرات',
+                                computedArrears > 0 ? 'المتأخرات المستحقة' : 'المتأخرات',
                                 style: GoogleFonts.cairo(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
-                                  color: arrears > 0 ? AppColors.danger : AppColors.success,
+                                  color: computedArrears > 0 ? AppColors.danger : AppColors.success,
                                 ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${arrears.toStringAsFixed(0)} د.م',
+                            '${computedArrears.toStringAsFixed(0)} د.م',
                             style: GoogleFonts.cairo(
                               fontSize: 16,
                               fontWeight: FontWeight.w900,
-                              color: arrears > 0 ? AppColors.danger : AppColors.success,
+                              color: computedArrears > 0 ? AppColors.danger : AppColors.success,
                             ),
                           ),
                           Text(
-                            arrears > 0
+                            computedArrears > 0
                                 ? '${unpaidMonths.length + partialMonths.length} شهر غير مكتمل'
                                 : 'لا توجد متأخرات ✓',
                             style: GoogleFonts.cairo(
                               fontSize: 10,
-                              color: arrears > 0 ? AppColors.danger : AppColors.success,
+                              color: computedArrears > 0 ? AppColors.danger : AppColors.success,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -333,7 +369,7 @@ class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  // 2. مجموع المؤدى
+                  // 2. المبالغ المؤداة
                   Expanded(
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
@@ -354,7 +390,7 @@ class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
                               ),
                               const SizedBox(width: 5),
                               Text(
-                                'مجموع المؤدى',
+                                'المبالغ المؤداة',
                                 style: GoogleFonts.cairo(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
@@ -1146,7 +1182,6 @@ class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
                         final unit = apt['unit'] ?? '';
                         final building = apt['building'] ?? '';
                         final floor = apt['floor'] ?? '';
-                        final status = apt['status'] ?? 'ARREARS';
                         final isBillable = apt['is_billable'] != false;
                         final monthlyFee = parseDouble(apt['monthly_fee']);
                         final arrears = parseDouble(apt['arrears']);
@@ -1154,6 +1189,33 @@ class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
                         final paidMonths = apt['paid_months'] != null ? List<String>.from(apt['paid_months']) : <String>[];
                         final unpaidMonths = apt['unpaid_months'] != null ? List<String>.from(apt['unpaid_months']) : <String>[];
                         final partialMonths = apt['partial_months'] != null ? List<Map<String, dynamic>>.from(apt['partial_months']) : <Map<String, dynamic>>[];
+
+                        // Compute robust arrears and effective status
+                        double computedArrears = arrears;
+                        if (computedArrears <= 0 && isBillable) {
+                          if (unpaidMonths.isNotEmpty) {
+                            computedArrears = unpaidMonths.length * monthlyFee;
+                          }
+                          for (final pm in partialMonths) {
+                            computedArrears += parseDouble(pm['remaining_balance']);
+                          }
+                        }
+                        if (!isBillable) {
+                          computedArrears = 0.0;
+                        }
+
+                        String effectiveStatus = apt['status'] ?? 'ARREARS';
+                        if (!isBillable) {
+                          effectiveStatus = 'EXEMPT';
+                        } else if (computedArrears <= 0 && unpaidMonths.isEmpty && partialMonths.isEmpty) {
+                          effectiveStatus = 'PAID';
+                        } else if (partialMonths.isNotEmpty && unpaidMonths.isEmpty) {
+                          effectiveStatus = 'PARTIAL';
+                        } else if (partialMonths.isNotEmpty && unpaidMonths.isNotEmpty) {
+                          effectiveStatus = 'PARTIAL';
+                        } else {
+                          effectiveStatus = 'ARREARS';
+                        }
 
                         Color cardColor;
                         String badgeText;
@@ -1167,18 +1229,18 @@ class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
                           badgeColor = Colors.grey;
                           icon = Icons.block;
                           subtitle = 'شقة شاغرة معفية من الواجبات';
-                        } else if (status == 'PAID') {
+                        } else if (effectiveStatus == 'PAID') {
                           cardColor = AppColors.success;
                           badgeText = 'خالصة بالكامل ✓';
                           badgeColor = AppColors.success;
                           icon = Icons.check_circle_outline;
                           subtitle = 'مؤداة بالكامل (${paidMonths.length} أشهر)';
-                        } else if (status == 'PARTIAL') {
+                        } else if (effectiveStatus == 'PARTIAL') {
                           cardColor = AppColors.warning;
                           badgeText = 'أداء جزئي ⚠️';
                           badgeColor = AppColors.warning;
                           icon = Icons.timelapse;
-                          subtitle = 'أداء جزئي (${partialMonths.length} أشهر) • متبقي: ${arrears.toStringAsFixed(0)} د.م';
+                          subtitle = 'أداء جزئي (${partialMonths.length} أشهر) • متبقي: ${computedArrears.toStringAsFixed(0)} د.م';
                         } else {
                           cardColor = AppColors.danger;
                           badgeText = 'متأخرات ⏳';
@@ -1186,8 +1248,8 @@ class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
                           icon = Icons.schedule;
                           final unpaidDesc = _formatUnpaidMonthsSummary(unpaidMonths);
                           subtitle = unpaidDesc.isNotEmpty
-                              ? 'متأخرات: ${arrears.toStringAsFixed(0)} د.م ($unpaidDesc)'
-                              : 'متأخرات: ${arrears.toStringAsFixed(0)} د.م (${unpaidMonths.length} أشهر)';
+                              ? 'متأخرات: ${computedArrears.toStringAsFixed(0)} د.م ($unpaidDesc)'
+                              : 'متأخرات: ${computedArrears.toStringAsFixed(0)} د.م (${unpaidMonths.length} أشهر)';
                         }
 
                         return Container(
