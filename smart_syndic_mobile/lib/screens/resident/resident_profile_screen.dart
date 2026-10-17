@@ -476,10 +476,14 @@ class _ResidentProfileScreenState extends State<ResidentProfileScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                'الوضعية المالية للمستحقات',
-                                style: GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                              Expanded(
+                                child: Text(
+                                  'الوضعية المالية للمستحقات',
+                                  style: GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
+                              const SizedBox(width: 8),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
@@ -592,29 +596,35 @@ class _ResidentProfileScreenState extends State<ResidentProfileScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primary.withAlpha(20),
-                                      borderRadius: BorderRadius.circular(10),
+                              Expanded(
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary.withAlpha(20),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: const Icon(Icons.receipt_long, color: AppColors.primary, size: 20),
                                     ),
-                                    child: const Icon(Icons.receipt_long, color: AppColors.primary, size: 20),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    'إيصالات الدفع الخاصة بالشقة',
-                                    style: GoogleFonts.cairo(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.textPrimary,
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'إيصالات الدفع الخاصة بالشقة',
+                                        style: GoogleFonts.cairo(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
+                              const SizedBox(width: 8),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: AppColors.primary.withAlpha(15),
                                   borderRadius: BorderRadius.circular(20),
@@ -730,16 +740,22 @@ class _ResidentProfileScreenState extends State<ResidentProfileScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Row(
-                                  children: [
-                                    const Icon(Icons.account_balance, color: AppColors.primary, size: 20),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'الحساب البنكي للإقامة (RIB)',
-                                      style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                                    ),
-                                  ],
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.account_balance, color: AppColors.primary, size: 20),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'الحساب البنكي للإقامة (RIB)',
+                                          style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
+                                const SizedBox(width: 8),
                                 IconButton(
                                   icon: const Icon(Icons.copy, color: AppColors.primary, size: 20),
                                   tooltip: 'نسخ الـ RIB',
@@ -997,8 +1013,15 @@ class _ResidentProfileScreenState extends State<ResidentProfileScreen> {
           Icon(icon, size: 16, color: AppColors.textSecondary),
           const SizedBox(width: 8),
           Text(label, style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary)),
-          const Spacer(),
-          Text(value, style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
     );
