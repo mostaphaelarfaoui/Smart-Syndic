@@ -163,26 +163,31 @@ class _AddApartmentDialogState extends State<AddApartmentDialog> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withAlpha(20),
-                            borderRadius: BorderRadius.circular(10),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withAlpha(20),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(Icons.add_home_work_rounded, color: AppColors.primary, size: 22),
                           ),
-                          child: const Icon(Icons.add_home_work_rounded, color: AppColors.primary, size: 22),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          'إضافة شقق جديدة',
-                          style: GoogleFonts.cairo(
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
+                          const SizedBox(width: 10),
+                          Flexible(
+                            child: Text(
+                              'إضافة شقق جديدة',
+                              style: GoogleFonts.cairo(
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close, color: AppColors.textLight),
@@ -207,22 +212,27 @@ class _AddApartmentDialogState extends State<AddApartmentDialog> {
                           onTap: () => setState(() => _isBulk = false),
                           borderRadius: BorderRadius.circular(9),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
                             decoration: BoxDecoration(
                               color: !_isBulk ? AppColors.primary : Colors.transparent,
                               borderRadius: BorderRadius.circular(9),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(Icons.home_outlined, size: 16, color: !_isBulk ? Colors.white : AppColors.textSecondary),
                                 const SizedBox(width: 6),
-                                Text(
-                                  'إدخال فردي (شقة واحدة)',
-                                  style: GoogleFonts.cairo(
-                                    fontSize: 12,
-                                    fontWeight: !_isBulk ? FontWeight.bold : FontWeight.normal,
-                                    color: !_isBulk ? Colors.white : AppColors.textSecondary,
+                                Flexible(
+                                  child: Text(
+                                    'شقة واحدة',
+                                    style: GoogleFonts.cairo(
+                                      fontSize: 12,
+                                      fontWeight: !_isBulk ? FontWeight.bold : FontWeight.normal,
+                                      color: !_isBulk ? Colors.white : AppColors.textSecondary,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               ],
@@ -236,22 +246,27 @@ class _AddApartmentDialogState extends State<AddApartmentDialog> {
                           onTap: () => setState(() => _isBulk = true),
                           borderRadius: BorderRadius.circular(9),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
                             decoration: BoxDecoration(
                               color: _isBulk ? AppColors.primary : Colors.transparent,
                               borderRadius: BorderRadius.circular(9),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(Icons.flash_on_rounded, size: 16, color: _isBulk ? Colors.white : AppColors.textSecondary),
                                 const SizedBox(width: 6),
-                                Text(
-                                  'إدخال جماعي (مجموعة شقق)',
-                                  style: GoogleFonts.cairo(
-                                    fontSize: 12,
-                                    fontWeight: _isBulk ? FontWeight.bold : FontWeight.normal,
-                                    color: _isBulk ? Colors.white : AppColors.textSecondary,
+                                Flexible(
+                                  child: Text(
+                                    'مجموعة شقق',
+                                    style: GoogleFonts.cairo(
+                                      fontSize: 12,
+                                      fontWeight: _isBulk ? FontWeight.bold : FontWeight.normal,
+                                      color: _isBulk ? Colors.white : AppColors.textSecondary,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               ],
