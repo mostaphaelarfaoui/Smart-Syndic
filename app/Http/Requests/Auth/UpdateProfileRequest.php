@@ -20,11 +20,24 @@ class UpdateProfileRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'first_name' => ['sometimes', 'string', 'max:255'],
-            'last_name'  => ['sometimes', 'string', 'max:255'],
-            'phone'      => ['sometimes', 'string', 'max:20'],
-            'password'   => ['sometimes', 'string', 'min:8', 'confirmed'],
-            'locale'     => ['sometimes', 'string', 'in:ar,fr,en'],
+            'first_name'       => ['sometimes', 'string', 'max:255'],
+            'last_name'        => ['sometimes', 'string', 'max:255'],
+            'phone'            => ['sometimes', 'string', 'max:20'],
+            'current_password' => ['required_with:password', 'string'],
+            'password'         => ['sometimes', 'string', 'min:8', 'confirmed'],
+            'locale'           => ['sometimes', 'string', 'in:ar,fr,en'],
+        ];
+    }
+
+    /**
+     * Custom validation messages in Arabic.
+     */
+    public function messages(): array
+    {
+        return [
+            'current_password.required_with' => 'يرجى إدخال كلمة المرور الحالية لتغيير كلمة المرور.',
+            'password.min'                   => 'يجب أن لا تقل كلمة المرور الجديدة عن 8 أحرف.',
+            'password.confirmed'             => 'تأكيد كلمة المرور الجديدة غير متطابق.',
         ];
     }
 }

@@ -241,8 +241,13 @@
                                     @csrf
                                     <div class="modal-body" style="padding:1.5rem;">
                                         <p style="color:var(--text-muted); font-size:0.875rem; margin-bottom:1.25rem;">
-                                            أدخل كلمة المرور الجديدة للمستخدم: <strong>{{ $user->full_name }}</strong>
+                                            أدخل كلمة المرور الحالية وكلمة المرور الجديدة للمستخدم: <strong>{{ $user->full_name }}</strong>
                                         </p>
+                                        <div style="margin-bottom:1rem;">
+                                            <label class="form-label" style="font-size:0.85rem; margin-bottom:0.4rem;">كلمة المرور الحالية</label>
+                                            <input type="password" name="current_password" required
+                                                class="form-input" placeholder="••••••••">
+                                        </div>
                                         <div>
                                             <label class="form-label" style="font-size:0.85rem; margin-bottom:0.4rem;">كلمة المرور الجديدة (6 أحرف على الأقل)</label>
                                             <input type="password" name="new_password" required minlength="6"

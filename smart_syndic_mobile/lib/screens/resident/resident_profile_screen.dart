@@ -158,9 +158,13 @@ class _ResidentProfileScreenState extends State<ResidentProfileScreen> {
   }
 
   Future<void> _showChangePasswordDialog(BuildContext context) async {
+    final currentPasswordController = TextEditingController();
     final passwordController = TextEditingController();
     final confirmController = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    bool obscureCurrent = true;
+    bool obscureNew = true;
+    bool obscureConfirm = true;
     bool isSaving = false;
 
     await showDialog(
@@ -179,11 +183,37 @@ class _ResidentProfileScreenState extends State<ResidentProfileScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextFormField(
-                    controller: passwordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(labelText: 'كلمة المرور الجديدة', prefixIcon: Icon(Icons.lock_outline)),
+                    controller: currentPasswordController,
+                    obscureText: obscureCurrent,
+                    decoration: InputDecoration(
+                      labelText: 'كلمة المرور الحالية',
+                      hintText: 'أدخل كلمة مرورك الحالية',
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(obscureCurrent ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 20),
+                        onPressed: () => setDialogState(() => obscureCurrent = !obscureCurrent),
+                      ),
+                    ),
                     validator: (v) {
-                      if (v == null || v.isEmpty) return 'كلمة المرور مطلوبة';
+                      if (v == null || v.isEmpty) return 'كلمة المرور الحالية مطلوبة';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: passwordController,
+                    obscureText: obscureNew,
+                    decoration: InputDecoration(
+                      labelText: 'كلمة المرور الجديدة',
+                      hintText: '8 أحرف على الأقل',
+                      prefixIcon: const Icon(Icons.lock_reset_outlined),
+                      suffixIcon: IconButton(
+                        icon: Icon(obscureNew ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 20),
+                        onPressed: () => setDialogState(() => obscureNew = !obscureNew),
+                      ),
+                    ),
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'كلمة المرور الجديدة مطلوبة';
                       if (v.length < 8) return 'يجب أن لا تقل عن 8 أحرف';
                       return null;
                     },
@@ -191,8 +221,15 @@ class _ResidentProfileScreenState extends State<ResidentProfileScreen> {
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: confirmController,
-                    obscureText: true,
-                    decoration: const InputDecoration(labelText: 'تأكيد كلمة المرور', prefixIcon: Icon(Icons.lock_outline)),
+                    obscureText: obscureConfirm,
+                    decoration: InputDecoration(
+                      labelText: 'تأكيد كلمة المرور',
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(obscureConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 20),
+                        onPressed: () => setDialogState(() => obscureConfirm = !obscureConfirm),
+                      ),
+                    ),
                     validator: (v) {
                       if (v != passwordController.text) return 'كلمات المرور غير متطابقة';
                       return null;
@@ -221,6 +258,7 @@ class _ResidentProfileScreenState extends State<ResidentProfileScreen> {
 
                       final auth = Provider.of<AuthProvider>(context, listen: false);
                       final success = await auth.updateProfile({
+                        'current_password': currentPasswordController.text,
                         'password': passwordController.text,
                         'password_confirmation': confirmController.text,
                       });

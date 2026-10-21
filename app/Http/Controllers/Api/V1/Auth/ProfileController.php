@@ -20,8 +20,19 @@ class ProfileController extends Controller
 
         $data = $request->validated();
 
-        if (isset($data['password'])) {
+        if (!empty($data['password'])) {
+            if (empty($data['current_password']) || !Hash::check($data['current_password'], $user->password)) {
+                return response()->json([
+                    'message' => 'كلمة المرور الحالية غير صحيحة.',
+                    'errors'  => [
+                        'current_password' => ['كلمة المرور الحالية غير صحيحة.'],
+                    ],
+                ], 422);
+            }
             $data['password'] = Hash::make($data['password']);
+            unset($data['current_password']);
+        } else {
+            unset($data['password'], $data['current_password']);
         }
 
         $user->update($data);

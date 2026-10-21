@@ -16,9 +16,13 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _currentPasswordController = TextEditingController();
   final _passwordController = TextEditingController();
   final _passwordConfirmController = TextEditingController();
 
+  bool _obscureCurrentPassword = true;
+  bool _obscureNewPassword = true;
+  bool _obscureConfirmPassword = true;
   bool _isSubmitting = false;
 
   @override
@@ -37,6 +41,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     _firstNameController.dispose();
     _lastNameController.dispose();
     _phoneController.dispose();
+    _currentPasswordController.dispose();
     _passwordController.dispose();
     _passwordConfirmController.dispose();
     super.dispose();
@@ -56,6 +61,17 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     };
 
     if (_passwordController.text.isNotEmpty) {
+      if (_currentPasswordController.text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('يرجى إدخال كلمة المرور الحالية', style: GoogleFonts.cairo()),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+        setState(() => _isSubmitting = false);
+        return;
+      }
+      data['current_password'] = _currentPasswordController.text;
       data['password'] = _passwordController.text;
       data['password_confirmation'] = _passwordConfirmController.text;
     }
@@ -164,11 +180,37 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
               const SizedBox(height: 16),
               
               TextFormField(
+                controller: _currentPasswordController,
+                obscureText: _obscureCurrentPassword,
+                decoration: InputDecoration(
+                  labelText: 'كلمة المرور الحالية',
+                  hintText: 'مطلوبة فقط عند تغيير كلمة المرور',
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    icon: Icon(_obscureCurrentPassword ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 20),
+                    onPressed: () => setState(() => _obscureCurrentPassword = !_obscureCurrentPassword),
+                  ),
+                ),
+                validator: (v) {
+                  if (_passwordController.text.isNotEmpty && (v == null || v.isEmpty)) {
+                    return 'يرجى إدخال كلمة المرور الحالية';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
                 controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
+                obscureText: _obscureNewPassword,
+                decoration: InputDecoration(
                   labelText: 'كلمة المرور الجديدة',
-                  prefixIcon: Icon(Icons.lock_outline),
+                  hintText: '8 أحرف على الأقل',
+                  prefixIcon: const Icon(Icons.lock_reset_outlined),
+                  suffixIcon: IconButton(
+                    icon: Icon(_obscureNewPassword ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 20),
+                    onPressed: () => setState(() => _obscureNewPassword = !_obscureNewPassword),
+                  ),
                 ),
                 validator: (v) {
                   if (v != null && v.isNotEmpty && v.length < 8) {
@@ -181,10 +223,14 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
               
               TextFormField(
                 controller: _passwordConfirmController,
-                obscureText: true,
-                decoration: const InputDecoration(
+                obscureText: _obscureConfirmPassword,
+                decoration: InputDecoration(
                   labelText: 'تأكيد كلمة المرور الجديدة',
-                  prefixIcon: Icon(Icons.lock_outline),
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    icon: Icon(_obscureConfirmPassword ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 20),
+                    onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                  ),
                 ),
                 validator: (v) {
                   if (_passwordController.text.isNotEmpty && v != _passwordController.text) {

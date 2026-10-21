@@ -184,8 +184,21 @@ class SuperAdminController extends Controller
         $user = User::findOrFail($id);
 
         $request->validate([
-            'new_password' => 'required|string|min:6',
+            'current_password' => 'required|string',
+            'new_password'     => 'required|string|min:6',
+        ], [
+            'current_password.required' => 'يرجى إدخال كلمة المرور الحالية.',
+            'new_password.required'     => 'يرجى إدخال كلمة المرور الجديدة.',
+            'new_password.min'          => 'يجب أن لا تقل كلمة المرور الجديدة عن 6 أحرف.',
         ]);
+
+        $currentAuthUser = auth()->user();
+        $isCurrentPasswordValid = Hash::check($request->current_password, $currentAuthUser->password)
+            || Hash::check($request->current_password, $user->password);
+
+        if (!$isCurrentPasswordValid) {
+            return back()->withErrors(['current_password' => 'كلمة المرور الحالية غير صحيحة.']);
+        }
 
         $user->update([
             'password' => bcrypt($request->new_password),
