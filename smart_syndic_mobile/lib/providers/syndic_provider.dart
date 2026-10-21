@@ -232,21 +232,27 @@ class SyndicProvider extends ChangeNotifier {
   }
 
   Future<bool> addApartment({
-    required String buildingId,
+    String? buildingId,
+    String? buildingName,
+    String? block,
     required String unitNumber,
-    required int floor,
+    int floor = 0,
     required double monthlyFee,
   }) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      await _api.post(ApiConstants.syndicApartments, {
-        'building_id': buildingId,
+      final data = <String, dynamic>{
         'unit_number': unitNumber,
         'floor': floor,
         'monthly_fee': monthlyFee,
-      });
+      };
+      if (buildingId != null && buildingId.isNotEmpty) data['building_id'] = buildingId;
+      if (buildingName != null && buildingName.isNotEmpty) data['building_name'] = buildingName;
+      if (block != null && block.isNotEmpty) data['block'] = block;
+
+      await _api.post(ApiConstants.syndicApartments, data);
 
       await fetchApartments();
       await fetchDashboardKpis();
@@ -285,7 +291,7 @@ class SyndicProvider extends ChangeNotifier {
       if (totalFloors != null) data['total_floors'] = totalFloors;
       if (unitsPerFloor != null) data['units_per_floor'] = unitsPerFloor;
       if (totalUnits != null) data['total_units'] = totalUnits;
-      if (unitPrefix != null && unitPrefix.isNotEmpty) data['unit_prefix'] = unitPrefix;
+      if (unitPrefix != null) data['unit_prefix'] = unitPrefix;
       if (numberingScheme != null && numberingScheme.isNotEmpty) data['numbering_scheme'] = numberingScheme;
 
       await _api.post(ApiConstants.syndicBulkApartments, data);

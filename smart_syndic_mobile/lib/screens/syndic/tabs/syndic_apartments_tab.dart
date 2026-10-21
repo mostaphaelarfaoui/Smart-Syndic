@@ -8,7 +8,6 @@ import '../../../providers/syndic_provider.dart';
 import '../../../widgets/empty_state.dart';
 import '../dialogs/add_apartment_dialog.dart';
 import '../dialogs/apartment_details_dialog.dart';
-import '../dialogs/bulk_generate_apartments_dialog.dart';
 
 // Feature 4 helper — toggle billable from apartment list
 extension _BillableToggle on _SyndicApartmentsTabState {
@@ -148,39 +147,19 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      floatingActionButton: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FloatingActionButton.extended(
-            heroTag: 'fab_single_apt',
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (_) => const AddApartmentDialog(),
-              );
-            },
-            backgroundColor: Colors.white,
-            foregroundColor: AppColors.primary,
-            elevation: 2,
-            icon: const Icon(Icons.add, size: 18),
-            label: Text('شقة مفردة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12)),
-          ),
-          const SizedBox(width: 8),
-          FloatingActionButton.extended(
-            heroTag: 'fab_bulk_apt',
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (_) => const BulkGenerateApartmentsDialog(),
-              );
-            },
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            elevation: 3,
-            icon: const Icon(Icons.flash_on, size: 18),
-            label: Text('⚡ توليد شقق دفعة واحدة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13)),
-          ),
-        ],
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'fab_add_apartments',
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (_) => const AddApartmentDialog(),
+          );
+        },
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        elevation: 3,
+        icon: const Icon(Icons.add_home_work_rounded, size: 20),
+        label: Text('إضافة شقق', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13)),
       ),
       body: RefreshIndicator(
         onRefresh: () => syndic.fetchApartments(),
@@ -246,22 +225,19 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
               child: filteredApartments.isEmpty
                   ? EmptyStateWidget(
                       icon: Icons.apartment,
-                      title: 'لا توجد نتائج مطابقة',
-                      description: 'لم يتم العثور على أي شقق تطابق معايير البحث الحالية.',
-                      buttonText: _searchController.text.isNotEmpty ? 'مسح البحث' : 'إضافة شقة الآن',
-                      onButtonPressed: () {
-                        if (_searchController.text.isNotEmpty) {
-                          setState(() {
-                            _searchController.clear();
-                            _filter = 'ALL';
-                          });
-                        } else {
-                          showDialog(
-                            context: context,
-                            builder: (_) => const AddApartmentDialog(),
-                          );
-                        }
-                      },
+                      title: allApartments.isEmpty ? 'لا توجد شقق مسجلة حالياً' : 'لا توجد نتائج مطابقة',
+                      description: allApartments.isEmpty
+                          ? 'اضغط على زر إضافة شقق بالأسفل لإضافة أولى الشقق في الإقامة'
+                          : 'لم يتم العثور على أي شقق تطابق معايير البحث الحالية.',
+                      buttonText: _searchController.text.isNotEmpty ? 'مسح البحث' : null,
+                      onButtonPressed: _searchController.text.isNotEmpty
+                          ? () {
+                              setState(() {
+                                _searchController.clear();
+                                _filter = 'ALL';
+                              });
+                            }
+                          : null,
                     )
                   : ListView.builder(
                       padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),

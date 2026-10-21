@@ -130,13 +130,6 @@ class _SyndicExpensesTabState extends State<SyndicExpensesTab> {
                             icon: Icons.receipt_long,
                             title: 'لا توجد مصاريف مسجلة في هذا الصنف',
                             description: 'اضغط على زر تسجيل مصروف بالأسفل لتوثيق فاتورة جديدة أو اسحب للأسفل للتحديث',
-                            buttonText: 'تسجيل مصروف جديد',
-                            onButtonPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (_) => const RecordExpenseDialog(),
-                              );
-                            },
                           ),
                         ),
                       ),

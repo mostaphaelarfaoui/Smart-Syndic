@@ -288,15 +288,17 @@ class _SyndicPaymentsTabState extends State<SyndicPaymentsTab> {
               child: filteredPayments.isEmpty
                   ? EmptyStateWidget(
                       icon: Icons.receipt_long_outlined,
-                      title: 'لا توجد إيصالات مسجلة حالياً',
-                      description: 'اضغط على زر استخلاص واجب بالأسفل لتسجيل دفعة جديدة',
-                      buttonText: 'استخلاص واجب جديد',
-                      onButtonPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (_) => const RecordPaymentDialog(),
-                        );
-                      },
+                      title: allPayments.isEmpty ? 'لا توجد إيصالات مسجلة حالياً' : 'لا توجد نتائج مطابقة للبحث',
+                      description: allPayments.isEmpty
+                          ? 'اضغط على زر استخلاص واجب بالأسفل لتسجيل دفعة جديدة'
+                          : 'لم يتم العثور على أي وصل يطابق معايير البحث.',
+                      buttonText: _searchQuery.isNotEmpty ? 'مسح البحث' : null,
+                      onButtonPressed: _searchQuery.isNotEmpty
+                          ? () {
+                              _searchController.clear();
+                              setState(() => _searchQuery = '');
+                            }
+                          : null,
                     )
                   : ListView.builder(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),

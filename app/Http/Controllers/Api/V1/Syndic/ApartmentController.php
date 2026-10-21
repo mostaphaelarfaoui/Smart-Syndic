@@ -105,12 +105,13 @@ class ApartmentController extends Controller
             'building_name'=> ['nullable', 'string', 'max:100'],
             'block'        => ['nullable', 'string', 'max:100'],
             'unit_number'  => ['required', 'string', 'max:50'],
-            'floor'        => ['required', 'integer', 'min:0'],
+            'floor'        => ['nullable', 'integer', 'min:0'],
             'monthly_fee'  => ['required', 'numeric', 'min:0.01', 'max:999999.99'],
         ]);
 
         $tenantId = $request->user()->tenant_id;
         $building = null;
+        $floor = (int) ($request->floor ?? 0);
 
         if ($request->filled('building_id')) {
             $building = Building::where('tenant_id', $tenantId)
@@ -124,7 +125,7 @@ class ApartmentController extends Controller
                     'block'     => $request->block,
                 ],
                 [
-                    'total_floors' => max(1, (int) $request->floor),
+                    'total_floors' => max(1, $floor),
                 ]
             );
         } else {
@@ -133,7 +134,7 @@ class ApartmentController extends Controller
                 $building = Building::create([
                     'tenant_id'    => $tenantId,
                     'name'         => $request->user()->tenant->name ?? 'العمارة الرئيسية',
-                    'total_floors' => max(1, (int) $request->floor),
+                    'total_floors' => max(1, $floor),
                 ]);
             }
         }
@@ -144,7 +145,7 @@ class ApartmentController extends Controller
                 'unit_number'  => $request->unit_number,
             ],
             [
-                'floor'       => $request->floor,
+                'floor'       => $floor,
                 'monthly_fee' => $request->monthly_fee,
             ]
         );
@@ -204,7 +205,7 @@ class ApartmentController extends Controller
         $unitsPerFloor = (int) ($request->units_per_floor ?? 0);
         $totalUnits = (int) ($request->total_units ?? ($floors * ($unitsPerFloor ?: 1)));
         $fee = (float) $request->monthly_fee;
-        $prefix = $request->unit_prefix ?? 'شقة ';
+        $prefix = $request->has('unit_prefix') ? ($request->unit_prefix ?? '') : '';
         $numberingScheme = $request->numbering_scheme ?? 'sequential';
 
         $existingCount = $building->apartments()->count();
