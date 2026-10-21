@@ -106,7 +106,24 @@ class ResidentController extends Controller
         $apartment = $user->apartments()->first();
 
         if (! $apartment) {
-            return response()->json(['message' => __('resident.no_apartment')], 404);
+            return response()->json([
+                'apartment' => [
+                    'id'          => null,
+                    'unit_number' => '-',
+                    'building'    => $user->tenant?->name ?? 'الإقامة',
+                    'floor'       => '-',
+                ],
+                'balance' => [
+                    'monthly_fee'         => 0.0,
+                    'total_due'           => 0.0,
+                    'total_paid'          => 0.0,
+                    'arrears'             => 0.0,
+                    'is_settled'          => true,
+                    'unpaid_months'       => [],
+                    'paid_months'         => [],
+                    'advance_paid_months' => [],
+                ],
+            ]);
         }
 
         $balance = $this->paymentService->getApartmentBalance($apartment);
