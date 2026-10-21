@@ -956,42 +956,169 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Quick Demo Logins
+                  // Quick Demo Logins Card
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade50,
-                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: AppColors.border),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(6),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text(
-                          '⚡ تسجيل دخول سريع للتجربة:',
-                          style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textSecondary),
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          alignment: WrapAlignment.center,
+                        // Card Header
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            ActionChip(
-                              avatar: const Icon(Icons.admin_panel_settings, size: 16, color: AppColors.primary),
-                              label: Text('سانديك الإقامة', style: GoogleFonts.cairo(fontSize: 11)),
-                              onPressed: () => _quickFill('syndic@alfirdaws.ma', 'سانديك الإقامة'),
-                            ),
-                            ActionChip(
-                              avatar: const Icon(Icons.person, size: 16, color: AppColors.secondary),
-                              label: Text('الساكن: يوسف', style: GoogleFonts.cairo(fontSize: 11)),
-                              onPressed: () => _quickFill('youssef@example.com', 'الساكن يوسف بناني'),
-                            ),
-                            ActionChip(
-                              avatar: const Icon(Icons.person, size: 16, color: AppColors.warning),
-                              label: Text('الساكنة: فاطمة', style: GoogleFonts.cairo(fontSize: 11)),
-                              onPressed: () => _quickFill('fatima@example.com', 'الساكنة فاطمة المنصوري'),
+                            const Icon(Icons.flash_on, color: Colors.amber, size: 18),
+                            const SizedBox(width: 6),
+                            Text(
+                              'تسجيل دخول سريع للتجربة بضغطة زر',
+                              style: GoogleFonts.cairo(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
                             ),
                           ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Section 1: إقامة سكنية (عمارة منفردة)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50.withAlpha(80),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.blue.shade100),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.apartment, size: 16, color: AppColors.primary),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '🏢 إقامة سكنية (عمارة الفردوس)',
+                                    style: GoogleFonts.cairo(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 6,
+                                children: [
+                                  ActionChip(
+                                    backgroundColor: Colors.white,
+                                    side: BorderSide(color: AppColors.primary.withAlpha(80)),
+                                    avatar: const Icon(Icons.admin_panel_settings, size: 15, color: AppColors.primary),
+                                    label: Text('سانديك الإقامة', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.w600)),
+                                    onPressed: () => _quickFill('syndic@alfirdaws.ma', 'سانديك إقامة الفردوس'),
+                                  ),
+                                  ActionChip(
+                                    backgroundColor: Colors.white,
+                                    side: BorderSide(color: Colors.grey.shade300),
+                                    avatar: const Icon(Icons.person, size: 15, color: AppColors.secondary),
+                                    label: Text('الساكن: يوسف', style: GoogleFonts.cairo(fontSize: 11)),
+                                    onPressed: () => _quickFill('youssef@example.com', 'الساكن يوسف بناني (الإقامة)'),
+                                  ),
+                                  ActionChip(
+                                    backgroundColor: Colors.white,
+                                    side: BorderSide(color: Colors.grey.shade300),
+                                    avatar: const Icon(Icons.person, size: 15, color: AppColors.warning),
+                                    label: Text('الساكنة: فاطمة', style: GoogleFonts.cairo(fontSize: 11)),
+                                    onPressed: () => _quickFill('fatima@example.com', 'الساكنة فاطمة المنصوري (الإقامة)'),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        // Section 2: مجمع سكني (عدة عمارات / بلوكات)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.teal.shade50.withAlpha(80),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.teal.shade100),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.holiday_village, size: 16, color: Color(0xFF0D9488)),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '🏘️ مجمع سكني (مجمع الأندلس)',
+                                    style: GoogleFonts.cairo(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFF0D9488),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 6,
+                                children: [
+                                  ActionChip(
+                                    backgroundColor: Colors.white,
+                                    side: const BorderSide(color: Color(0xFF99F6E4)),
+                                    avatar: const Icon(Icons.admin_panel_settings, size: 15, color: Color(0xFF0D9488)),
+                                    label: Text('سانديك المجمع', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.w600)),
+                                    onPressed: () => _quickFill('syndic@complex-andalous.ma', 'سانديك مجمع الأندلس'),
+                                  ),
+                                  ActionChip(
+                                    backgroundColor: Colors.white,
+                                    side: BorderSide(color: Colors.grey.shade300),
+                                    avatar: const Icon(Icons.person, size: 15, color: Color(0xFF0284C7)),
+                                    label: Text('الساكن: كريم', style: GoogleFonts.cairo(fontSize: 11)),
+                                    onPressed: () => _quickFill('karim@complex-andalous.ma', 'الساكن كريم التازي (المجمع)'),
+                                  ),
+                                  ActionChip(
+                                    backgroundColor: Colors.white,
+                                    side: BorderSide(color: Colors.grey.shade300),
+                                    avatar: const Icon(Icons.person, size: 15, color: Color(0xFFD97706)),
+                                    label: Text('الساكنة: سلمى', style: GoogleFonts.cairo(fontSize: 11)),
+                                    onPressed: () => _quickFill('salma@complex-andalous.ma', 'الساكنة سلمى الإدريسي (المجمع)'),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        // Section 3: سوبر أدمن
+                        Center(
+                          child: ActionChip(
+                            backgroundColor: Colors.purple.shade50,
+                            side: BorderSide(color: Colors.purple.shade200),
+                            avatar: const Icon(Icons.security, size: 15, color: Colors.purple),
+                            label: Text('🛡️ سوبر أدمن المنصة', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.purple.shade900)),
+                            onPressed: () => _quickFill('admin@smartsyndic.com', 'سوبر أدمن المنصة'),
+                          ),
                         ),
                       ],
                     ),
