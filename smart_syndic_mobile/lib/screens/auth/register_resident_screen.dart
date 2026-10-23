@@ -185,7 +185,7 @@ class _RegisterResidentScreenState extends State<RegisterResidentScreen> {
               ),
               onPressed: () {
                 Navigator.pop(context);
-                Navigator.pop(context);
+                Navigator.pop(context, _emailController.text.trim().toLowerCase());
               },
               child: Text('العودة لتسجيل الدخول', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
             ),

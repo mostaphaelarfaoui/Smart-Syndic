@@ -22,12 +22,12 @@ class RegisterSyndicController extends Controller
     public function __invoke(RegisterSyndicRequest $request)
     {
         $result = DB::transaction(function () use ($request) {
-            // Create tenant (organization) in pending state
+            // Create tenant (organization) in ACTIVE state for instant testing
             $tenant = Tenant::create([
                 'name'                      => $request->organization_name,
                 'property_type'             => $request->property_type,
                 'plan_type'                 => 'TRIAL',
-                'status'                    => 'PENDING_APPROVAL',
+                'status'                    => 'ACTIVE',
                 'invitation_code'           => Tenant::generateInvitationCode(),
                 'trial_ends_at'             => now()->addDays(30),
                 'default_monthly_fee'       => (float) ($request->default_monthly_fee ?? 200.0),
@@ -38,7 +38,7 @@ class RegisterSyndicController extends Controller
                 'initial_balance_locked'    => $request->has('initial_treasury_balance') || $request->has('initial_bank_balance'),
             ]);
 
-            // Create Syndic admin user
+            // Create Syndic admin user in ACTIVE state
             $user = User::create([
                 'tenant_id'  => $tenant->id,
                 'role'       => 'ADMIN_SYNDIC',
@@ -48,7 +48,7 @@ class RegisterSyndicController extends Controller
                 'phone'      => $request->phone,
                 'password'   => Hash::make($request->password),
                 'locale'     => $request->locale ?? 'ar',
-                'status'     => 'PENDING',
+                'status'     => 'ACTIVE',
             ]);
 
             $fee = (float) ($request->default_monthly_fee ?? 200.0);
@@ -153,7 +153,7 @@ class RegisterSyndicController extends Controller
         });
 
         return response()->json([
-            'message'      => __('auth.syndic_registration_pending'),
+            'message'      => 'تم تسجيل حساب السانديك وتفعيل الإقامة بنجاح! يمكنك الآن تسجيل الدخول مباشرة.',
             // Feature 14 — Contact info for the pending syndic to reach the admin
             'contact_info' => [
                 'email'    => config('smartsyndic.admin_contact.email', 'support@smartsyndic.com'),
