@@ -155,6 +155,7 @@ Route::middleware(['auth:web', 'role:ADMIN_SYNDIC,SUPER_ADMIN'])->prefix('portal
     // Community & Polls
     Route::get('/community', [CommunityController::class, 'index'])->name('community.index');
     Route::post('/community/suggestions/{id}/update', [CommunityController::class, 'updateSuggestionStatus'])->name('community.suggestions.update');
+    Route::post('/community/suggestions/{id}/convert-to-poll', [CommunityController::class, 'convertToPoll'])->name('community.suggestions.convert');
     Route::post('/community/polls', [CommunityController::class, 'storePoll'])->name('community.polls.store');
     Route::post('/community/polls/{id}/toggle', [CommunityController::class, 'togglePoll'])->name('community.polls.toggle');
 

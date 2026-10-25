@@ -60,6 +60,85 @@ class CommunityController extends Controller
         return back()->with('success', 'تم تحديث حالة الملاحظة / الشكاية بنجاح.');
     }
 
+    public function convertToPoll(Request $request, $id)
+    {
+        $tenantId = auth()->user()->tenant_id;
+        $suggestion = Suggestion::where('tenant_id', $tenantId)->findOrFail($id);
+
+        $validated = $request->validate([
+            'title'                 => ['required', 'string', 'max:255'],
+            'description'           => ['nullable', 'string', 'max:1000'],
+            'expires_at'            => ['nullable', 'date'],
+            'options'               => ['required', 'array', 'min:2'],
+            'options.*'             => ['required', 'string', 'max:255'],
+            'include_resident_info' => ['nullable'],
+        ]);
+
+        $finalDescription = $validated['description'] ?? '';
+        if ($request->boolean('include_resident_info') || $request->input('include_resident_info') == '1') {
+            $unit = $suggestion->apartment ? $suggestion->apartment->unit_number : 'غير محددة';
+            $name = $suggestion->user ? $suggestion->user->full_name : 'أحد السكان';
+            $credit = "\n\n(مُقترح من طرف: {$name} - شقة {$unit})";
+            $finalDescription .= $credit;
+        }
+
+        $poll = DB::transaction(function () use ($tenantId, $suggestion, $validated, $finalDescription) {
+            $suggestion->convertToPoll();
+
+            $poll = Poll::create([
+                'tenant_id'   => $tenantId,
+                'created_by'  => auth()->id(),
+                'title'       => $validated['title'],
+                'description' => trim($finalDescription) ?: null,
+                'expires_at'  => $validated['expires_at'] ?? now()->addDays(7),
+                'is_active'   => true,
+            ]);
+
+            foreach ($validated['options'] as $optionText) {
+                if (trim($optionText) !== '') {
+                    $poll->options()->create([
+                        'option_text' => trim($optionText),
+                    ]);
+                }
+            }
+
+            return $poll;
+        });
+
+        // 1. Notify all residents in the building/tenant
+        app(\App\Services\NotificationService::class)->sendToTenantResidents(
+            tenantId: $tenantId,
+            title: 'استطلاع رأي وتصويت جديد 📊',
+            message: "تم طرح تصويت جديد في الإقامة بناءً على مقترح تم تقديمه: \"{$poll->title}\". شارك بصوتك الآن!",
+            type: 'info',
+            url: route('portal.residents.index', ['tab' => 'polls']),
+            icon: '🗳️',
+            extra: [
+                'target_screen' => 'polls',
+                'target_id'     => $poll->id,
+            ]
+        );
+
+        // 2. Notify the suggesting resident specifically
+        if ($suggestion->user) {
+            app(\App\Services\NotificationService::class)->send(
+                user: $suggestion->user,
+                title: 'تم تحويل مقترحك إلى تصويت عام 🎉',
+                message: "وافق السانديك على مقترحك وتم تحويله إلى تصويت عام لجميع السكان: \"{$poll->title}\"",
+                type: 'success',
+                url: route('portal.dashboard'),
+                icon: '🗳️',
+                extra: [
+                    'target_screen' => 'polls',
+                    'target_id'     => $poll->id,
+                ]
+            );
+        }
+
+        return redirect()->route('portal.residents.index', ['tab' => 'polls'])
+            ->with('success', 'تم تحويل المقترح إلى استطلاع رأي وتصويت عام بنجاح.');
+    }
+
     public function storePoll(Request $request)
     {
         $tenantId = auth()->user()->tenant_id;

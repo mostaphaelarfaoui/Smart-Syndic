@@ -53,7 +53,12 @@ class ResidentController extends Controller
 
         // Polls Query
         $polls = Poll::where('tenant_id', $tenantId)
-            ->with(['options.votes'])
+            ->with([
+                'options.votes',
+                'votes' => function ($q) {
+                    $q->with(['user', 'apartment.building', 'option'])->latest();
+                }
+            ])
             ->latest('created_at')
             ->paginate(15, ['*'], 'polls_page')
             ->withQueryString();
