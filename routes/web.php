@@ -33,25 +33,47 @@ Route::get('/login', function () {
 })->name('login');
 
 // ─── Direct Receipt Download (Secured & Access-Controlled) ───────────────
-Route::get('/receipts/{payment}/download', function (Payment $payment) {
-    $user = auth('web')->user() ?? auth('sanctum')->user();
+Route::get('/receipts/{payment}/download', function (\Illuminate\Http\Request $request, Payment $payment) {
+    $isAuthorized = false;
 
-    if (! $user) {
-        abort(401, 'يجب تسجيل الدخول لتحميل وصل الأداء.');
+    // 1. Verify cryptographic token in URL query parameter (?token=...)
+    $expectedToken = $payment->getReceiptToken();
+    $providedToken = $request->query('token') ?? $request->query('signature');
+    if ($providedToken && hash_equals($expectedToken, (string) $providedToken)) {
+        $isAuthorized = true;
     }
 
-    // Authorization: Super Admin, Admin Syndic of the same tenant, or Resident who owns the payment
-    $isAuthorized = false;
-    if ($user->isSuperAdmin()) {
+    // 2. Fallback check for Laravel signed route if used
+    if (! $isAuthorized && $request->hasValidSignature(false)) {
         $isAuthorized = true;
-    } elseif ($user->isAdminSyndic() && $user->tenant_id === $payment->tenant_id) {
-        $isAuthorized = true;
-    } elseif ($payment->user_id === $user->id) {
-        $isAuthorized = true;
+    }
+
+    // 3. Check Sanctum API token passed via query param or Authorization header
+    if (! $isAuthorized) {
+        $bearerToken = $request->bearerToken() ?? $request->query('auth_token') ?? $request->query('api_token');
+        if ($bearerToken) {
+            $tokenModel = \Laravel\Sanctum\PersonalAccessToken::findToken($bearerToken);
+            if ($tokenModel && $tokenModel->tokenable) {
+                $user = $tokenModel->tokenable;
+                if ($user->isSuperAdmin() || ($user->isAdminSyndic() && $user->tenant_id === $payment->tenant_id) || $payment->user_id === $user->id) {
+                    $isAuthorized = true;
+                }
+            }
+        }
+    }
+
+    // 4. Check web session or Sanctum guard
+    if (! $isAuthorized) {
+        $user = auth('web')->user() ?? auth('sanctum')->user();
+        if ($user) {
+            if ($user->isSuperAdmin() || ($user->isAdminSyndic() && $user->tenant_id === $payment->tenant_id) || $payment->user_id === $user->id) {
+                $isAuthorized = true;
+            }
+        }
     }
 
     if (! $isAuthorized) {
-        abort(403, 'غير مصرح لك بتحميل هذا الوصل المالي.');
+        abort(401, 'يجب تسجيل الدخول أو استخدام رابط موثق لتحميل وصل الأداء.');
     }
 
     $path = $payment->receipt_pdf_path;
@@ -66,9 +88,18 @@ Route::get('/receipts/{payment}/download', function (Payment $payment) {
     $fullPath = Storage::disk($disk)->path($path);
     $filename = "recu-{$payment->receipt_number}.pdf";
 
-    return response()->download($fullPath, $filename, [
+    if (str_ends_with($path, '.html')) {
+        return response()->file($fullPath, [
+            'Content-Type'        => 'text/html; charset=UTF-8',
+            'Content-Disposition' => "inline; filename=\"recu-{$payment->receipt_number}.html\"",
+        ]);
+    }
+
+    $disposition = $request->boolean('download', false) ? 'attachment' : 'inline';
+
+    return response()->file($fullPath, [
         'Content-Type'        => 'application/pdf',
-        'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        'Content-Disposition' => "{$disposition}; filename=\"{$filename}\"",
     ]);
 })->name('receipts.download');
 

@@ -187,20 +187,6 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
 
         Navigator.pop(context, true);
 
-        // Auto launch receipt in browser/external viewer for the syndic
-        if (receiptUrl != null && receiptUrl.isNotEmpty) {
-          try {
-            final resolved = ApiService().resolveMediaUrl(receiptUrl);
-            final uri = Uri.parse(resolved);
-            launchUrl(uri, mode: LaunchMode.externalApplication).then((launched) {
-              if (!launched) {
-                launchUrl(uri, mode: LaunchMode.platformDefault);
-              }
-            }).catchError((_) {
-              launchUrl(uri, mode: LaunchMode.platformDefault);
-            });
-          } catch (_) {}
-        }
 
         // Show dedicated receipt success modal dialog with direct download & WhatsApp actions
         showDialog(

@@ -63,7 +63,15 @@ class Payment extends Model
     // ─── Signed URL Access ────────────────────────────────────────────
 
     /**
-     * Generate a time-limited signed URL for the receipt PDF.
+     * Generate a cryptographic token for secure direct receipt download.
+     */
+    public function getReceiptToken(): string
+    {
+        return substr(hash_hmac('sha256', $this->id . '|' . ($this->created_at?->timestamp ?? '') . '|' . config('app.key'), config('app.key')), 0, 32);
+    }
+
+    /**
+     * Generate a secure direct URL for the receipt PDF.
      */
     public function getReceiptUrlAttribute(): ?string
     {
@@ -71,7 +79,9 @@ class Payment extends Model
             return null;
         }
 
-        return url('/receipts/' . $this->id . '/download');
+        $token = $this->getReceiptToken();
+
+        return url('/receipts/' . $this->id . '/download?token=' . $token);
     }
 
     /**
