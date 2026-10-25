@@ -305,28 +305,33 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withAlpha(25),
-                            borderRadius: BorderRadius.circular(10),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withAlpha(25),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(Icons.receipt_long, color: AppColors.primary, size: 24),
                           ),
-                          child: const Icon(Icons.receipt_long, color: AppColors.primary, size: 24),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'تسجيل استخلاص واجبات',
-                          style: GoogleFonts.cairo(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
+                          const SizedBox(width: 12),
+                          Flexible(
+                            child: Text(
+                              'تسجيل استخلاص واجبات',
+                              style: GoogleFonts.cairo(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close, color: AppColors.textLight),
@@ -842,7 +847,7 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
     Widget? trailing,
   }) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
@@ -851,19 +856,32 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
             color: AppColors.textSecondary,
           ),
         ),
-        const Spacer(),
-        Text(
-          value,
-          style: GoogleFonts.cairo(
-            fontSize: 12,
-            fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
-            color: valueColor ?? AppColors.textPrimary,
+        const SizedBox(width: 12),
+        Expanded(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text(
+                  value,
+                  textAlign: TextAlign.end,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.cairo(
+                    fontSize: 12,
+                    fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+                    color: valueColor ?? AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              if (trailing != null) ...[
+                const SizedBox(width: 4),
+                trailing,
+              ],
+            ],
           ),
         ),
-        if (trailing != null) ...[
-          const SizedBox(width: 6),
-          trailing,
-        ],
       ],
     );
   }
