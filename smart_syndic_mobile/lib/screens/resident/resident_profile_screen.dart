@@ -333,7 +333,6 @@ class _ResidentProfileScreenState extends State<ResidentProfileScreen> {
     final email = user?['email'] ?? '-';
     final phone = user?['phone'] ?? '-';
     final unitNumber = apartment?['unit_number'] ?? '-';
-    final floor = apartment?['floor']?.toString() ?? '-';
     final buildingName = apartment?['building_name'] ?? '-';
     final monthlyFee = parseDouble(apartment?['monthly_fee']);
     final occupancyType = apartment?['occupancy_type'] == 'TENANT' ? 'مكترٍ' : 'مالك الشقة';
@@ -750,7 +749,6 @@ class _ResidentProfileScreenState extends State<ResidentProfileScreen> {
                           ),
                           const SizedBox(height: 16),
                           _buildDetailRow(label: 'رقم الشقة:', value: unitNumber, icon: Icons.meeting_room_outlined),
-                          _buildDetailRow(label: 'الطابق:', value: 'الطابق $floor', icon: Icons.layers_outlined),
                           _buildDetailRow(label: 'العمارة / المجمع:', value: buildingName, icon: Icons.business_outlined),
                           _buildDetailRow(label: 'الصفة القانونية:', value: occupancyType, icon: Icons.badge_outlined),
                           _buildDetailRow(

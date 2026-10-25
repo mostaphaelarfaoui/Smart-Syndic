@@ -60,7 +60,7 @@ class ApartmentResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Section::make('معلومات الشقة')
-                    ->description('تحديد العمارة ورقم الشقة والطابق والواجب الشهري')
+                    ->description('تحديد العمارة ورقم الشقة والواجب الشهري')
                     ->schema([
                         Forms\Components\Select::make('building_id')
                             ->label('العمارة / البلوك')
@@ -72,17 +72,13 @@ class ApartmentResource extends Resource
                             ->required(),
 
                         Forms\Components\TextInput::make('unit_number')
-                            ->label('رقم الشقة')
+                            ->label('رقم أو اسم الشقة')
                             ->placeholder('مثال: 12، A-04، B-101')
                             ->required()
                             ->maxLength(50),
 
-                        Forms\Components\TextInput::make('floor')
-                            ->label('الطابق')
-                            ->numeric()
-                            ->default(1)
-                            ->required()
-                            ->helperText('0 للطابق الأرضي، 1، 2، 3...'),
+                        Forms\Components\Hidden::make('floor')
+                            ->default(0),
 
                         Forms\Components\TextInput::make('monthly_fee')
                             ->label('الواجب الشهري (درهم)')
@@ -117,11 +113,6 @@ class ApartmentResource extends Resource
                     ->label('العمارة / البلوك')
                     ->badge()
                     ->color('info')
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('floor')
-                    ->label('الطابق')
-                    ->formatStateUsing(fn ($state) => $state == 0 ? 'الطابق الأرضي' : "الطابق {$state}")
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('monthly_fee')

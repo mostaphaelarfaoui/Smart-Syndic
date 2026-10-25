@@ -61,7 +61,6 @@ class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
   void _showApartmentDetails(BuildContext context, Map<String, dynamic> apt) {
     final unit = apt['unit'] ?? '';
     final building = apt['building'] ?? '';
-    final floor = apt['floor'] ?? '';
     final isBillable = apt['is_billable'] != false;
     final monthlyFee = parseDouble(apt['monthly_fee']);
     final totalPaid = parseDouble(apt['total_paid']);
@@ -175,7 +174,7 @@ class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
                           ),
                         ),
                         Text(
-                          '$building • الطابق $floor',
+                          building,
                           style: GoogleFonts.cairo(
                             fontSize: 12,
                             color: AppColors.textSecondary,
@@ -1181,7 +1180,6 @@ class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
                       ...collectionList.map((apt) {
                         final unit = apt['unit'] ?? '';
                         final building = apt['building'] ?? '';
-                        final floor = apt['floor'] ?? '';
                         final isBillable = apt['is_billable'] != false;
                         final monthlyFee = parseDouble(apt['monthly_fee']);
                         final arrears = parseDouble(apt['arrears']);
@@ -1313,7 +1311,7 @@ class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
                                             ],
                                           ),
                                           Text(
-                                            '$building • الطابق $floor',
+                                            building,
                                             style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textLight),
                                           ),
                                           const SizedBox(height: 2),

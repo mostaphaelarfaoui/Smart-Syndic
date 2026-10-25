@@ -17,7 +17,6 @@ class EditApartmentDialog extends StatefulWidget {
 class _EditApartmentDialogState extends State<EditApartmentDialog> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _unitNumberController;
-  late final TextEditingController _floorController;
   late final TextEditingController _monthlyFeeController;
   late bool _isBillable;
   bool _isSubmitting = false;
@@ -26,7 +25,6 @@ class _EditApartmentDialogState extends State<EditApartmentDialog> {
   void initState() {
     super.initState();
     _unitNumberController = TextEditingController(text: widget.apartment.unitNumber);
-    _floorController = TextEditingController(text: widget.apartment.floor.toString());
     _monthlyFeeController = TextEditingController(text: widget.apartment.monthlyFee.toStringAsFixed(0));
     _isBillable = widget.apartment.isBillable;
   }
@@ -34,7 +32,6 @@ class _EditApartmentDialogState extends State<EditApartmentDialog> {
   @override
   void dispose() {
     _unitNumberController.dispose();
-    _floorController.dispose();
     _monthlyFeeController.dispose();
     super.dispose();
   }
@@ -48,7 +45,7 @@ class _EditApartmentDialogState extends State<EditApartmentDialog> {
     final success = await syndic.updateApartment(
       apartmentId: widget.apartment.id,
       unitNumber: _unitNumberController.text.trim(),
-      floor: int.tryParse(_floorController.text.trim()) ?? widget.apartment.floor,
+      floor: widget.apartment.floor,
       monthlyFee: double.tryParse(_monthlyFeeController.text.trim()) ?? widget.apartment.monthlyFee,
       isBillable: _isBillable,
     );
@@ -125,13 +122,6 @@ class _EditApartmentDialogState extends State<EditApartmentDialog> {
                 ),
                 const SizedBox(height: 14),
 
-                TextFormField(
-                  controller: _floorController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'رقم الطابق', prefixIcon: Icon(Icons.layers_outlined)),
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'الطابق مطلوب' : null,
-                ),
-                const SizedBox(height: 14),
 
                 TextFormField(
                   controller: _monthlyFeeController,

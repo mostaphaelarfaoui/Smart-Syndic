@@ -38,15 +38,9 @@
                         </select>
                     </div>
 
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
-                        <div class="form-group">
-                            <label class="form-label">رقم الشقة</label>
-                            <input type="text" name="unit_number" class="form-control" placeholder="مثال: 12" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">رقم الطابق</label>
-                            <input type="number" name="floor_number" class="form-control" placeholder="0 = أرضي" value="1">
-                        </div>
+                    <div class="form-group">
+                        <label class="form-label">رقم أو اسم الشقة</label>
+                        <input type="text" name="unit_number" class="form-control" placeholder="مثال: 12 أو شقة 1" required>
                     </div>
 
                     <div class="form-group">
@@ -162,7 +156,6 @@
                 <tr>
                     <th style="min-width:110px;">رقم الشقة</th>
                     <th style="min-width:120px;">العمارة</th>
-                    <th style="min-width:110px;">الطابق</th>
                     <th style="min-width:150px;">المقيم الحالي</th>
                     <th style="min-width:130px;">الواجب الشهري</th>
                     <th style="text-align:center; min-width:120px;">حالة الخضوع</th>
@@ -174,13 +167,10 @@
                     <tr>
                         <td>
                             <strong style="font-size:1.1rem; color:var(--text-primary);" class="num">
-                                شقة {{ $apartment->unit_number }}
+                                {{ str_starts_with(trim($apartment->unit_number), 'شقة') ? $apartment->unit_number : 'شقة ' . $apartment->unit_number }}
                             </strong>
                         </td>
                         <td>{{ $apartment->building?->name ?? '—' }}</td>
-                        <td class="num">
-                            {{ $apartment->floor_number == 0 ? 'الطابق الأرضي' : 'الطابق ' . $apartment->floor_number }}
-                        </td>
                         <td>
                             @if($apartment->residents->isNotEmpty())
                                 <div style="display:flex; align-items:center; gap:0.5rem;">

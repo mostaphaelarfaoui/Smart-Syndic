@@ -42,26 +42,13 @@ class ListApartments extends ListRecords
                         ->label('بادئة رقم الشقة (اختياري)')
                         ->placeholder('مثال: Apt أو A أو اتركها فارغة'),
 
-                    Forms\Components\TextInput::make('start_floor')
-                        ->label('طابق البداية')
+                    Forms\Components\TextInput::make('total_units')
+                        ->label('عدد الشقق الإجمالي المراد إنشاؤها')
                         ->numeric()
-                        ->default(0)
+                        ->default(10)
                         ->required()
-                        ->helperText('0 = طابق أرضي، 1 = الطابق الأول'),
-
-                    Forms\Components\TextInput::make('floors_count')
-                        ->label('عدد الطوابق الإجمالي')
-                        ->numeric()
-                        ->default(4)
-                        ->required()
-                        ->minValue(1),
-
-                    Forms\Components\TextInput::make('units_per_floor')
-                        ->label('عدد الشقق في كل طابق')
-                        ->numeric()
-                        ->default(4)
-                        ->required()
-                        ->minValue(1),
+                        ->minValue(1)
+                        ->maxValue(200),
 
                     Forms\Components\TextInput::make('monthly_fee')
                         ->label('الواجب الشهري الافتراضي (درهم)')
@@ -73,9 +60,7 @@ class ListApartments extends ListRecords
                 ->action(function (array $data) use ($tenantId) {
                     $building = Building::where('tenant_id', $tenantId)->findOrFail($data['building_id']);
                     $prefix = trim($data['prefix'] ?? '');
-                    $startFloor = (int) $data['start_floor'];
-                    $floorsCount = (int) $data['floors_count'];
-                    $unitsPerFloor = (int) $data['units_per_floor'];
+                    $totalUnits = (int) $data['total_units'];
                     $monthlyFee = (float) $data['monthly_fee'];
 
                     $createdCount = 0;
@@ -84,40 +69,32 @@ class ListApartments extends ListRecords
                     DB::transaction(function () use (
                         $building,
                         $prefix,
-                        $startFloor,
-                        $floorsCount,
-                        $unitsPerFloor,
+                        $totalUnits,
                         $monthlyFee,
                         &$createdCount,
                         &$skippedCount
                     ) {
-                        $unitCounter = 1;
+                        for ($u = 1; $u <= $totalUnits; $u++) {
+                            $unitNum = $prefix
+                                ? "{$prefix}-{$u}"
+                                : (string) $u;
 
-                        for ($f = $startFloor; $f < ($startFloor + $floorsCount); $f++) {
-                            for ($u = 1; $u <= $unitsPerFloor; $u++) {
-                                $unitNum = $prefix
-                                    ? "{$prefix}-{$unitCounter}"
-                                    : (string) $unitCounter;
+                            // Check if apartment unit number exists in this building
+                            $exists = Apartment::where('building_id', $building->id)
+                                ->where('unit_number', $unitNum)
+                                ->exists();
 
-                                // Check if apartment unit number exists in this building
-                                $exists = Apartment::where('building_id', $building->id)
-                                    ->where('unit_number', $unitNum)
-                                    ->exists();
-
-                                if (! $exists) {
-                                    Apartment::create([
-                                        'building_id' => $building->id,
-                                        'unit_number' => $unitNum,
-                                        'floor'       => $f,
-                                        'monthly_fee' => $monthlyFee,
-                                        'is_billable' => true,
-                                    ]);
-                                    $createdCount++;
-                                } else {
-                                    $skippedCount++;
-                                }
-
-                                $unitCounter++;
+                            if (! $exists) {
+                                Apartment::create([
+                                    'building_id' => $building->id,
+                                    'unit_number' => $unitNum,
+                                    'floor'       => 0,
+                                    'monthly_fee' => $monthlyFee,
+                                    'is_billable' => true,
+                                ]);
+                                $createdCount++;
+                            } else {
+                                $skippedCount++;
                             }
                         }
                     });

@@ -496,31 +496,6 @@ class _RegisterResidentScreenState extends State<RegisterResidentScreen> {
               ],
               const SizedBox(height: 16),
 
-              // Automatic Floor info (Requirement 3: no manual floor input required)
-              if (_selectedApartmentData != null) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '📍 الطابق المعتمد للشقة:',
-                        style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary),
-                      ),
-                      Text(
-                        'الطابق ${_selectedApartmentData!['floor']}',
-                        style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primary),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
 
               // Occupancy Type (Owner / Tenant)
               Text('الصفة القانونية:', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 14)),

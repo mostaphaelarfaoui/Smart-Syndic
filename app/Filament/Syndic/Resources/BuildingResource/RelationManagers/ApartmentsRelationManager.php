@@ -27,15 +27,12 @@ class ApartmentsRelationManager extends RelationManager
         return $form
             ->schema([
                 Forms\Components\TextInput::make('unit_number')
-                    ->label('رقم الشقة')
+                    ->label('رقم أو اسم الشقة')
                     ->required()
                     ->maxLength(50),
 
-                Forms\Components\TextInput::make('floor')
-                    ->label('الطابق')
-                    ->numeric()
-                    ->default(1)
-                    ->required(),
+                Forms\Components\Hidden::make('floor')
+                    ->default(0),
 
                 Forms\Components\TextInput::make('monthly_fee')
                     ->label('الواجب الشهري (درهم)')
@@ -56,15 +53,10 @@ class ApartmentsRelationManager extends RelationManager
             ->recordTitleAttribute('unit_number')
             ->columns([
                 Tables\Columns\TextColumn::make('unit_number')
-                    ->label('رقم الشقة')
+                    ->label('رقم أو اسم الشقة')
                     ->sortable()
                     ->searchable()
                     ->weight('bold'),
-
-                Tables\Columns\TextColumn::make('floor')
-                    ->label('الطابق')
-                    ->formatStateUsing(fn ($state) => $state == 0 ? 'أرضي' : "طابق {$state}")
-                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('monthly_fee')
                     ->label('الواجب الشهري')

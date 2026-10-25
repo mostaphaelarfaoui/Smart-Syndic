@@ -87,7 +87,7 @@ class SyndicApartmentsTab extends StatefulWidget {
 class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
   final TextEditingController _searchController = TextEditingController();
   String _filter = 'ALL'; // ALL, EXEMPTED, ARREARS, SETTLED, VACANT
-  String _sortBy = 'NUMBER_ASC'; // NUMBER_ASC, NUMBER_DESC, NAME_ASC, FLOOR_ASC
+  String _sortBy = 'NUMBER_ASC'; // NUMBER_ASC, NUMBER_DESC, NAME_ASC
   String? _selectedBuildingId; // null = all buildings
   final Set<String> _expandedBuildingIds = {}; // Hidden/collapsed by default for complex
 
@@ -157,10 +157,6 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
             final comp = nameA.compareTo(nameB);
             if (comp != 0) return comp;
           }
-          return _naturalCompare(a.unitNumber, b.unitNumber);
-        case 'FLOOR_ASC':
-          final compFloor = a.floor.compareTo(b.floor);
-          if (compFloor != 0) return compFloor;
           return _naturalCompare(a.unitNumber, b.unitNumber);
         case 'NUMBER_ASC':
         default:
@@ -234,8 +230,6 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
         return 'رقم الشقة (10 ← 1)';
       case 'NAME_ASC':
         return 'اسم الساكن (أ ← ي)';
-      case 'FLOOR_ASC':
-        return 'حسب الطابق';
       case 'NUMBER_ASC':
       default:
         return 'رقم الشقة (1 ← 10)';
@@ -285,19 +279,6 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
                 child: Text('اسم الساكن (أ ← ي)', style: GoogleFonts.cairo(fontSize: 12)),
               ),
               if (_sortBy == 'NAME_ASC') const Icon(Icons.check, size: 16, color: AppColors.primary),
-            ],
-          ),
-        ),
-        PopupMenuItem(
-          value: 'FLOOR_ASC',
-          child: Row(
-            children: [
-              const Icon(Icons.stairs_rounded, size: 18, color: AppColors.primary),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text('حسب الطابق (0 ← الأعلى)', style: GoogleFonts.cairo(fontSize: 12)),
-              ),
-              if (_sortBy == 'FLOOR_ASC') const Icon(Icons.check, size: 16, color: AppColors.primary),
             ],
           ),
         ),
@@ -491,8 +472,8 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
                     const SizedBox(height: 2),
                     Text(
                       isComplex
-                          ? '${apt.block != null ? "بلوك ${apt.block} • " : ""}الطابق ${apt.floor} • ${apt.monthlyFee.toStringAsFixed(0)} درهم'
-                          : '${apt.buildingName != null && apt.buildingName!.isNotEmpty ? "${apt.buildingName} • " : ""}الطابق ${apt.floor} • ${apt.monthlyFee.toStringAsFixed(0)} درهم',
+                          ? '${apt.block != null ? "بلوك ${apt.block} • " : ""}${apt.buildingName != null && apt.buildingName!.isNotEmpty ? "${apt.buildingName} • " : ""}الواجب: ${apt.monthlyFee.toStringAsFixed(0)} درهم'
+                          : '${apt.buildingName != null && apt.buildingName!.isNotEmpty ? "${apt.buildingName} • " : ""}الواجب: ${apt.monthlyFee.toStringAsFixed(0)} درهم',
                       style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

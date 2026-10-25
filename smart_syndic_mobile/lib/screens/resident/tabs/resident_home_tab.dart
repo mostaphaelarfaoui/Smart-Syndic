@@ -20,8 +20,9 @@ class ResidentHomeTab extends StatelessWidget {
     final balance = resident.balanceInfo;
     final balanceData = (balance?['balance'] as Map<String, dynamic>?) ?? balance;
 
-    final unitNumber = balance?['apartment']?['unit_number'] ?? '-';
-    final floor = balance?['apartment']?['floor']?.toString() ?? '-';
+    final unitNumber = balance?['apartment']?['unit_number']?.toString();
+    final buildingName = balance?['apartment']?['building_name']?.toString() ?? '';
+    final formattedUnit = formatUnitLabel(unitNumber);
     final monthlyFee = parseDouble(balanceData?['monthly_fee'] ?? balance?['apartment']?['monthly_fee']);
     final arrears = parseDouble(balanceData?['arrears']);
     final isUpToDate = (balanceData?['is_settled'] == true) || arrears <= 0;
@@ -71,7 +72,7 @@ class ResidentHomeTab extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
-                          'شقة رقم $unitNumber - الطابق $floor',
+                          buildingName.isNotEmpty ? '$formattedUnit • $buildingName' : formattedUnit,
                           style: GoogleFonts.cairo(
                             fontSize: 12,
                             color: AppColors.textSecondary,

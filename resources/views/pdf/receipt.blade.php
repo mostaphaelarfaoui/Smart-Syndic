@@ -186,6 +186,14 @@
             </tr>
         </table>
 
+        @php
+            $rawUnit = trim($apartment->unit_number ?? '');
+            $unitDisplay = preg_match('/^شقة\s*/u', $rawUnit) ? $rawUnit : ('شقة ' . $rawUnit);
+            $isComplex = ($tenant->property_type ?? '') === 'MULTI_BUILDING_COMPLEX';
+            $blockVal = trim($building->block ?? '');
+            $buildingName = trim($building->name ?? 'العمارة الرئيسية');
+        @endphp
+
         {{-- ─── Info Grid ───────────────────────────────────── --}}
         <table class="info-table">
             <tr>
@@ -194,19 +202,55 @@
                 <td class="label-cell">الصفة / Statut</td>
                 <td class="value-cell">{{ $resident?->apartments?->first()?->pivot?->occupancy_type === 'OWNER' ? 'مالك (Propriétaire)' : 'مكترٍ (Locataire)' }}</td>
             </tr>
-            <tr>
-                <td class="label-cell">العمارة / Immeuble</td>
-                <td class="value-cell">{{ $building->name }}</td>
-                <td class="label-cell">الشقة / Appartement</td>
-                <td class="value-cell"><strong>شقة {{ $apartment->unit_number }} (الطابق {{ $apartment->floor }})</strong></td>
-            </tr>
+
+            @if($isComplex && !empty($blockVal))
+                <tr>
+                    <td class="label-cell">البلوك (الشطر) / Bloc</td>
+                    <td class="value-cell"><strong>{{ (str_starts_with($blockVal, 'بلوك') || str_starts_with($blockVal, 'شطر')) ? $blockVal : 'بلوك ' . $blockVal }}</strong></td>
+                    <td class="label-cell">العمارة / Immeuble</td>
+                    <td class="value-cell"><strong>{{ $buildingName }}</strong></td>
+                </tr>
+                <tr>
+                    <td class="label-cell">الشقة / Appartement</td>
+                    <td class="value-cell"><strong>{{ $unitDisplay }}</strong></td>
+                    <td class="label-cell">تاريخ الأداء / Date</td>
+                    <td class="value-cell">{{ $payment->payment_date->format('d/m/Y') }}</td>
+                </tr>
+            @elseif($isComplex)
+                <tr>
+                    <td class="label-cell">العمارة بالمجمع / Immeuble</td>
+                    <td class="value-cell"><strong>{{ $buildingName }}</strong></td>
+                    <td class="label-cell">الشقة / Appartement</td>
+                    <td class="value-cell"><strong>{{ $unitDisplay }}</strong></td>
+                </tr>
+                <tr>
+                    <td class="label-cell">نوع العقار / Type</td>
+                    <td class="value-cell">مجمع سكني (Complexe)</td>
+                    <td class="label-cell">تاريخ الأداء / Date</td>
+                    <td class="value-cell">{{ $payment->payment_date->format('d/m/Y') }}</td>
+                </tr>
+            @else
+                <tr>
+                    <td class="label-cell">العمارة / Immeuble</td>
+                    <td class="value-cell"><strong>{{ $buildingName }}</strong></td>
+                    <td class="label-cell">الشقة / Appartement</td>
+                    <td class="value-cell"><strong>{{ $unitDisplay }}</strong></td>
+                </tr>
+                <tr>
+                    <td class="label-cell">نوع العقار / Type</td>
+                    <td class="value-cell">عمارة سكنية (Immeuble)</td>
+                    <td class="label-cell">تاريخ الأداء / Date</td>
+                    <td class="value-cell">{{ $payment->payment_date->format('d/m/Y') }}</td>
+                </tr>
+            @endif
+
             <tr>
                 <td class="label-cell">الشهور المستخلصة / Mois</td>
                 <td class="value-cell" colspan="3"><strong>{{ implode(', ', $payment->covered_months ?? []) }}</strong></td>
             </tr>
             <tr>
                 <td class="label-cell">طريقة الأداء / Règlement</td>
-                <td class="value-cell">
+                <td class="value-cell" colspan="3">
                     @switch($payment->payment_method)
                         @case('CASH') نقداً (Espèces) @break
                         @case('BANK_TRANSFER') تحويل بنكي (Virement) @break
@@ -214,8 +258,6 @@
                         @default {{ $payment->payment_method }}
                     @endswitch
                 </td>
-                <td class="label-cell">تاريخ الأداء / Date</td>
-                <td class="value-cell">{{ $payment->payment_date->format('d/m/Y') }}</td>
             </tr>
         </table>
 

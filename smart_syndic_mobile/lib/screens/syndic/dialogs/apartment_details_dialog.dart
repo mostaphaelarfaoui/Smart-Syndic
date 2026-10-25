@@ -204,7 +204,7 @@ class ApartmentDetailsDialog extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '${apartment.block != null ? "بلوك ${apartment.block} • " : ""}${apartment.buildingName ?? "الإقامة"} • الطابق ${apartment.floor}',
+                          '${apartment.block != null ? "بلوك ${apartment.block} • " : ""}${apartment.buildingName ?? "الإقامة"}',
                           style: GoogleFonts.cairo(
                             fontSize: 12,
                             color: Colors.white.withAlpha(220),
