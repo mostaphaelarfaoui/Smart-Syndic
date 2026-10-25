@@ -98,6 +98,18 @@ class ResidentResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('apartments.unit_number')
                     ->label('رقم الشقة')
+                    ->formatStateUsing(function ($state, User $record) {
+                        $apt = $record->apartments->first();
+                        if (! $apt) {
+                            return '—';
+                        }
+                        $num = preg_replace('/^(شقة|Appartement)\s*/iu', '', $apt->unit_number);
+                        $res = 'شقة ' . $num;
+                        if ($apt->building) {
+                            $res .= ' (' . $apt->building->name . ')';
+                        }
+                        return $res;
+                    })
                     ->badge(),
                 Tables\Columns\BadgeColumn::make('status')
                     ->label('الحالة')

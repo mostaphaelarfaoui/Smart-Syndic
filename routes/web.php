@@ -119,11 +119,13 @@ Route::middleware(['auth:web', 'role:ADMIN_SYNDIC,SUPER_ADMIN'])->prefix('portal
 
     // Apartments
     Route::get('/apartments', [ApartmentController::class, 'index'])->name('apartments.index');
+    Route::get('/apartments/{id}/history', [ApartmentController::class, 'history'])->name('apartments.history');
     Route::post('/apartments', [ApartmentController::class, 'store'])->name('apartments.store');
     Route::post('/apartments/bulk-generate', [ApartmentController::class, 'bulkGenerate'])->name('apartments.bulk-generate');
     Route::post('/apartments/{id}/vacate', [ApartmentController::class, 'vacate'])->name('apartments.vacate');
     Route::post('/apartments/{id}/toggle-billable', [ApartmentController::class, 'toggleBillable'])->name('apartments.toggle-billable');
     Route::delete('/apartments/{id}', [ApartmentController::class, 'destroy'])->name('apartments.destroy');
+
 
     // Residents
     Route::get('/residents', [ResidentController::class, 'index'])->name('residents.index');

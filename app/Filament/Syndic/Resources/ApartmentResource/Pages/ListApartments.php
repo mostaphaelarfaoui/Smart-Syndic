@@ -29,7 +29,7 @@ class ListApartments extends ListRecords
                 ->icon('heroicon-o-sparkles')
                 ->color('success')
                 ->modalHeading('توليد شقق العمارة تلقائياً')
-                ->modalDescription('حدد العمارة وعدد الطوابق والشقق ليتم إنشاء الوحدات وحساب أرقامها تلقائياً.')
+                ->modalDescription('حدد العمارة وعدد الشقق ليتم إنشاء الوحدات وحساب أرقامها تلقائياً وبشكل تسلسلي.')
                 ->modalSubmitActionLabel('بدء التوليد التلقائي')
                 ->form([
                     Forms\Components\Select::make('building_id')

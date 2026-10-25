@@ -114,9 +114,20 @@
                         <td style="color:var(--text-secondary); font-size:0.88rem;">{{ $resident->email }}</td>
                         <td>
                             @if($resident->apartments->isNotEmpty())
-                                <span class="badge badge-neutral num" style="font-weight:800;">
-                                    شقة {{ $resident->apartments->first()->unit_number }}
-                                </span>
+                                @php
+                                    $apt = $resident->apartments->first();
+                                    $cleanUnit = str_starts_with(trim($apt->unit_number), 'شقة') ? $apt->unit_number : 'شقة ' . $apt->unit_number;
+                                @endphp
+                                <div>
+                                    <span class="badge badge-neutral num" style="font-weight:800; font-size:0.85rem;">
+                                        {{ $cleanUnit }}
+                                    </span>
+                                    @if($apt->building)
+                                        <div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;">
+                                            {{ $apt->building->name }}{{ $apt->building->block ? ' (' . $apt->building->block . ')' : '' }}
+                                        </div>
+                                    @endif
+                                </div>
                             @else
                                 <span style="color:var(--text-muted); font-size:0.85rem;">غير محددة</span>
                             @endif

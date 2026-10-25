@@ -104,6 +104,10 @@ class ApartmentResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('unit_number')
                     ->label('رقم الشقة')
+                    ->formatStateUsing(function ($state) {
+                        $num = preg_replace('/^(شقة|Appartement)\s*/iu', '', (string)$state);
+                        return 'شقة ' . $num;
+                    })
                     ->searchable()
                     ->sortable()
                     ->weight('bold')
@@ -111,6 +115,13 @@ class ApartmentResource extends Resource
 
                 Tables\Columns\TextColumn::make('building.name')
                     ->label('العمارة / البلوك')
+                    ->formatStateUsing(function ($state, Apartment $record) {
+                        $desc = (string)$state;
+                        if ($record->building?->block) {
+                            $desc .= ' (' . $record->building->block . ')';
+                        }
+                        return $desc;
+                    })
                     ->badge()
                     ->color('info')
                     ->sortable(),
@@ -312,6 +323,18 @@ class ApartmentResource extends Resource
                             ->success()
                             ->send();
                     }),
+
+                Action::make('payment_history')
+                    ->label('سجل الدفعات')
+                    ->icon('heroicon-o-clipboard-document-list')
+                    ->color('info')
+                    ->modalHeading(fn (Apartment $record) => "سجل دفعات الشقة {$record->unit_number}")
+                    ->modalContent(fn (Apartment $record) => view('filament.syndic.resources.apartment.payment-history', [
+                        'apartment' => $record->load(['building', 'residents', 'payments' => fn ($q) => $q->latest('payment_date')]),
+                        'paymentsByYear' => $record->payments()->latest('payment_date')->get()->groupBy(fn($p) => \Carbon\Carbon::parse($p->payment_date)->format('Y')),
+                    ]))
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('إغلاق'),
 
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make()

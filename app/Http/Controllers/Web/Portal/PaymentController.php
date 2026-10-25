@@ -18,10 +18,13 @@ class PaymentController extends Controller
 
     public function index(Request $request)
     {
+        $tenant = auth()->user()->tenant;
         $tenantId = auth()->user()->tenant_id;
 
         $apartments = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))
-            ->orderBy('unit_number')
+            ->with(['building', 'residents'])
+            ->orderBy('building_id')
+            ->orderByRaw('LENGTH(unit_number) ASC, unit_number ASC')
             ->get();
 
         $query = Payment::where('tenant_id', $tenantId)
@@ -54,7 +57,9 @@ class PaymentController extends Controller
             ->whereYear('payment_date', now()->year)
             ->sum('amount_paid');
 
-        return view('portal.payments.index', compact('payments', 'apartments', 'totalCollected', 'thisMonthCollected'));
+        $isComplex = $tenant && ($tenant->property_type === 'COMPLEX');
+
+        return view('portal.payments.index', compact('payments', 'apartments', 'totalCollected', 'thisMonthCollected', 'isComplex'));
     }
 
     public function store(Request $request)
@@ -74,8 +79,9 @@ class PaymentController extends Controller
         // Format covered months array
         $coveredMonths = [];
         if ($request->filled('covered_months')) {
-            $coveredMonths = array_map('trim', explode(',', $request->covered_months));
-        } else {
+            $coveredMonths = array_values(array_filter(array_map('trim', explode(',', $request->covered_months))));
+        }
+        if (empty($coveredMonths)) {
             $coveredMonths = [now()->format('Y-m')];
         }
         $validated['covered_months'] = $coveredMonths;
@@ -99,6 +105,15 @@ class PaymentController extends Controller
             $this->paymentService->sendToResident($payment, auth()->id());
         }
 
+        $receiptData = array_map(fn ($p) => [
+            'id' => $p->id,
+            'receipt_number' => $p->receipt_number,
+            'month' => is_array($p->covered_months) ? ($p->covered_months[0] ?? '') : $p->covered_months,
+            'amount' => (float) $p->amount_paid,
+            'preview_url' => route('receipts.download', $p),
+            'download_url' => route('receipts.download', ['payment' => $p->id, 'download' => 1]),
+        ], $payments);
+
         $receiptNumbers = implode(', ', array_map(fn ($p) => $p->receipt_number, $payments));
         $totalPaid = array_sum(array_map(fn ($p) => (float) $p->amount_paid, $payments));
 
@@ -118,10 +133,13 @@ class PaymentController extends Controller
             ]
         );
 
-        return back()->with('success', count($payments) > 1
-            ? "تم تسجيل واستخلاص " . count($payments) . " وصولات بنجاح (وصل لكل شهر): {$receiptNumbers}"
-            : "تم تسجيل واستخلاص الدفعة بنجاح برقم وصل: {$receiptNumbers}");
+        return back()
+            ->with('success', count($payments) > 1
+                ? "تم تسجيل واستخلاص " . count($payments) . " وصولات بنجاح (وصل مستقل لكل شهر): {$receiptNumbers}"
+                : "تم تسجيل واستخلاص الدفعة بنجاح برقم وصل: {$receiptNumbers}")
+            ->with('generated_payments', $receiptData);
     }
+
 
     public function confirm($id)
     {

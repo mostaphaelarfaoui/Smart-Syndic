@@ -43,7 +43,22 @@ class PaymentResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('apartment_id')
                             ->label('الشقة')
-                            ->relationship('apartment', 'unit_number')
+                            ->options(function () {
+                                $tenantId = auth()->user()?->tenant_id;
+                                return Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))
+                                    ->with('building')
+                                    ->get()
+                                    ->sortBy(['building_id', 'unit_number'])
+                                    ->mapWithKeys(function ($apt) {
+                                        $num = preg_replace('/^(شقة|Appartement)\s*/iu', '', $apt->unit_number);
+                                        $bName = $apt->building ? $apt->building->name : '';
+                                        if ($apt->building && !empty($apt->building->block)) {
+                                            $bName .= ' (' . $apt->building->block . ')';
+                                        }
+                                        $label = 'شقة ' . $num . ($bName ? ' — ' . $bName : '');
+                                        return [$apt->id => $label];
+                                    });
+                            })
                             ->searchable()
                             ->preload()
                             ->required(),
@@ -110,6 +125,19 @@ class PaymentResource extends Resource
                     ->copyable(),
                 Tables\Columns\TextColumn::make('apartment.unit_number')
                     ->label('الشقة')
+                    ->formatStateUsing(function ($state) {
+                        $num = preg_replace('/^(شقة|Appartement)\s*/iu', '', (string)$state);
+                        return 'شقة ' . $num;
+                    })
+                    ->description(function (Payment $record) {
+                        $b = $record->apartment?->building;
+                        if (!$b) return null;
+                        $desc = $b->name;
+                        if (!empty($b->block)) {
+                            $desc .= ' (' . $b->block . ')';
+                        }
+                        return $desc;
+                    })
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('amount_paid')
@@ -158,10 +186,17 @@ class PaymentResource extends Resource
                     ->query(fn ($query) => $query->where('remaining_balance', '>', 0)),
             ])
             ->actions([
+                Action::make('preview_receipt')
+                    ->label('معاينة الوصل')
+                    ->icon('heroicon-o-eye')
+                    ->color('info')
+                    ->url(fn (Payment $record) => route('receipts.download', ['payment' => $record->id]))
+                    ->openUrlInNewTab(),
                 Action::make('download_receipt')
-                    ->label('تحميل الوصل PDF')
+                    ->label('تحميل PDF')
                     ->icon('heroicon-o-arrow-down-tray')
-                    ->url(fn (Payment $record) => $record->receipt_url)
+                    ->color('success')
+                    ->url(fn (Payment $record) => route('receipts.download', ['payment' => $record->id, 'download' => 1]))
                     ->openUrlInNewTab(),
                 Action::make('send_whatsapp')
                     ->label('إرسال عبر واتساب')

@@ -38,16 +38,15 @@ class BuildingResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('name')
                     ->label('اسم العمارة')
-                    ->placeholder('مثال: عمارة الأندلس، بلوك أ')
+                    ->placeholder('مثال: عمارة الأندلس، عمارة 1')
                     ->required()
                     ->maxLength(100),
-                Forms\Components\TextInput::make('total_floors')
-                    ->label('عدد الطوابق')
-                    ->numeric()
-                    ->required()
-                    ->default(1)
-                    ->minValue(1)
-                    ->maxValue(100),
+                Forms\Components\TextInput::make('block')
+                    ->label('البلوك / الشطر (اختياري بالمجمع)')
+                    ->placeholder('مثال: بلوك أ، الشطر 1')
+                    ->maxLength(100),
+                Forms\Components\Hidden::make('total_floors')
+                    ->default(1),
             ]);
     }
 
@@ -59,9 +58,11 @@ class BuildingResource extends Resource
                     ->label('اسم العمارة')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('total_floors')
-                    ->label('عدد الطوابق')
+                Tables\Columns\TextColumn::make('block')
+                    ->label('البلوك / الشطر')
+                    ->placeholder('—')
                     ->sortable(),
+
                 Tables\Columns\TextColumn::make('apartments_count')
                     ->counts('apartments')
                     ->label('عدد الشقق')
