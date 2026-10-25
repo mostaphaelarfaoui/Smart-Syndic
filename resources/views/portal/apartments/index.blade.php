@@ -100,7 +100,7 @@
                         <input type="number" step="0.01" name="monthly_fee" class="form-control" value="200" required>
                     </div>
 
-                    <div style="background:rgba(15,52,96,0.06); padding:0.75rem 1rem; border-radius:8px; border:1px solid rgba(15,52,96,0.12); font-size:0.8rem; color:var(--text-secondary);">
+                    <div style="background:var(--bg-secondary); padding:0.85rem 1.1rem; border-radius:10px; border:1px solid var(--border-color); font-size:0.84rem; color:var(--text-secondary);">
                         💡 سيتم توليد أرقام الشقق تلقائياً بالتسلسل بدءاً من آخر شقة موجودة بالعمارة.
                     </div>
                 </div>
@@ -271,7 +271,7 @@
             <div class="modal-header" style="display:flex; align-items:center; justify-content:space-between;">
                 <div>
                     <h3 class="modal-title" style="margin:0;" x-text="detailsData.apartment ? detailsData.apartment.clean_unit + ' — تفاصيل وسجل الدفعات' : 'جاري التحميل...'"></h3>
-                    <p style="margin:0; font-size:0.8rem; color:var(--text-muted);" x-text="detailsData.apartment ? detailsData.apartment.building_name + (detailsData.apartment.block ? ' (' + detailsData.apartment.block + ')' : '') : ''"></p>
+                    <p style="margin:0; font-size:0.82rem; color:var(--text-secondary); margin-top:3px;" x-text="detailsData.apartment ? '🏢 ' + detailsData.apartment.building_name + (detailsData.apartment.block ? ' (بلوك ' + detailsData.apartment.block + ')' : '') : ''"></p>
                 </div>
                 <button type="button" class="icon-btn" @click="detailsModal = false">✕</button>
             </div>
@@ -287,28 +287,28 @@
                 <template x-if="!detailsLoading && detailsData.apartment">
                     <div>
                         {{-- Apartment Summary Bar --}}
-                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:0.75rem; background:var(--bg-secondary, #f8fafc); border:1px solid var(--border-color, #e2e8f0); border-radius:10px; padding:0.9rem; margin-bottom:1.5rem;">
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:12px; padding:1.1rem; margin-bottom:1.5rem;">
                             <div>
-                                <div style="font-size:0.75rem; color:var(--text-muted);">الساكن المقيم</div>
-                                <div style="font-weight:700; color:var(--text-primary);">
+                                <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">الساكن المقيم</div>
+                                <div style="font-weight:800; color:var(--text-primary); margin-top:4px; font-size:0.95rem;">
                                     <span x-text="detailsData.apartment.residents.length > 0 ? detailsData.apartment.residents[0].name : 'شاغرة (بدون ساكن)'"></span>
                                 </div>
                             </div>
                             <div>
-                                <div style="font-size:0.75rem; color:var(--text-muted);">رقم الهاتف</div>
-                                <div class="num" style="font-weight:700; color:var(--text-primary);">
+                                <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">رقم الهاتف</div>
+                                <div class="num" style="font-weight:800; color:var(--text-primary); margin-top:4px; font-size:0.95rem;">
                                     <span x-text="detailsData.apartment.residents.length > 0 && detailsData.apartment.residents[0].phone ? detailsData.apartment.residents[0].phone : '—'"></span>
                                 </div>
                             </div>
                             <div>
-                                <div style="font-size:0.75rem; color:var(--text-muted);">الواجب الشهري</div>
-                                <div class="num" style="font-weight:800; color:var(--brand-primary);">
+                                <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">الواجب الشهري</div>
+                                <div class="num" style="font-weight:900; color:var(--brand-primary); margin-top:4px; font-size:1.05rem;">
                                     <span x-text="detailsData.apartment.monthly_fee.toFixed(2) + ' د.م'"></span>
                                 </div>
                             </div>
                             <div>
-                                <div style="font-size:0.75rem; color:var(--text-muted);">حالة الأداء</div>
-                                <div>
+                                <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">حالة الأداء</div>
+                                <div style="margin-top:4px;">
                                     <span class="badge" :class="detailsData.apartment.is_billable ? 'badge-success' : 'badge-neutral'" x-text="detailsData.apartment.is_billable ? 'خاضعة للأداء' : 'معفاة'"></span>
                                 </div>
                             </div>
@@ -322,15 +322,17 @@
                         </div>
 
                         <template x-if="!detailsData.payments_by_year || detailsData.payments_by_year.length === 0">
-                            <div style="text-align:center; padding:2.5rem; background:var(--bg-secondary, #f8fafc); border-radius:10px; color:var(--text-muted);">
-                                لا توجد دفعات أو وصولات مسجلة لهذه الشقة بعد.
+                            <div style="text-align:center; padding:3rem 1.5rem; background:var(--bg-secondary); border:1px dashed var(--border-color); border-radius:12px; color:var(--text-secondary);">
+                                <div style="font-size:2.2rem; margin-bottom:0.6rem; opacity:0.8;">📭</div>
+                                <div style="font-weight:700; font-size:0.95rem; color:var(--text-primary); margin-bottom:0.25rem;">لا توجد دفعات أو وصولات مسجلة لهذه الشقة بعد</div>
+                                <div style="font-size:0.82rem; color:var(--text-muted);">عند قيام الساكن بأداء الواجبات أو تسجيل استخلاص جديد، ستظهر جميع التوصيلات هنا مصنفة حسب السنوات.</div>
                             </div>
                         </template>
 
                         <template x-for="yearGroup in detailsData.payments_by_year" :key="yearGroup.year">
-                            <div style="margin-bottom:1.5rem; border:1px solid var(--border-color, #e2e8f0); border-radius:10px; overflow:hidden;">
+                            <div style="margin-bottom:1.5rem; border:1px solid var(--border-color); border-radius:12px; overflow:hidden; background:var(--bg-surface);">
                                 {{-- Year Header --}}
-                                <div style="display:flex; align-items:center; justify-content:space-between; background:var(--bg-secondary, #f1f5f9); padding:0.75rem 1rem; border-bottom:1px solid var(--border-color, #e2e8f0);">
+                                <div style="display:flex; align-items:center; justify-content:space-between; background:var(--bg-secondary); padding:0.85rem 1.2rem; border-bottom:1px solid var(--border-color);">
                                     <div style="display:flex; align-items:center; gap:0.5rem; font-weight:800; color:var(--text-primary);">
                                         <span>📅 سنة</span>
                                         <span class="num" x-text="yearGroup.year"></span>
@@ -345,20 +347,20 @@
                                 <div class="table-responsive">
                                     <table class="table" style="margin:0; font-size:0.85rem;">
                                         <thead>
-                                            <tr style="background:#fff;">
-                                                <th>رقم الوصل</th>
-                                                <th>تاريخ الأداء</th>
-                                                <th>الشهر المستخلص</th>
-                                                <th>المبلغ</th>
-                                                <th>طريقة الأداء</th>
-                                                <th style="text-align:center;">إجراءات الوصل</th>
+                                            <tr style="background:var(--bg-surface-elevated); border-bottom:1px solid var(--border-color);">
+                                                <th style="color:var(--text-secondary); font-size:0.8rem; font-weight:700;">رقم الوصل</th>
+                                                <th style="color:var(--text-secondary); font-size:0.8rem; font-weight:700;">تاريخ الأداء</th>
+                                                <th style="color:var(--text-secondary); font-size:0.8rem; font-weight:700;">الشهر المستخلص</th>
+                                                <th style="color:var(--text-secondary); font-size:0.8rem; font-weight:700;">المبلغ</th>
+                                                <th style="color:var(--text-secondary); font-size:0.8rem; font-weight:700;">طريقة الأداء</th>
+                                                <th style="color:var(--text-secondary); font-size:0.8rem; font-weight:700; text-align:center;">إجراءات الوصل</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <template x-for="p in yearGroup.payments" :key="p.id">
                                                 <tr>
-                                                    <td class="num" style="font-weight:700; color:var(--text-secondary);" x-text="'#' + p.receipt_number"></td>
-                                                    <td class="num" style="color:var(--text-muted);" x-text="p.payment_date"></td>
+                                                    <td class="num" style="font-weight:800; color:var(--brand-primary);" x-text="'#' + p.receipt_number"></td>
+                                                    <td class="num" style="color:var(--text-secondary);" x-text="p.payment_date"></td>
                                                     <td>
                                                         <template x-for="m in p.covered_months" :key="m">
                                                             <span class="badge badge-neutral num" style="font-size:0.72rem; font-weight:700; margin-left:3px;" x-text="m"></span>
@@ -374,7 +376,7 @@
                                                         <div style="display:flex; align-items:center; justify-content:center; gap:0.3rem;">
                                                             <button type="button" 
                                                                     class="btn btn-sm btn-secondary" 
-                                                                    style="padding:0.25rem 0.6rem; font-size:0.78rem;"
+                                                                    style="padding:0.25rem 0.6rem; font-size:0.78rem;" 
                                                                     @click="openPreview(p.id, p.receipt_number, p.preview_url)">
                                                                 👁️ معاينة
                                                             </button>
@@ -423,7 +425,7 @@
                     <button type="button" class="icon-btn" @click="previewModal = false">✕</button>
                 </div>
             </div>
-            <div class="modal-body" style="padding:0; background:#f1f5f9;">
+            <div class="modal-body" style="padding:0; background:var(--bg-app);">
                 <iframe id="apartmentReceiptIframe" :src="previewModalUrl" style="width:100%; height:75vh; border:none; display:block;"></iframe>
             </div>
             <div class="modal-footer" style="display:flex; justify-content:flex-end;">

@@ -64,28 +64,28 @@
                     </div>
 
                     {{-- Interactive Multi-Month Selection --}}
-                    <div class="form-group" style="background:var(--bg-secondary, #f8fafc); padding:1rem; border-radius:10px; border:1px solid var(--border-color, #e2e8f0);">
-                        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem;">
-                            <label class="form-label" style="margin:0; font-weight:700;">
+                    <div class="form-group" style="background:var(--bg-secondary); padding:1.15rem; border-radius:12px; border:1px solid var(--border-color); margin-bottom:1.25rem;">
+                        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.85rem;">
+                            <label class="form-label" style="margin:0; font-weight:800; font-size:0.92rem; color:var(--text-primary);">
                                 الشهور المستخلصة
-                                <span style="font-size:0.78rem; font-weight:normal; color:var(--text-muted);">(يمكنك تحديد عدة أشهر لاستخراج وصل مستقل لكل شهر)</span>
+                                <span style="font-size:0.78rem; font-weight:normal; color:var(--text-muted); margin-right:4px;">(يمكنك تحديد عدة أشهر لاستخراج وصل مستقل لكل شهر)</span>
                             </label>
-                            <div style="display:flex; align-items:center; gap:0.3rem;">
-                                <button type="button" class="btn btn-sm btn-secondary" style="padding:0.2rem 0.5rem; font-size:0.8rem;" @click="changeYear(-1)">◀</button>
-                                <strong class="num" style="font-size:0.95rem; min-width:50px; text-align:center;" x-text="selectedYear"></strong>
-                                <button type="button" class="btn btn-sm btn-secondary" style="padding:0.2rem 0.5rem; font-size:0.8rem;" @click="changeYear(1)">▶</button>
+                            <div style="display:flex; align-items:center; gap:0.4rem; background:var(--bg-surface); padding:3px 6px; border-radius:8px; border:1px solid var(--border-color);">
+                                <button type="button" class="btn btn-sm btn-secondary" style="padding:0.2rem 0.55rem; font-size:0.75rem; border-radius:6px; cursor:pointer;" @click="changeYear(-1)">◀</button>
+                                <strong class="num" style="font-size:0.95rem; min-width:55px; text-align:center; color:var(--text-primary); font-weight:800;" x-text="selectedYear"></strong>
+                                <button type="button" class="btn btn-sm btn-secondary" style="padding:0.2rem 0.55rem; font-size:0.75rem; border-radius:6px; cursor:pointer;" @click="changeYear(1)">▶</button>
                             </div>
                         </div>
 
                         {{-- Month Pills Grid --}}
-                        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:0.4rem; margin-bottom:0.75rem;">
+                        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:0.45rem; margin-bottom:0.85rem;">
                             <template x-for="(monthObj, idx) in currentYearMonths" :key="monthObj.key">
                                 <button type="button" 
                                         @click="toggleMonth(monthObj.key)"
                                         :style="isMonthSelected(monthObj.key) 
-                                            ? 'background:var(--brand-primary, #0f3460); color:#fff; border-color:var(--brand-primary, #0f3460); font-weight:700;' 
-                                            : 'background:#fff; color:var(--text-primary); border-color:#cbd5e1;'"
-                                        style="padding:0.45rem 0.3rem; border:1px solid; border-radius:8px; font-size:0.82rem; cursor:pointer; text-align:center; transition:all 0.15s ease;">
+                                            ? 'background:linear-gradient(135deg, #0d9488 0%, #059669 100%); color:#ffffff; border-color:#0d9488; font-weight:800; box-shadow:0 2px 6px rgba(13,148,136,0.35);' 
+                                            : 'background:var(--bg-surface); color:var(--text-primary); border-color:var(--border-color); font-weight:600;'"
+                                        style="padding:0.55rem 0.35rem; border:1px solid; border-radius:8px; font-size:0.84rem; cursor:pointer; text-align:center; transition:all 0.15s ease;">
                                     <span x-text="monthObj.name"></span>
                                     <span x-show="isMonthSelected(monthObj.key)" style="font-size:0.75rem; margin-right:3px;">✓</span>
                                 </button>
@@ -95,14 +95,14 @@
                         {{-- Hidden input containing comma-separated months --}}
                         <input type="hidden" name="covered_months" :value="selectedMonths.join(',')">
 
-                        <div style="display:flex; align-items:center; justify-content:space-between; font-size:0.82rem;">
+                        <div style="display:flex; align-items:center; justify-content:space-between; font-size:0.84rem; padding-top:0.6rem; border-top:1px dashed var(--border-color);">
                             <span style="color:var(--brand-primary); font-weight:700;">
-                                ✨ عدد الأشهر المحددة: <span class="num" x-text="selectedMonths.length"></span> شهر
+                                ✨ عدد الأشهر المحددة: <span class="num" style="font-weight:900;" x-text="selectedMonths.length"></span> شهر
                                 <template x-if="selectedMonths.length > 1">
-                                    <span style="color:var(--color-success); font-weight:600;">(سيتم استخراج <span x-text="selectedMonths.length"></span> وصولات مستقلة)</span>
+                                    <span style="color:var(--color-success); font-weight:700;">(سيتم استخراج <span x-text="selectedMonths.length"></span> وصولات مستقلة)</span>
                                 </template>
                             </span>
-                            <button type="button" class="btn btn-link btn-sm" style="padding:0; font-size:0.78rem; text-decoration:underline;" @click="selectCurrentMonthOnly()">
+                            <button type="button" class="btn btn-link btn-sm" style="padding:0; font-size:0.8rem; color:var(--brand-secondary); text-decoration:underline; font-weight:700; cursor:pointer;" @click="selectCurrentMonthOnly()">
                                 إعادة ضبط للشهر الحالي فقط
                             </button>
                         </div>
@@ -347,7 +347,7 @@
                     <button type="button" class="icon-btn" @click="previewModal = false">✕</button>
                 </div>
             </div>
-            <div class="modal-body" style="padding:0; background:#f1f5f9;">
+            <div class="modal-body" style="padding:0; background:var(--bg-app);">
                 <iframe id="receiptPreviewIframe" :src="previewModalUrl" style="width:100%; height:75vh; border:none; display:block;"></iframe>
             </div>
             <div class="modal-footer" style="display:flex; justify-content:flex-end;">
@@ -360,7 +360,7 @@
     @if(session('generated_payments'))
     <div class="modal-overlay" x-show="successModal" x-cloak style="z-index:99998;">
         <div class="modal-dialog" style="max-width:620px; width:95%;" @click.away="successModal = false">
-            <div class="modal-header" style="background:linear-gradient(135deg, rgba(16,185,129,0.1), rgba(6,78,59,0.05)); border-bottom:1px solid #10b98133;">
+            <div class="modal-header" style="background:linear-gradient(135deg, rgba(16,185,129,0.12), rgba(6,78,59,0.08)); border-bottom:1px solid rgba(16,185,129,0.25);">
                 <div style="display:flex; align-items:center; gap:0.75rem;">
                     <span style="font-size:1.8rem;">🎉</span>
                     <div>
@@ -373,7 +373,7 @@
             <div class="modal-body" style="max-height:60vh; overflow-y:auto;">
                 <div style="display:flex; flex-direction:column; gap:0.75rem;">
                     @foreach(session('generated_payments') as $p)
-                        <div style="display:flex; align-items:center; justify-content:space-between; padding:0.9rem 1.1rem; background:var(--bg-card, #fff); border:1px solid var(--border-color, #e2e8f0); border-radius:10px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                        <div style="display:flex; align-items:center; justify-content:space-between; padding:0.9rem 1.1rem; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:10px; box-shadow:var(--shadow-sm);">
                             <div style="display:flex; align-items:center; gap:0.75rem;">
                                 <div style="width:38px; height:38px; border-radius:8px; background:rgba(16,185,129,0.1); color:#10b981; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">
                                     📄
