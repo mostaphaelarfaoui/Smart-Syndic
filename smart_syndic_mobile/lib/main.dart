@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'core/theme/app_theme.dart';
 import 'core/constants/app_colors.dart';
+import 'core/localization/arabic_western_localizations.dart';
 import 'providers/auth_provider.dart';
 import 'providers/syndic_provider.dart';
 import 'providers/resident_provider.dart';
@@ -38,6 +39,7 @@ class SmartSyndicApp extends StatelessWidget {
           Locale('fr'),
         ],
         localizationsDelegates: const [
+          ArabicWesternMaterialLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
@@ -47,6 +49,7 @@ class SmartSyndicApp extends StatelessWidget {
     );
   }
 }
+
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
