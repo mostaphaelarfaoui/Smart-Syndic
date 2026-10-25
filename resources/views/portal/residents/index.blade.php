@@ -22,7 +22,7 @@
         this.convertData.title = title || '';
         this.convertData.description = desc || '';
         this.convertData.residentName = name || 'أحد السكان';
-        this.convertData.unitNumber = unit || '';
+        this.convertData.unitNumber = (unit || '').toString().replace(/^(شقة\s*)+/g, '').trim();
         this.convertData.includeResident = true;
         this.convertData.expiresAt = '{{ date('Y-m-d', strtotime('+7 days')) }}';
         this.convertData.options = ['نعم، أوافق', 'لا، أرفض'];
@@ -358,9 +358,12 @@
 
                                         {{-- Convert to Poll Button (Like Mobile App) --}}
                                         @if($sug->status !== 'CONVERTED_TO_POLL')
+                                            @php
+                                                $cleanSugUnit = preg_replace('/^(شقة\s*)+/u', '', trim($sug->apartment?->unit_number ?? ''));
+                                            @endphp
                                             <button type="button" 
                                                     class="btn btn-sm btn-primary" 
-                                                    @click="openConvertModal('{{ $sug->id }}', @js($sug->title), @js($sug->description), @js($sug->user?->full_name ?? 'الساكن'), @js($sug->apartment?->unit_number ?? ''))"
+                                                    @click="openConvertModal('{{ $sug->id }}', @js($sug->title), @js($sug->description), @js($sug->user?->full_name ?? 'الساكن'), @js($cleanSugUnit))"
                                                     style="display:inline-flex; align-items:center; gap:0.3rem; padding:0.25rem 0.65rem; font-size:0.75rem; font-weight:700; background:linear-gradient(135deg, #6366f1, #4f46e5); border:none; box-shadow:0 2px 6px rgba(99,102,241,0.25);"
                                                     title="تحويل هذا المقترح لاستطلاع رأي وتصويت لجميع السكان">
                                                 <span>🗳️ تحويل لتصويت</span>
@@ -621,7 +624,7 @@
                             <span>تضمين اسم صاحب المقترح تقديراً لمبادرته</span>
                         </label>
                         <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.35rem; margin-right:1.75rem;">
-                            سيتم إلحاق العبارة: <strong x-text="'(مُقترح من طرف: ' + convertData.residentName + (convertData.unitNumber ? ' - شقة ' + convertData.unitNumber : '') + ')'"></strong> في نهاية الوصف
+                            سيتم إلحاق العبارة: <strong x-text="'(مُقترح من طرف: ' + convertData.residentName + (convertData.unitNumber ? ' - شقة ' + convertData.unitNumber.replace(/^(شقة\s*)+/g, '').trim() : '') + ')'"></strong> في نهاية الوصف
                         </div>
                     </div>
 

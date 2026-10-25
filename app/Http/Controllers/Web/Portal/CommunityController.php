@@ -76,9 +76,15 @@ class CommunityController extends Controller
 
         $finalDescription = $validated['description'] ?? '';
         if ($request->boolean('include_resident_info') || $request->input('include_resident_info') == '1') {
-            $unit = $suggestion->apartment ? $suggestion->apartment->unit_number : 'غير محددة';
+            if ($suggestion->apartment) {
+                $rawUnit = trim($suggestion->apartment->unit_number);
+                $cleanUnit = preg_replace('/^(شقة\s*)+/u', '', $rawUnit);
+                $unitLabel = 'شقة ' . trim($cleanUnit);
+            } else {
+                $unitLabel = 'غير محددة';
+            }
             $name = $suggestion->user ? $suggestion->user->full_name : 'أحد السكان';
-            $credit = "\n\n(مُقترح من طرف: {$name} - شقة {$unit})";
+            $credit = "\n\n(مُقترح من طرف: {$name} - {$unitLabel})";
             $finalDescription .= $credit;
         }
 
