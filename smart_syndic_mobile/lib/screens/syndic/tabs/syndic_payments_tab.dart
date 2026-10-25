@@ -491,109 +491,119 @@ class _SyndicPaymentsTabState extends State<SyndicPaymentsTab> {
                                   ],
                                 ),
                               ] else ...[
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    if (payment.isConfirmed)
-                                      ElevatedButton.icon(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(0xFF0D9488),
-                                          foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                          elevation: 0,
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: Wrap(
+                                    alignment: WrapAlignment.spaceBetween,
+                                    crossAxisAlignment: WrapCrossAlignment.center,
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: [
+                                      if (payment.isConfirmed)
+                                        ElevatedButton.icon(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: const Color(0xFF0D9488),
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                            elevation: 0,
+                                          ),
+                                          onPressed: () => _sendPaymentDialog(payment),
+                                          icon: const Icon(Icons.send_rounded, size: 15),
+                                          label: Text('إرسال للساكن', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold)),
+                                        )
+                                      else
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.green.shade50,
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(Icons.done_all, size: 14, color: AppColors.success),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                'تم التسليم للساكن',
+                                                style: GoogleFonts.cairo(fontSize: 11, color: AppColors.success, fontWeight: FontWeight.bold),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                        onPressed: () => _sendPaymentDialog(payment),
-                                        icon: const Icon(Icons.send_rounded, size: 15),
-                                        label: Text('إرسال للساكن', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold)),
-                                      )
-                                    else
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: Colors.green.shade50,
-                                          borderRadius: BorderRadius.circular(6),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            const Icon(Icons.done_all, size: 14, color: AppColors.success),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              'تم التسليم للساكن',
-                                              style: GoogleFonts.cairo(fontSize: 11, color: AppColors.success, fontWeight: FontWeight.bold),
+
+                                      Wrap(
+                                        spacing: 6,
+                                        runSpacing: 6,
+                                        crossAxisAlignment: WrapCrossAlignment.center,
+                                        children: [
+                                          // WhatsApp Button
+                                          IconButton(
+                                            tooltip: 'إرسال بالواتساب',
+                                            style: IconButton.styleFrom(
+                                              backgroundColor: const Color(0xFF25D366).withAlpha(25),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                              padding: const EdgeInsets.all(8),
+                                              minimumSize: const Size(36, 36),
+                                            ),
+                                            onPressed: () => _shareViaWhatsApp(
+                                              payment.residentPhone,
+                                              payment.receiptNumber,
+                                              payment.amountPaid,
+                                              payment.apartmentUnit ?? '',
+                                              receiptUrl: payment.receiptUrl,
+                                            ),
+                                            icon: const Icon(Icons.chat, size: 18, color: Color(0xFF25D366)),
+                                          ),
+
+                                          // Receipt actions: Preview in app + Direct download
+                                          if (payment.receiptUrl != null && payment.receiptUrl!.isNotEmpty) ...[
+                                            ElevatedButton.icon(
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: AppColors.primary,
+                                                foregroundColor: Colors.white,
+                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                                elevation: 0,
+                                              ),
+                                              onPressed: () => ReceiptViewerScreen.open(
+                                                context,
+                                                receiptUrl: payment.receiptUrl!,
+                                                receiptNumber: payment.receiptNumber,
+                                                residentName: payment.residentName,
+                                                residentPhone: payment.residentPhone,
+                                                unitNumber: payment.apartmentUnit,
+                                                amountPaid: payment.amountPaid,
+                                              ),
+                                              icon: const Icon(Icons.visibility_rounded, size: 15, color: Colors.white),
+                                              label: Text(
+                                                'معاينة',
+                                                style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold),
+                                              ),
+                                            ),
+                                            OutlinedButton.icon(
+                                              style: OutlinedButton.styleFrom(
+                                                foregroundColor: AppColors.primary,
+                                                side: const BorderSide(color: AppColors.primary),
+                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                              ),
+                                              onPressed: () => ReceiptViewerScreen.downloadDirectly(
+                                                context,
+                                                receiptUrl: payment.receiptUrl!,
+                                                receiptNumber: payment.receiptNumber,
+                                              ),
+                                              icon: const Icon(Icons.download_rounded, size: 15),
+                                              label: Text(
+                                                'تحميل',
+                                                style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold),
+                                              ),
                                             ),
                                           ],
-                                        ),
-                                      ),
-
-                                    Row(
-                                      children: [
-                                        // WhatsApp Button
-                                        IconButton(
-                                          tooltip: 'إرسال بالواتساب',
-                                          style: IconButton.styleFrom(
-                                            backgroundColor: const Color(0xFF25D366).withAlpha(25),
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                          ),
-                                          onPressed: () => _shareViaWhatsApp(
-                                            payment.residentPhone,
-                                            payment.receiptNumber,
-                                            payment.amountPaid,
-                                            payment.apartmentUnit ?? '',
-                                            receiptUrl: payment.receiptUrl,
-                                          ),
-                                          icon: const Icon(Icons.chat, size: 18, color: Color(0xFF25D366)),
-                                        ),
-                                        const SizedBox(width: 6),
-
-                                        // Receipt actions: Preview in app + Direct download
-                                        if (payment.receiptUrl != null && payment.receiptUrl!.isNotEmpty) ...[
-                                          ElevatedButton.icon(
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: AppColors.primary,
-                                              foregroundColor: Colors.white,
-                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                              elevation: 0,
-                                            ),
-                                            onPressed: () => ReceiptViewerScreen.open(
-                                              context,
-                                              receiptUrl: payment.receiptUrl!,
-                                              receiptNumber: payment.receiptNumber,
-                                              residentName: payment.residentName,
-                                              residentPhone: payment.residentPhone,
-                                              unitNumber: payment.apartmentUnit,
-                                              amountPaid: payment.amountPaid,
-                                            ),
-                                            icon: const Icon(Icons.visibility_rounded, size: 15, color: Colors.white),
-                                            label: Text(
-                                              'معاينة',
-                                              style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 6),
-                                          OutlinedButton.icon(
-                                            style: OutlinedButton.styleFrom(
-                                              foregroundColor: AppColors.primary,
-                                              side: const BorderSide(color: AppColors.primary),
-                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                            ),
-                                            onPressed: () => ReceiptViewerScreen.downloadDirectly(
-                                              context,
-                                              receiptUrl: payment.receiptUrl!,
-                                              receiptNumber: payment.receiptNumber,
-                                            ),
-                                            icon: const Icon(Icons.download_rounded, size: 15),
-                                            label: Text(
-                                              'تحميل مباشر',
-                                              style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold),
-                                            ),
-                                          ),
                                         ],
-                                      ],
-                                    ),
-                                  ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ],
