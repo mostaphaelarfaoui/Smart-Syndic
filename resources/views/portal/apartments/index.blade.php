@@ -7,17 +7,65 @@
 <div x-data="apartmentsPage()" x-init="init()">
     <div class="page-header">
         <div>
-            <h1 class="page-title">إدارة الشقق والوحدات السكنية</h1>
+            <h1 class="page-title">
+                <span>🏢</span>
+                <span>إدارة الشقق والوحدات السكنية</span>
+            </h1>
             <p class="page-subtitle">متابعة تفاصيل الشقق، الملاك المقيمين، سجلات الأداء والوصولات مصنفة بالسنوات</p>
         </div>
 
-        <div class="page-actions" style="display:flex; align-items:center; gap:0.5rem;">
-            <button type="button" class="btn btn-secondary" @click="bulkModal = true">
-                <span>⚡ توليد جماعي للشقق</span>
+        <div class="page-actions">
+            <button type="button" class="btn btn-secondary" @click="bulkModal = true" style="display:inline-flex; align-items:center; gap:0.4rem; font-weight:700;">
+                <span>⚡</span>
+                <span>توليد جماعي للشقق</span>
             </button>
-            <button type="button" class="btn btn-primary" @click="addModal = true">
-                <span>+ إضافة شقة جديدة</span>
+            <button type="button" class="btn btn-primary" @click="addModal = true" style="display:inline-flex; align-items:center; gap:0.4rem; font-weight:800;">
+                <span>+</span>
+                <span>إضافة شقة جديدة</span>
             </button>
+        </div>
+    </div>
+
+    {{-- Apartments Summary KPI Grid --}}
+    <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom:1.5rem;">
+        <div class="kpi-card" style="padding:1.15rem 1.35rem;">
+            <div class="kpi-card-header" style="margin-bottom:0.4rem;">
+                <span class="kpi-label">إجمالي الشقق</span>
+                <div class="kpi-icon-box teal" style="width:34px; height:34px; font-size:1rem;">🏢</div>
+            </div>
+            <div class="kpi-value num" style="font-size:1.6rem; margin-bottom:0;">
+                {{ $totalCount }} <span class="unit">شقة</span>
+            </div>
+        </div>
+
+        <div class="kpi-card" style="padding:1.15rem 1.35rem;">
+            <div class="kpi-card-header" style="margin-bottom:0.4rem;">
+                <span class="kpi-label">الشقق المأهولة (بها سكان)</span>
+                <div class="kpi-icon-box emerald" style="width:34px; height:34px; font-size:1rem;">👥</div>
+            </div>
+            <div class="kpi-value num" style="font-size:1.6rem; margin-bottom:0; color:var(--color-success);">
+                {{ $occupiedCount }} <span class="unit">مأهولة</span>
+            </div>
+        </div>
+
+        <div class="kpi-card" style="padding:1.15rem 1.35rem;">
+            <div class="kpi-card-header" style="margin-bottom:0.4rem;">
+                <span class="kpi-label">الخاضعة لواجبات السانديك</span>
+                <div class="kpi-icon-box indigo" style="width:34px; height:34px; font-size:1rem;">💳</div>
+            </div>
+            <div class="kpi-value num" style="font-size:1.6rem; margin-bottom:0; color:var(--brand-primary);">
+                {{ $billableCount }} <span class="unit">شقة</span>
+            </div>
+        </div>
+
+        <div class="kpi-card" style="padding:1.15rem 1.35rem;">
+            <div class="kpi-card-header" style="margin-bottom:0.4rem;">
+                <span class="kpi-label">الواجبات الشهرية المتوقعة</span>
+                <div class="kpi-icon-box amber" style="width:34px; height:34px; font-size:1rem;">💰</div>
+            </div>
+            <div class="kpi-value num" style="font-size:1.6rem; margin-bottom:0;">
+                {{ number_format($expectedMonthly, 2) }} <span class="unit">د.م</span>
+            </div>
         </div>
     </div>
 
@@ -113,46 +161,44 @@
     </div>
 
     {{-- Filters Card --}}
-    <div class="card" style="margin-bottom:1.5rem;">
-        <div class="card-body" style="padding:1.25rem;">
-            <form method="GET" action="{{ route('portal.apartments.index') }}" style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
-                <div class="search-box" style="flex:1; min-width:200px;">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="ابحث برقم الشقة...">
-                    <span class="search-icon">🔍</span>
-                </div>
+    <div class="filter-card">
+        <form method="GET" action="{{ route('portal.apartments.index') }}" class="filter-form">
+            <div class="search-box" style="flex:1; min-width:200px;">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="ابحث برقم الشقة...">
+                <span class="search-icon">🔍</span>
+            </div>
 
-                <select name="building_id" class="form-select" style="width:auto; min-width:180px;">
-                    <option value="">جميع العمارات</option>
-                    @foreach($buildings as $b)
-                        <option value="{{ $b->id }}" {{ request('building_id') == $b->id ? 'selected' : '' }}>
-                            {{ $b->name }}{{ $b->block ? ' (' . $b->block . ')' : '' }}
-                        </option>
-                    @endforeach
-                </select>
+            <select name="building_id" class="form-select" style="width:auto; min-width:180px;">
+                <option value="">جميع العمارات</option>
+                @foreach($buildings as $b)
+                    <option value="{{ $b->id }}" {{ request('building_id') == $b->id ? 'selected' : '' }}>
+                        {{ $b->name }}{{ $b->block ? ' (' . $b->block . ')' : '' }}
+                    </option>
+                @endforeach
+            </select>
 
-                <select name="status" class="form-select" style="width:auto; min-width:160px;">
-                    <option value="">جميع الحالات</option>
-                    <option value="OCCUPIED" {{ request('status') == 'OCCUPIED' ? 'selected' : '' }}>مأهولة (بها مقيم)</option>
-                    <option value="VACANT" {{ request('status') == 'VACANT' ? 'selected' : '' }}>شاغرة (بدون مقيم)</option>
-                </select>
+            <select name="status" class="form-select" style="width:auto; min-width:160px;">
+                <option value="">جميع الحالات</option>
+                <option value="OCCUPIED" {{ request('status') == 'OCCUPIED' ? 'selected' : '' }}>مأهولة (بها مقيم)</option>
+                <option value="VACANT" {{ request('status') == 'VACANT' ? 'selected' : '' }}>شاغرة (بدون مقيم)</option>
+            </select>
 
-                <select name="billable" class="form-select" style="width:auto; min-width:160px;">
-                    <option value="">الأداء والسانديك</option>
-                    <option value="1" {{ request('billable') === '1' ? 'selected' : '' }}>خاضعة للأداء</option>
-                    <option value="0" {{ request('billable') === '0' ? 'selected' : '' }}>معفاة</option>
-                </select>
+            <select name="billable" class="form-select" style="width:auto; min-width:160px;">
+                <option value="">الأداء والسانديك</option>
+                <option value="1" {{ request('billable') === '1' ? 'selected' : '' }}>خاضعة للأداء</option>
+                <option value="0" {{ request('billable') === '0' ? 'selected' : '' }}>معفاة</option>
+            </select>
 
-                <button type="submit" class="btn btn-primary btn-sm" style="padding:0.75rem 1.25rem;">
-                    تطبيق الفلترة
-                </button>
+            <button type="submit" class="btn btn-primary">
+                <span>تطبيق الفلترة</span>
+            </button>
 
-                @if(request()->hasAny(['search', 'building_id', 'status', 'billable']))
-                    <a href="{{ route('portal.apartments.index') }}" class="btn btn-secondary btn-sm" style="padding:0.75rem 1.25rem;">
-                        إلغاء الفلاتر
-                    </a>
-                @endif
-            </form>
-        </div>
+            @if(request()->hasAny(['search', 'building_id', 'status', 'billable']))
+                <a href="{{ route('portal.apartments.index') }}" class="btn btn-secondary">
+                    <span>إلغاء الفلاتر</span>
+                </a>
+            @endif
+        </form>
     </div>
 
     {{-- Apartments Table Card --}}

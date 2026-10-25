@@ -1186,6 +1186,222 @@ input[type="month"]::-webkit-calendar-picker-indicator:hover {
 }
 
 /* ==========================================================================
+   Page Headers & Hero Banners (Unified Across All Portal Pages)
+   ========================================================================== */
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+    padding: 1.35rem 1.6rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+}
+
+[data-theme="dark"] .page-header {
+    background: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(30, 41, 59, 0.75) 100%);
+    border-color: rgba(51, 65, 85, 0.75);
+}
+
+.page-header::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--brand-primary), var(--brand-secondary));
+    border-top-right-radius: var(--radius-lg);
+    border-bottom-right-radius: var(--radius-lg);
+}
+
+.page-title {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--text-primary);
+    margin: 0 0 0.35rem 0;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.page-subtitle {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.page-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+}
+
+/* ==========================================================================
+   Modern Unified Tables (Across All Portal Pages)
+   ========================================================================== */
+.table-responsive {
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+    border: 1px solid var(--border-color);
+    background: var(--bg-surface);
+    box-shadow: var(--shadow-xs);
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+    font-size: 0.88rem;
+}
+
+.table thead th {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-secondary) !important;
+    font-size: 0.8rem !important;
+    font-weight: 800 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 0.9rem 1.1rem !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    text-align: right;
+    white-space: nowrap;
+}
+
+[data-theme="dark"] .table thead th {
+    background-color: var(--bg-surface-elevated, #1e293b) !important;
+    color: #cbd5e1 !important;
+    border-bottom-color: var(--border-color) !important;
+}
+
+.table tbody tr {
+    transition: background-color 0.15s ease;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(13, 148, 136, 0.04) !important;
+}
+
+[data-theme="dark"] .table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+.table tbody td {
+    padding: 1rem 1.1rem !important;
+    vertical-align: middle !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    color: var(--text-primary);
+    font-size: 0.88rem;
+}
+
+.table tbody tr:last-child td {
+    border-bottom: none !important;
+}
+
+/* ==========================================================================
+   Compact & Elegant Filter Bars
+   ========================================================================== */
+.filter-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-xs);
+}
+
+.filter-form {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.filter-form .form-control,
+.filter-form .form-select,
+.filter-form select,
+.filter-form input:not([type="hidden"]) {
+    width: auto !important;
+    display: inline-block !important;
+    padding: 0.5rem 0.85rem;
+    font-size: 0.85rem;
+    border-radius: var(--radius-sm);
+    height: 42px;
+}
+
+.filter-form .search-box {
+    flex: 1 1 240px;
+    min-width: 200px;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.filter-form .search-box input {
+    width: 100% !important;
+    padding: 0.5rem 2.4rem 0.5rem 0.85rem !important;
+}
+
+.filter-form .btn {
+    height: 42px;
+    padding: 0 1.25rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+}
+
+/* Search Box */
+.search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 0.5rem 2.4rem 0.5rem 0.85rem;
+    border: 1px solid var(--border-color);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    height: 42px;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.search-box input:focus {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+}
+
+.search-box .search-icon {
+    position: absolute;
+    right: 0.85rem;
+    pointer-events: none;
+    font-size: 0.95rem;
+    opacity: 0.6;
+}
+
+/* ==========================================================================
    Responsive Adaptations
    ========================================================================== */
 @media (max-width: 900px) {
@@ -1199,3 +1415,4 @@ input[type="month"]::-webkit-calendar-picker-indicator:hover {
         margin-right: 0;
     }
 }
+

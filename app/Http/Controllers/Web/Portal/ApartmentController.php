@@ -48,7 +48,12 @@ class ApartmentController extends Controller
             ->paginate(25)
             ->withQueryString();
 
-        return view('portal.apartments.index', compact('apartments', 'buildings', 'isComplex'));
+        $totalCount      = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))->count();
+        $occupiedCount   = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))->has('residents')->count();
+        $billableCount   = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))->billable()->count();
+        $expectedMonthly = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))->billable()->sum('monthly_fee');
+
+        return view('portal.apartments.index', compact('apartments', 'buildings', 'isComplex', 'totalCount', 'occupiedCount', 'billableCount', 'expectedMonthly'));
     }
 
     public function store(Request $request)

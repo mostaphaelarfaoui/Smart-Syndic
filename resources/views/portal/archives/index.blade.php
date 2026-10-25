@@ -23,32 +23,30 @@
 
 @if($tab === 'audit')
     {{-- Audit Logs Section --}}
-    <div class="card" style="margin-bottom:1.5rem;">
-        <div class="card-body" style="padding:1.25rem;">
-            <form method="GET" action="{{ route('portal.archives.index') }}" style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
-                <input type="hidden" name="tab" value="audit">
+    <div class="filter-card">
+        <form method="GET" action="{{ route('portal.archives.index') }}" class="filter-form">
+            <input type="hidden" name="tab" value="audit">
 
-                <select name="action" class="form-select" style="width:auto; min-width:240px;">
-                    <option value="">جميع أنواع العمليات</option>
-                    <option value="PAYMENT_RECORDED" {{ request('action') == 'PAYMENT_RECORDED' ? 'selected' : '' }}>تسجيل أداء / دفعة</option>
-                    <option value="PAYMENT_CONFIRMED" {{ request('action') == 'PAYMENT_CONFIRMED' ? 'selected' : '' }}>تأكيد وصل أداء</option>
-                    <option value="EXPENSE_RECORDED" {{ request('action') == 'EXPENSE_RECORDED' ? 'selected' : '' }}>تسجيل مصروف جديد</option>
-                    <option value="EXPENSE_DELETED" {{ request('action') == 'EXPENSE_DELETED' ? 'selected' : '' }}>حذف مصروف</option>
-                    <option value="RESIDENT_APPROVED" {{ request('action') == 'RESIDENT_APPROVED' ? 'selected' : '' }}>تفعيل حساب ساكن</option>
-                    <option value="APARTMENT_VACATED" {{ request('action') == 'APARTMENT_VACATED' ? 'selected' : '' }}>تفريغ شقة وتصفير الحساب</option>
-                </select>
+            <select name="action" class="form-select" style="min-width:240px;">
+                <option value="">جميع أنواع العمليات</option>
+                <option value="PAYMENT_RECORDED" {{ request('action') == 'PAYMENT_RECORDED' ? 'selected' : '' }}>تسجيل أداء / دفعة</option>
+                <option value="PAYMENT_CONFIRMED" {{ request('action') == 'PAYMENT_CONFIRMED' ? 'selected' : '' }}>تأكيد وصل أداء</option>
+                <option value="EXPENSE_RECORDED" {{ request('action') == 'EXPENSE_RECORDED' ? 'selected' : '' }}>تسجيل مصروف جديد</option>
+                <option value="EXPENSE_DELETED" {{ request('action') == 'EXPENSE_DELETED' ? 'selected' : '' }}>حذف مصروف</option>
+                <option value="RESIDENT_APPROVED" {{ request('action') == 'RESIDENT_APPROVED' ? 'selected' : '' }}>تفعيل حساب ساكن</option>
+                <option value="APARTMENT_VACATED" {{ request('action') == 'APARTMENT_VACATED' ? 'selected' : '' }}>تفريغ شقة وتصفير الحساب</option>
+            </select>
 
-                <button type="submit" class="btn btn-primary btn-sm" style="padding:0.75rem 1.25rem;">
-                    تطبيق الفلترة
-                </button>
+            <button type="submit" class="btn btn-primary">
+                <span>تطبيق الفلترة</span>
+            </button>
 
-                @if(request('action'))
-                    <a href="{{ route('portal.archives.index', ['tab' => 'audit']) }}" class="btn btn-secondary btn-sm" style="padding:0.75rem 1.25rem;">
-                        إلغاء الفلتر
-                    </a>
-                @endif
-            </form>
-        </div>
+            @if(request('action'))
+                <a href="{{ route('portal.archives.index', ['tab' => 'audit']) }}" class="btn btn-secondary">
+                    <span>إلغاء الفلتر</span>
+                </a>
+            @endif
+        </form>
     </div>
 
     <div class="card">

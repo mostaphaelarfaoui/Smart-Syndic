@@ -6,32 +6,45 @@
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">إدارة السكان والمقيمين</h1>
+        <h1 class="page-title">
+            <span>👥</span>
+            <span>إدارة السكان والمقيمين</span>
+        </h1>
         <p class="page-subtitle">متابعة حسابات الملاك والسكان، تفعيل طلبات الانضمام الجديدة وإدارة كود الدعوة</p>
     </div>
 
     {{-- Invitation Code Banner Card --}}
-    <div style="display:flex; align-items:center; gap:0.75rem; background:var(--bg-surface); padding:0.6rem 1.25rem; border:1px solid var(--border-color); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm);" x-data="{ copied: false }">
-        <span style="font-size:0.85rem; color:var(--text-secondary); font-weight:700;">كود انضمام السكان:</span>
-        <code style="font-family:monospace; font-size:1.1rem; font-weight:900; color:var(--brand-primary); letter-spacing:0.05em;">
+    <div style="display:flex; align-items:center; gap:0.5rem; background:var(--bg-surface); padding:0.6rem 1.15rem; border:1px solid var(--border-color); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm);" x-data="{ copied: false }">
+        <span style="font-size:0.85rem; color:var(--text-secondary); font-weight:700;">كود الانضمام:</span>
+        <code style="font-family:monospace; font-size:1.15rem; font-weight:900; color:#38bdf8; letter-spacing:0.08em; padding:0 0.3rem;">
             {{ $tenant->invitation_code }}
         </code>
         <button
             type="button"
             class="btn btn-sm btn-secondary"
+            style="padding:0.25rem 0.6rem; font-size:0.75rem;"
             x-on:click="navigator.clipboard.writeText('{{ $tenant->invitation_code }}'); copied = true; setTimeout(() => copied = false, 2500)"
         >
-            <span x-show="!copied">نسخ 📋</span>
+            <span x-show="!copied">📋 نسخ</span>
             <span x-show="copied" x-cloak style="color:var(--color-success); font-weight:700;">تم! ✓</span>
         </button>
+
+        <a href="https://api.whatsapp.com/send?text={{ urlencode('السلام عليكم، يرجى من جميع سكان ' . $tenant->name . ' تحميل تطبيق Smart Syndic واستخدام كود الانضمام: ' . $tenant->invitation_code) }}" 
+           target="_blank" 
+           class="btn btn-sm btn-success" 
+           style="padding:0.25rem 0.65rem; font-size:0.75rem; background:#25d366; border-color:#25d366; color:#fff;"
+           title="مشاركة الكود في واتساب">
+            📲 واتساب
+        </a>
 
         <form method="POST" action="{{ route('portal.residents.regenerate-code') }}"
               data-confirm="هل تؤكد تجديد كود الدعوة للإقامة؟ الكود القديم سيتوقف عن العمل فوراً."
               data-confirm-title="تجديد كود الدعوة"
               data-confirm-type="warning"
-              data-confirm-btn="تجديد الكود">
+              data-confirm-btn="تجديد الكود"
+              style="margin:0;">
             @csrf
-            <button type="submit" class="btn btn-sm btn-secondary" title="توليد كود جديد">
+            <button type="submit" class="btn btn-sm btn-secondary" style="padding:0.25rem 0.55rem; font-size:0.75rem;" title="توليد كود جديد">
                 🔄 تجديد
             </button>
         </form>
@@ -39,54 +52,62 @@
 </div>
 
 {{-- KPI Summary Row --}}
-<div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom:1.5rem;">
-    <div class="kpi-card" style="padding:1.25rem;">
-        <div class="kpi-card-header" style="margin-bottom:0.5rem;">
+<div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom:1.5rem;">
+    <div class="kpi-card" style="padding:1.15rem 1.35rem;">
+        <div class="kpi-card-header" style="margin-bottom:0.4rem;">
             <span class="kpi-label">السكان المفعلين</span>
-            <div class="kpi-icon-box emerald" style="width:36px; height:36px;">👥</div>
+            <div class="kpi-icon-box emerald" style="width:34px; height:34px; font-size:1rem;">👥</div>
         </div>
-        <div class="kpi-value num" style="font-size:1.75rem; margin-bottom:0;">
+        <div class="kpi-value num" style="font-size:1.6rem; margin-bottom:0; color:var(--color-success);">
             {{ $activeCount }} <span class="unit">ساكن</span>
         </div>
     </div>
 
-    <div class="kpi-card" style="padding:1.25rem;">
-        <div class="kpi-card-header" style="margin-bottom:0.5rem;">
+    <div class="kpi-card" style="padding:1.15rem 1.35rem;">
+        <div class="kpi-card-header" style="margin-bottom:0.4rem;">
             <span class="kpi-label">طلبات في انتظار التفعيل</span>
-            <div class="kpi-icon-box amber" style="width:36px; height:36px;">⏳</div>
+            <div class="kpi-icon-box amber" style="width:34px; height:34px; font-size:1rem;">⏳</div>
         </div>
-        <div class="kpi-value num" style="font-size:1.75rem; margin-bottom:0; color: {{ $pendingCount > 0 ? 'var(--color-warning)' : 'var(--text-primary)' }};">
+        <div class="kpi-value num" style="font-size:1.6rem; margin-bottom:0; color: {{ $pendingCount > 0 ? 'var(--color-warning)' : 'var(--text-primary)' }};">
             {{ $pendingCount }} <span class="unit">طلب</span>
+        </div>
+    </div>
+
+    <div class="kpi-card" style="padding:1.15rem 1.35rem;">
+        <div class="kpi-card-header" style="margin-bottom:0.4rem;">
+            <span class="kpi-label">إجمالي المسجلين</span>
+            <div class="kpi-icon-box teal" style="width:34px; height:34px; font-size:1rem;">📋</div>
+        </div>
+        <div class="kpi-value num" style="font-size:1.6rem; margin-bottom:0;">
+            {{ $activeCount + $pendingCount }} <span class="unit">حساب</span>
         </div>
     </div>
 </div>
 
 {{-- Filters Card --}}
-<div class="card" style="margin-bottom:1.5rem;">
-    <div class="card-body" style="padding:1.25rem;">
-        <form method="GET" action="{{ route('portal.residents.index') }}" style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
-            <div class="search-box" style="flex:1;">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="ابحث بالاسم، الهاتف أو البريد الإلكتروني...">
-                <span class="search-icon">🔍</span>
-            </div>
+<div class="filter-card">
+    <form method="GET" action="{{ route('portal.residents.index') }}" class="filter-form">
+        <div class="search-box" style="flex:1; min-width:200px;">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="ابحث بالاسم، الهاتف أو البريد الإلكتروني...">
+            <span class="search-icon">🔍</span>
+        </div>
 
-            <select name="status" class="form-select" style="width:auto; min-width:180px;">
-                <option value="">جميع الحالات</option>
-                <option value="ACTIVE" {{ request('status') == 'ACTIVE' ? 'selected' : '' }}>حساب مفعل (نشط)</option>
-                <option value="PENDING" {{ request('status') == 'PENDING' ? 'selected' : '' }}>في انتظار الموافقة</option>
-            </select>
+        <select name="status" class="form-select" style="width:auto; min-width:180px;">
+            <option value="">جميع الحالات</option>
+            <option value="ACTIVE" {{ request('status') == 'ACTIVE' ? 'selected' : '' }}>حساب مفعل (نشط)</option>
+            <option value="PENDING" {{ request('status') == 'PENDING' ? 'selected' : '' }}>في انتظار الموافقة</option>
+        </select>
 
-            <button type="submit" class="btn btn-primary btn-sm" style="padding:0.75rem 1.25rem;">
-                تطبيق الفلترة
-            </button>
+        <button type="submit" class="btn btn-primary">
+            <span>تطبيق الفلترة</span>
+        </button>
 
-            @if(request()->hasAny(['search', 'status']))
-                <a href="{{ route('portal.residents.index') }}" class="btn btn-secondary btn-sm" style="padding:0.75rem 1.25rem;">
-                    إلغاء الفلاتر
-                </a>
-            @endif
-        </form>
-    </div>
+        @if(request()->hasAny(['search', 'status']))
+            <a href="{{ route('portal.residents.index') }}" class="btn btn-secondary">
+                <span>إلغاء الفلاتر</span>
+            </a>
+        @endif
+    </form>
 </div>
 
 {{-- Residents Table Card --}}

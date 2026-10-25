@@ -7,19 +7,23 @@
 <div x-data="paymentsPage()" x-init="init()">
     <div class="page-header">
         <div>
-            <h1 class="page-title">الواجبات الشهرية والتحصيل</h1>
+            <h1 class="page-title">
+                <span>💳</span>
+                <span>الواجبات الشهرية والتحصيل</span>
+            </h1>
             <p class="page-subtitle">تسجيل مقبوضات السانديك، إصدار التوصيلات الرسمية المستقلة ومتابعة الشهور المؤداة</p>
         </div>
 
-        <div class="page-actions" style="display:flex; align-items:center; gap:0.5rem;">
+        <div class="page-actions">
             <button type="button" class="btn btn-secondary" onclick="openFinancialReportModal('revenues')" style="display:inline-flex; align-items:center; gap:0.4rem; font-weight:700;">
                 <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 <span>📑 تقرير المداخيل (PDF)</span>
             </button>
-            <button type="button" class="btn btn-primary" @click="recordModal = true">
-                <span>+ استخلاص دفعة جديدة</span>
+            <button type="button" class="btn btn-primary" @click="recordModal = true" style="display:inline-flex; align-items:center; gap:0.4rem; font-weight:800;">
+                <span>+</span>
+                <span>استخلاص دفعة جديدة</span>
             </button>
         </div>
     </div>
@@ -153,68 +157,76 @@
     </div>
 
     {{-- KPI Summary Row --}}
-    <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-bottom:1.5rem;">
-        <div class="kpi-card" style="padding:1.25rem;">
-            <div class="kpi-card-header" style="margin-bottom:0.5rem;">
+    <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom:1.5rem;">
+        <div class="kpi-card" style="padding:1.15rem 1.35rem;">
+            <div class="kpi-card-header" style="margin-bottom:0.4rem;">
                 <span class="kpi-label">مداخيل الشهر الحالي</span>
-                <div class="kpi-icon-box emerald" style="width:36px; height:36px;">📈</div>
+                <div class="kpi-icon-box emerald" style="width:34px; height:34px; font-size:1rem;">📈</div>
             </div>
-            <div class="kpi-value num" style="font-size:1.75rem; margin-bottom:0; color:var(--color-success);">
+            <div class="kpi-value num" style="font-size:1.6rem; margin-bottom:0; color:var(--color-success);">
                 {{ number_format($thisMonthCollected, 2) }} <span class="unit">د.م</span>
             </div>
         </div>
 
-        <div class="kpi-card" style="padding:1.25rem;">
-            <div class="kpi-card-header" style="margin-bottom:0.5rem;">
+        <div class="kpi-card" style="padding:1.15rem 1.35rem;">
+            <div class="kpi-card-header" style="margin-bottom:0.4rem;">
                 <span class="kpi-label">إجمالي المقبوضات المحصلة</span>
-                <div class="kpi-icon-box teal" style="width:36px; height:36px;">💰</div>
+                <div class="kpi-icon-box teal" style="width:34px; height:34px; font-size:1rem;">💰</div>
             </div>
-            <div class="kpi-value num" style="font-size:1.75rem; margin-bottom:0;">
+            <div class="kpi-value num" style="font-size:1.6rem; margin-bottom:0;">
                 {{ number_format($totalCollected, 2) }} <span class="unit">د.م</span>
+            </div>
+        </div>
+
+        <div class="kpi-card" style="padding:1.15rem 1.35rem;">
+            <div class="kpi-card-header" style="margin-bottom:0.4rem;">
+                <span class="kpi-label">إجمالي العمليات المسجلة</span>
+                <div class="kpi-icon-box indigo" style="width:34px; height:34px; font-size:1rem;">📄</div>
+            </div>
+            <div class="kpi-value num" style="font-size:1.6rem; margin-bottom:0; color:var(--brand-primary);">
+                {{ $payments->total() }} <span class="unit">وصل</span>
             </div>
         </div>
     </div>
 
     {{-- Filters Card --}}
-    <div class="card" style="margin-bottom:1.5rem;">
-        <div class="card-body" style="padding:1.25rem;">
-            <form method="GET" action="{{ route('portal.payments.index') }}" style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
-                <select name="apartment_id" class="form-select" style="width:auto; min-width:200px;">
-                    <option value="">جميع الشقق</option>
-                    @foreach($groupedApartments as $groupName => $apts)
-                        <optgroup label="🏢 {{ $groupName }}">
-                            @foreach($apts as $a)
-                                @php
-                                    $cleanUnit = str_starts_with(trim($a->unit_number), 'شقة') ? $a->unit_number : 'شقة ' . $a->unit_number;
-                                @endphp
-                                <option value="{{ $a->id }}" {{ request('apartment_id') == $a->id ? 'selected' : '' }}>
-                                    {{ $cleanUnit }}
-                                </option>
-                            @endforeach
-                        </optgroup>
-                    @endforeach
-                </select>
+    <div class="filter-card">
+        <form method="GET" action="{{ route('portal.payments.index') }}" class="filter-form">
+            <select name="apartment_id" class="form-select" style="width:auto; min-width:200px;">
+                <option value="">جميع الشقق</option>
+                @foreach($groupedApartments as $groupName => $apts)
+                    <optgroup label="🏢 {{ $groupName }}">
+                        @foreach($apts as $a)
+                            @php
+                                $cleanUnit = str_starts_with(trim($a->unit_number), 'شقة') ? $a->unit_number : 'شقة ' . $a->unit_number;
+                            @endphp
+                            <option value="{{ $a->id }}" {{ request('apartment_id') == $a->id ? 'selected' : '' }}>
+                                {{ $cleanUnit }}
+                            </option>
+                        @endforeach
+                    </optgroup>
+                @endforeach
+            </select>
 
-                <select name="payment_method" class="form-select" style="width:auto; min-width:160px;">
-                    <option value="">طريقة الأداء</option>
-                    <option value="CASH" {{ request('payment_method') == 'CASH' ? 'selected' : '' }}>نقداً</option>
-                    <option value="BANK_TRANSFER" {{ request('payment_method') == 'BANK_TRANSFER' ? 'selected' : '' }}>تحويل بنكي</option>
-                    <option value="CHEQUE" {{ request('payment_method') == 'CHEQUE' ? 'selected' : '' }}>شيك</option>
-                </select>
+            <select name="payment_method" class="form-select" style="width:auto; min-width:160px;">
+                <option value="">طريقة الأداء</option>
+                <option value="CASH" {{ request('payment_method') == 'CASH' ? 'selected' : '' }}>نقداً</option>
+                <option value="BANK_TRANSFER" {{ request('payment_method') == 'BANK_TRANSFER' ? 'selected' : '' }}>تحويل بنكي</option>
+                <option value="CHEQUE" {{ request('payment_method') == 'CHEQUE' ? 'selected' : '' }}>شيك</option>
+            </select>
 
-                <input type="month" name="month" value="{{ request('month') }}" class="form-control" style="width:auto; min-width:160px;">
+            <input type="month" name="month" value="{{ request('month') }}" class="form-control" style="width:auto; min-width:160px;">
 
-                <button type="submit" class="btn btn-primary btn-sm" style="padding:0.75rem 1.25rem;">
-                    تطبيق الفلترة
-                </button>
+            <button type="submit" class="btn btn-primary">
+                <span>تطبيق الفلترة</span>
+            </button>
 
-                @if(request()->hasAny(['apartment_id', 'payment_method', 'month']))
-                    <a href="{{ route('portal.payments.index') }}" class="btn btn-secondary btn-sm" style="padding:0.75rem 1.25rem;">
-                        إلغاء الفلاتر
-                    </a>
-                @endif
-            </form>
-        </div>
+            @if(request()->hasAny(['apartment_id', 'payment_method', 'month']))
+                <a href="{{ route('portal.payments.index') }}" class="btn btn-secondary">
+                    <span>إلغاء الفلاتر</span>
+                </a>
+            @endif
+        </form>
     </div>
 
     {{-- Payments Table Card --}}

@@ -6,19 +6,23 @@
 
 <div class="page-header" x-data="{ addModal: false }">
     <div>
-        <h1 class="page-title">المصاريف ونفقات الإقامة</h1>
+        <h1 class="page-title">
+            <span>💸</span>
+            <span>المصاريف ونفقات الإقامة</span>
+        </h1>
         <p class="page-subtitle">تسجيل فواتير الصيانة والنظافة والخدمات وتتبع رصيد الخزينة</p>
     </div>
 
-    <div class="page-actions" style="display:flex; align-items:center; gap:0.5rem;">
+    <div class="page-actions">
         <button type="button" class="btn btn-secondary" onclick="openFinancialReportModal('expenses')" style="display:inline-flex; align-items:center; gap:0.4rem; font-weight:700;">
             <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             <span>📑 تقرير المصاريف (PDF)</span>
         </button>
-        <button type="button" class="btn btn-danger" @click="addModal = true">
-            <span>+ تسجيل مصروف جديد</span>
+        <button type="button" class="btn btn-danger" @click="addModal = true" style="display:inline-flex; align-items:center; gap:0.4rem; font-weight:800;">
+            <span>+</span>
+            <span>تسجيل مصروف جديد</span>
         </button>
     </div>
 
@@ -87,68 +91,76 @@
 </div>
 
 {{-- KPI Summary Row --}}
-<div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-bottom:1.5rem;">
-    <div class="kpi-card" style="padding:1.25rem;">
-        <div class="kpi-card-header" style="margin-bottom:0.5rem;">
+<div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom:1.5rem;">
+    <div class="kpi-card" style="padding:1.15rem 1.35rem;">
+        <div class="kpi-card-header" style="margin-bottom:0.4rem;">
             <span class="kpi-label">مصاريف الشهر الحالي</span>
-            <div class="kpi-icon-box rose" style="width:36px; height:36px;">📉</div>
+            <div class="kpi-icon-box rose" style="width:34px; height:34px; font-size:1rem;">📉</div>
         </div>
-        <div class="kpi-value num" style="font-size:1.75rem; margin-bottom:0; color:var(--color-danger);">
+        <div class="kpi-value num" style="font-size:1.6rem; margin-bottom:0; color:var(--color-danger);">
             {{ number_format($thisMonthExpenses, 2) }} <span class="unit">د.م</span>
         </div>
     </div>
 
-    <div class="kpi-card" style="padding:1.25rem;">
-        <div class="kpi-card-header" style="margin-bottom:0.5rem;">
+    <div class="kpi-card" style="padding:1.15rem 1.35rem;">
+        <div class="kpi-card-header" style="margin-bottom:0.4rem;">
             <span class="kpi-label">إجمالي نفقات المنظمة</span>
-            <div class="kpi-icon-box amber" style="width:36px; height:36px;">🧾</div>
+            <div class="kpi-icon-box amber" style="width:34px; height:34px; font-size:1rem;">🧾</div>
         </div>
-        <div class="kpi-value num" style="font-size:1.75rem; margin-bottom:0;">
+        <div class="kpi-value num" style="font-size:1.6rem; margin-bottom:0;">
             {{ number_format($totalExpenses, 2) }} <span class="unit">د.م</span>
+        </div>
+    </div>
+
+    <div class="kpi-card" style="padding:1.15rem 1.35rem;">
+        <div class="kpi-card-header" style="margin-bottom:0.4rem;">
+            <span class="kpi-label">إجمالي الفواتير المسجلة</span>
+            <div class="kpi-icon-box indigo" style="width:34px; height:34px; font-size:1rem;">📁</div>
+        </div>
+        <div class="kpi-value num" style="font-size:1.6rem; margin-bottom:0; color:var(--brand-primary);">
+            {{ $expenses->total() }} <span class="unit">فاتورة</span>
         </div>
     </div>
 </div>
 
 {{-- Filters Card --}}
-<div class="card" style="margin-bottom:1.5rem;">
-    <div class="card-body" style="padding:1.25rem;">
-        <form method="GET" action="{{ route('portal.expenses.index') }}" style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
-            <div class="search-box" style="flex:1;">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="ابحث باسم المصروف...">
-                <span class="search-icon">🔍</span>
-            </div>
+<div class="filter-card">
+    <form method="GET" action="{{ route('portal.expenses.index') }}" class="filter-form">
+        <div class="search-box" style="flex:1; min-width:200px;">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="ابحث باسم المصروف...">
+            <span class="search-icon">🔍</span>
+        </div>
 
-            <select name="category" class="form-select" style="width:auto; min-width:180px;">
-                <option value="">جميع الأصناف</option>
-                <option value="CLEANING" {{ request('category') == 'CLEANING' ? 'selected' : '' }}>النظافة</option>
-                <option value="ELEVATOR" {{ request('category') == 'ELEVATOR' ? 'selected' : '' }}>المصعد</option>
-                <option value="SECURITY" {{ request('category') == 'SECURITY' ? 'selected' : '' }}>الحراسة</option>
-                <option value="WATER_ELECTRICITY" {{ request('category') == 'WATER_ELECTRICITY' ? 'selected' : '' }}>الماء والكهرباء</option>
-                <option value="GARDENING" {{ request('category') == 'GARDENING' ? 'selected' : '' }}>البستنة</option>
-                <option value="MAINTENANCE" {{ request('category') == 'MAINTENANCE' ? 'selected' : '' }}>الصيانة</option>
-                <option value="OTHER" {{ request('category') == 'OTHER' ? 'selected' : '' }}>أخرى</option>
-            </select>
+        <select name="category" class="form-select" style="width:auto; min-width:180px;">
+            <option value="">جميع الأصناف</option>
+            <option value="CLEANING" {{ request('category') == 'CLEANING' ? 'selected' : '' }}>النظافة</option>
+            <option value="ELEVATOR" {{ request('category') == 'ELEVATOR' ? 'selected' : '' }}>المصعد</option>
+            <option value="SECURITY" {{ request('category') == 'SECURITY' ? 'selected' : '' }}>الحراسة</option>
+            <option value="WATER_ELECTRICITY" {{ request('category') == 'WATER_ELECTRICITY' ? 'selected' : '' }}>الماء والكهرباء</option>
+            <option value="GARDENING" {{ request('category') == 'GARDENING' ? 'selected' : '' }}>البستنة</option>
+            <option value="MAINTENANCE" {{ request('category') == 'MAINTENANCE' ? 'selected' : '' }}>الصيانة</option>
+            <option value="OTHER" {{ request('category') == 'OTHER' ? 'selected' : '' }}>أخرى</option>
+        </select>
 
-            <select name="payment_method" class="form-select" style="width:auto; min-width:160px;">
-                <option value="">طريقة الصرف</option>
-                <option value="CASH" {{ request('payment_method') == 'CASH' ? 'selected' : '' }}>نقداً (صندوق)</option>
-                <option value="BANK_TRANSFER" {{ request('payment_method') == 'BANK_TRANSFER' ? 'selected' : '' }}>تحويل (بنك)</option>
-                <option value="CHEQUE" {{ request('payment_method') == 'CHEQUE' ? 'selected' : '' }}>شيك</option>
-            </select>
+        <select name="payment_method" class="form-select" style="width:auto; min-width:160px;">
+            <option value="">طريقة الصرف</option>
+            <option value="CASH" {{ request('payment_method') == 'CASH' ? 'selected' : '' }}>نقداً (صندوق)</option>
+            <option value="BANK_TRANSFER" {{ request('payment_method') == 'BANK_TRANSFER' ? 'selected' : '' }}>تحويل (بنك)</option>
+            <option value="CHEQUE" {{ request('payment_method') == 'CHEQUE' ? 'selected' : '' }}>شيك</option>
+        </select>
 
-            <input type="month" name="month" value="{{ request('month') }}" class="form-control" style="width:auto; min-width:160px;">
+        <input type="month" name="month" value="{{ request('month') }}" class="form-control" style="width:auto; min-width:160px;">
 
-            <button type="submit" class="btn btn-primary btn-sm" style="padding:0.75rem 1.25rem;">
-                تطبيق الفلترة
-            </button>
+        <button type="submit" class="btn btn-primary">
+            <span>تطبيق الفلترة</span>
+        </button>
 
-            @if(request()->hasAny(['search', 'category', 'payment_method', 'month']))
-                <a href="{{ route('portal.expenses.index') }}" class="btn btn-secondary btn-sm" style="padding:0.75rem 1.25rem;">
-                    إلغاء الفلاتر
-                </a>
-            @endif
-        </form>
-    </div>
+        @if(request()->hasAny(['search', 'category', 'payment_method', 'month']))
+            <a href="{{ route('portal.expenses.index') }}" class="btn btn-secondary">
+                <span>إلغاء الفلاتر</span>
+            </a>
+        @endif
+    </form>
 </div>
 
 {{-- Expenses Table Card --}}
@@ -212,6 +224,7 @@
                                 <span style="color:var(--text-muted); font-size:0.82rem;">—</span>
                             @endif
                         </td>
+                        <td style="text-align:center;">
                             <form method="POST" action="{{ route('portal.expenses.destroy', $expense->id) }}"
                                   data-confirm="هل تؤكد حذف هذا المصروف المسجل بمبلغ {{ number_format($expense->amount, 2) }} درهم؟"
                                   data-confirm-title="تأكيد حذف المصروف"

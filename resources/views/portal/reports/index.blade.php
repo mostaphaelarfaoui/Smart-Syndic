@@ -5,27 +5,21 @@
 @section('content')
 
 {{-- Header --}}
-<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.25rem; margin-bottom:2rem;">
+<div class="page-header">
     <div>
-        <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
-            <a href="{{ route('portal.dashboard') }}" style="color:var(--text-secondary); text-decoration:none; font-size:0.875rem;">لوحة القيادة</a>
-            <span style="color:var(--text-muted); font-size:0.8rem;">/</span>
-            <span style="color:var(--brand-primary); font-weight:700; font-size:0.875rem;">التقارير المالية</span>
-        </div>
-        <h1 style="font-size:1.85rem; font-weight:900; color:var(--text-primary); margin:0;">
-            📑 مركز التقارير المالية والمحاسبية الرسمية (PDF)
+        <h1 class="page-title">
+            <span>📑</span>
+            <span>مركز التقارير المالية والمحاسبية الرسمية (PDF)</span>
         </h1>
-        <p style="color:var(--text-secondary); margin-top:0.35rem; font-size:0.95rem;">
-            استخراج بيانات مالية معتمدة وفق القانون 18.00 المنظم للملكية المشتركة، مع التفقيط العربي والخاتم الرسمي.
-        </p>
+        <p class="page-subtitle">استخراج بيانات مالية معتمدة وفق القانون 18.00 المنظم للملكية المشتركة، مع التفقيط العربي والخاتم الرسمي</p>
     </div>
 
-    <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+    <div class="page-actions">
         <button type="button" class="btn btn-secondary" onclick="openFinancialReportModal('revenues')" style="font-weight:700;">
-            <span>📈 تقرير المداخيل فقط</span>
+            <span>📈 تقرير المداخيل</span>
         </button>
         <button type="button" class="btn btn-secondary" onclick="openFinancialReportModal('expenses')" style="font-weight:700;">
-            <span>📉 تقرير المصاريف فقط</span>
+            <span>📉 تقرير المصاريف</span>
         </button>
         <button type="button" class="btn btn-primary" onclick="openFinancialReportModal('both')" style="font-weight:800; display:inline-flex; align-items:center; gap:0.5rem; background:linear-gradient(135deg, #0d9488 0%, #059669 100%); border:none; box-shadow:0 4px 14px rgba(13,148,136,0.35);">
             <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
