@@ -495,12 +495,12 @@ class ResidentCommunityTabState extends State<ResidentCommunityTab> with SingleT
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withAlpha(20),
+                              color: item.statusColor.withAlpha(25),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
                               item.statusArabic,
-                              style: GoogleFonts.cairo(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.bold),
+                              style: GoogleFonts.cairo(fontSize: 11, color: item.statusColor, fontWeight: FontWeight.bold),
                             ),
                           ),
                         ],

@@ -22,28 +22,35 @@ class SuggestionModel {
   });
 
   String get statusArabic {
-    switch (status) {
+    switch (status.toUpperCase()) {
       case 'PENDING':
-        return 'قيد المراجعة';
+        return 'في الانتظار';
+      case 'IN_PROGRESS':
+        return 'قيد المعالجة';
+      case 'RESOLVED':
+        return 'تم الحل';
       case 'ACCEPTED':
         return 'مقبول';
       case 'REJECTED':
         return 'مرفوض';
       case 'CONVERTED_TO_POLL':
-        return 'تم تحويله لتصويت';
+        return 'تم تحويله لتصويت 🗳️';
       default:
         return status;
     }
   }
 
   Color get statusColor {
-    switch (status) {
+    switch (status.toUpperCase()) {
       case 'ACCEPTED':
+      case 'RESOLVED':
         return const Color(0xFF10B981);
+      case 'IN_PROGRESS':
+        return const Color(0xFF0EA5E9);
       case 'REJECTED':
         return const Color(0xFFEF4444);
       case 'CONVERTED_TO_POLL':
-        return const Color(0xFF3B82F6);
+        return const Color(0xFF6366F1);
       default:
         return const Color(0xFFF59E0B);
     }

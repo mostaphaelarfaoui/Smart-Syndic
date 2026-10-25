@@ -36,7 +36,22 @@ class Suggestion extends Model
         return $this->belongsTo(Apartment::class);
     }
 
-    // ─── Signed URL ───────────────────────────────────────────────────
+    protected $appends = ['attachment_signed_url', 'status_arabic'];
+
+    // ─── Signed URL & Arabic Accessors ────────────────────────────────
+
+    public function getStatusArabicAttribute(): string
+    {
+        return match(strtoupper($this->status ?? '')) {
+            'PENDING'           => 'في الانتظار',
+            'IN_PROGRESS'       => 'قيد المعالجة',
+            'RESOLVED'          => 'تم الحل',
+            'ACCEPTED'          => 'تمت الموافقة',
+            'REJECTED'          => 'مرفوض',
+            'CONVERTED_TO_POLL' => 'تم تحويله لتصويت 🗳️',
+            default             => $this->status ?? 'في الانتظار',
+        };
+    }
 
     public function getAttachmentSignedUrlAttribute(): ?string
     {
