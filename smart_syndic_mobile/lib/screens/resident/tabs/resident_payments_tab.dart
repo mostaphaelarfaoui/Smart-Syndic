@@ -5,37 +5,41 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/services/api_service.dart';
+import '../../../models/payment_model.dart';
 import '../../../providers/resident_provider.dart';
 import '../../../widgets/empty_state.dart';
+import '../../common/receipt_viewer_screen.dart';
 
 class ResidentPaymentsTab extends StatelessWidget {
   const ResidentPaymentsTab({super.key});
 
-  Future<void> _viewReceipt(BuildContext context, String? receiptUrl) async {
-    if (receiptUrl == null || receiptUrl.isEmpty) {
+  void _viewReceipt(BuildContext context, PaymentModel payment) {
+    if (payment.receiptUrl == null || payment.receiptUrl!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('رابط الوصل غير متوفر حالياً')),
       );
       return;
     }
-    final resolved = ApiService().resolveMediaUrl(receiptUrl);
-    final uri = Uri.parse(resolved);
-    try {
-      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-      if (!launched) {
-        await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
-      }
-    } catch (_) {
-      try {
-        await launchUrl(uri, mode: LaunchMode.platformDefault);
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('تعذر فتح الوصل: $e')),
-          );
-        }
-      }
+    ReceiptViewerScreen.open(
+      context,
+      receiptUrl: payment.receiptUrl!,
+      receiptNumber: payment.receiptNumber,
+      amountPaid: payment.amountPaid,
+    );
+  }
+
+  void _downloadReceipt(BuildContext context, PaymentModel payment) {
+    if (payment.receiptUrl == null || payment.receiptUrl!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('رابط الوصل غير متوفر حالياً')),
+      );
+      return;
     }
+    ReceiptViewerScreen.downloadDirectly(
+      context,
+      receiptUrl: payment.receiptUrl!,
+      receiptNumber: payment.receiptNumber,
+    );
   }
 
   Future<void> _shareReceipt(BuildContext context, String receiptNumber, double amount, String? receiptUrl) async {
@@ -317,47 +321,65 @@ class ResidentPaymentsTab extends StatelessWidget {
 
                         const Divider(height: 24),
 
-                        // Actions: View/Download + Share
+                        // Actions: Preview + Direct Download + WhatsApp Share
                         Row(
                           children: [
+                            // In-App Preview
                             Expanded(
-                              flex: 3,
                               child: ElevatedButton.icon(
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.primary,
                                   foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                   elevation: 0,
                                 ),
-                                onPressed: () => _viewReceipt(context, payment.receiptUrl),
-                                icon: const Icon(Icons.download_rounded, size: 18),
+                                onPressed: () => _viewReceipt(context, payment),
+                                icon: const Icon(Icons.visibility_rounded, size: 16),
                                 label: Text(
-                                  'تحميل ومعاينة الوصل',
-                                  style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold),
+                                  'معاينة الوصل',
+                                  style: GoogleFonts.cairo(fontSize: 11.5, fontWeight: FontWeight.bold),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 10),
+                            const SizedBox(width: 8),
+
+                            // Direct Download
                             Expanded(
-                              flex: 2,
                               child: OutlinedButton.icon(
                                 style: OutlinedButton.styleFrom(
-                                  foregroundColor: const Color(0xFF25D366),
-                                  side: const BorderSide(color: Color(0xFF25D366)),
-                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  foregroundColor: AppColors.primary,
+                                  side: const BorderSide(color: AppColors.primary),
+                                  padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                 ),
+                                onPressed: () => _downloadReceipt(context, payment),
+                                icon: const Icon(Icons.download_rounded, size: 16),
+                                label: Text(
+                                  'تحميل مباشر',
+                                  style: GoogleFonts.cairo(fontSize: 11.5, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+
+                            // WhatsApp Share
+                            Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF25D366).withAlpha(20),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: const Color(0xFF25D366).withAlpha(60)),
+                              ),
+                              child: IconButton(
+                                tooltip: 'مشاركة عبر واتساب',
+                                padding: const EdgeInsets.all(8),
+                                constraints: const BoxConstraints(),
+                                icon: const Icon(Icons.chat, size: 18, color: Color(0xFF25D366)),
                                 onPressed: () => _shareReceipt(
                                   context,
                                   payment.receiptNumber,
                                   payment.amountPaid,
                                   payment.receiptUrl,
-                                ),
-                                icon: const Icon(Icons.share, size: 16, color: Color(0xFF25D366)),
-                                label: Text(
-                                  'مشاركة',
-                                  style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold),
                                 ),
                               ),
                             ),

@@ -9,6 +9,7 @@ import '../../../models/payment_model.dart';
 import '../../../providers/syndic_provider.dart';
 import '../../../widgets/empty_state.dart';
 import '../../../widgets/confirm_action_dialog.dart';
+import '../../common/receipt_viewer_screen.dart';
 import '../dialogs/record_payment_dialog.dart';
 
 class SyndicPaymentsTab extends StatefulWidget {
@@ -545,8 +546,8 @@ class _SyndicPaymentsTabState extends State<SyndicPaymentsTab> {
                                         ),
                                         const SizedBox(width: 6),
 
-                                        // Receipt download/view
-                                        if (payment.receiptUrl != null && payment.receiptUrl!.isNotEmpty)
+                                        // Receipt actions: Preview in app + Direct download
+                                        if (payment.receiptUrl != null && payment.receiptUrl!.isNotEmpty) ...[
                                           ElevatedButton.icon(
                                             style: ElevatedButton.styleFrom(
                                               backgroundColor: AppColors.primary,
@@ -555,32 +556,41 @@ class _SyndicPaymentsTabState extends State<SyndicPaymentsTab> {
                                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                               elevation: 0,
                                             ),
-                                            onPressed: () async {
-                                              final resolved = ApiService().resolveMediaUrl(payment.receiptUrl!);
-                                              final uri = Uri.parse(resolved);
-                                              try {
-                                                final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-                                                if (!launched) {
-                                                  await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
-                                                }
-                                              } catch (_) {
-                                                try {
-                                                  await launchUrl(uri, mode: LaunchMode.platformDefault);
-                                                } catch (e) {
-                                                  if (context.mounted) {
-                                                    ScaffoldMessenger.of(context).showSnackBar(
-                                                      SnackBar(content: Text('تعذر فتح الوصل: $e')),
-                                                    );
-                                                  }
-                                                }
-                                              }
-                                            },
-                                            icon: const Icon(Icons.download_rounded, size: 15, color: Colors.white),
+                                            onPressed: () => ReceiptViewerScreen.open(
+                                              context,
+                                              receiptUrl: payment.receiptUrl!,
+                                              receiptNumber: payment.receiptNumber,
+                                              residentName: payment.residentName,
+                                              residentPhone: payment.residentPhone,
+                                              unitNumber: payment.apartmentUnit,
+                                              amountPaid: payment.amountPaid,
+                                            ),
+                                            icon: const Icon(Icons.visibility_rounded, size: 15, color: Colors.white),
                                             label: Text(
-                                              'تحميل الوصل',
+                                              'معاينة',
                                               style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold),
                                             ),
                                           ),
+                                          const SizedBox(width: 6),
+                                          OutlinedButton.icon(
+                                            style: OutlinedButton.styleFrom(
+                                              foregroundColor: AppColors.primary,
+                                              side: const BorderSide(color: AppColors.primary),
+                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                            ),
+                                            onPressed: () => ReceiptViewerScreen.downloadDirectly(
+                                              context,
+                                              receiptUrl: payment.receiptUrl!,
+                                              receiptNumber: payment.receiptNumber,
+                                            ),
+                                            icon: const Icon(Icons.download_rounded, size: 15),
+                                            label: Text(
+                                              'تحميل مباشر',
+                                              style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold),
+                                            ),
+                                          ),
+                                        ],
                                       ],
                                     ),
                                   ],

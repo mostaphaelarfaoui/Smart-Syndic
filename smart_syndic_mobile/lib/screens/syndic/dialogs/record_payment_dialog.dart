@@ -10,6 +10,7 @@ import '../../../core/utils/number_utils.dart';
 import '../../../models/apartment_model.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/syndic_provider.dart';
+import '../../common/receipt_viewer_screen.dart';
 
 class RecordPaymentDialog extends StatefulWidget {
   final String? initialApartmentId;
@@ -564,31 +565,36 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
     required this.remainingArrears,
   });
 
-  Future<void> _viewReceipt(BuildContext context) async {
+  void _viewReceipt(BuildContext context) {
     if (receiptUrl == null || receiptUrl!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('رابط الوصل غير متوفر حالياً')),
       );
       return;
     }
-    final resolved = ApiService().resolveMediaUrl(receiptUrl);
-    final uri = Uri.parse(resolved);
-    try {
-      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-      if (!launched) {
-        await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
-      }
-    } catch (_) {
-      try {
-        await launchUrl(uri, mode: LaunchMode.platformDefault);
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('تعذر فتح الوصل: $e')),
-          );
-        }
-      }
+    ReceiptViewerScreen.open(
+      context,
+      receiptUrl: receiptUrl!,
+      receiptNumber: receiptNumber,
+      residentName: residentName,
+      residentPhone: residentPhone,
+      unitNumber: unitNumber,
+      amountPaid: amountPaid,
+    );
+  }
+
+  void _downloadReceipt(BuildContext context) {
+    if (receiptUrl == null || receiptUrl!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('رابط الوصل غير متوفر حالياً')),
+      );
+      return;
     }
+    ReceiptViewerScreen.downloadDirectly(
+      context,
+      receiptUrl: receiptUrl!,
+      receiptNumber: receiptNumber,
+    );
   }
 
   Future<void> _shareWhatsApp(BuildContext context) async {
@@ -773,18 +779,37 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
 
               // Action Buttons
               if (receiptUrl != null && receiptUrl!.isNotEmpty) ...[
+                // In-app preview button
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 13),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 1,
                   ),
                   onPressed: () => _viewReceipt(context),
-                  icon: const Icon(Icons.picture_as_pdf_outlined, size: 20),
+                  icon: const Icon(Icons.visibility_rounded, size: 20),
                   label: Text(
-                    'عرض وتحميل الوصل الرسمي (PDF)',
-                    style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 14),
+                    'معاينة الوصل داخل التطبيق',
+                    style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13.5),
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                // Direct download button
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.primary, width: 1.5),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () => _downloadReceipt(context),
+                  icon: const Icon(Icons.download_rounded, size: 20),
+                  label: Text(
+                    'تحميل مباشر للوصل (PDF)',
+                    style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13.5),
                   ),
                 ),
                 const SizedBox(height: 10),

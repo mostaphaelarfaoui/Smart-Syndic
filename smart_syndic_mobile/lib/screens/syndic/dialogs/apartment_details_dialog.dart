@@ -3,13 +3,13 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/services/api_service.dart';
 import '../../../core/utils/number_utils.dart';
 import '../../../models/apartment_model.dart';
 import '../../../providers/syndic_provider.dart';
 import 'edit_apartment_dialog.dart';
 import 'record_payment_dialog.dart';
 import '../../../widgets/confirm_action_dialog.dart';
+import '../../common/receipt_viewer_screen.dart';
 
 class ApartmentDetailsDialog extends StatelessWidget {
   final ApartmentModel apartment;
@@ -38,19 +38,26 @@ class ApartmentDetailsDialog extends StatelessWidget {
     }
   }
 
-  Future<void> _openPdfReceipt(BuildContext context, String? url) async {
+  void _openPdfReceipt(BuildContext context, String? url, String receiptNumber, double amount) {
     if (url == null || url.isEmpty) return;
-    final resolved = ApiService().resolveMediaUrl(url);
-    final uri = Uri.parse(resolved);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تعذر فتح وصل الأداء')),
-        );
-      }
-    }
+    ReceiptViewerScreen.open(
+      context,
+      receiptUrl: url,
+      receiptNumber: receiptNumber,
+      residentName: apartment.resident?['name'] as String?,
+      residentPhone: apartment.resident?['phone'] as String?,
+      unitNumber: apartment.unitNumber,
+      amountPaid: amount,
+    );
+  }
+
+  void _downloadDirectReceipt(BuildContext context, String? url, String receiptNumber) {
+    if (url == null || url.isEmpty) return;
+    ReceiptViewerScreen.downloadDirectly(
+      context,
+      receiptUrl: url,
+      receiptNumber: receiptNumber,
+    );
   }
 
   Future<void> _toggleExemption(BuildContext context) async {
@@ -616,12 +623,23 @@ class ApartmentDetailsDialog extends StatelessWidget {
                                     ],
                                   ),
                                 ),
-                                if (receiptUrl != null && receiptUrl.isNotEmpty)
+                                if (receiptUrl != null && receiptUrl.isNotEmpty) ...[
                                   IconButton(
-                                    onPressed: () => _openPdfReceipt(context, receiptUrl),
-                                    icon: const Icon(Icons.picture_as_pdf, color: AppColors.danger, size: 20),
-                                    tooltip: 'معاينة الوصل',
+                                    onPressed: () => _openPdfReceipt(context, receiptUrl, receiptNo, amount),
+                                    icon: const Icon(Icons.visibility_rounded, color: AppColors.primary, size: 20),
+                                    tooltip: 'معاينة الوصل داخل التطبيق',
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
                                   ),
+                                  const SizedBox(width: 10),
+                                  IconButton(
+                                    onPressed: () => _downloadDirectReceipt(context, receiptUrl, receiptNo),
+                                    icon: const Icon(Icons.download_rounded, color: AppColors.textSecondary, size: 20),
+                                    tooltip: 'تحميل مباشر (PDF)',
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                  ),
+                                ],
                               ],
                             ),
                           );
