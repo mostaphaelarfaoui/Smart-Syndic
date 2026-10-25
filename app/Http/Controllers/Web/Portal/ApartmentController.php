@@ -15,45 +15,120 @@ class ApartmentController extends Controller
     {
         $tenant = auth()->user()->tenant;
         $tenantId = auth()->user()->tenant_id;
+        $tab = $request->get('tab', 'apartments');
 
         $buildings = Building::where('tenant_id', $tenantId)->withCount('apartments')->get();
         $isComplex = $tenant && ($tenant->property_type === 'COMPLEX' || $buildings->count() > 1);
 
-        $query = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))
+        $allApartments = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))
+            ->billable()
+            ->with(['building', 'residents'])
+            ->get()
+            ->sortBy('unit_number', SORT_NATURAL);
+
+        $currentMonth = now()->format('Y-m');
+        $paidApartmentIdsThisMonth = Payment::where('tenant_id', $tenantId)
+            ->where('status', '!=', 'DRAFT')
+            ->whereJsonContains('covered_months', $currentMonth)
+            ->pluck('apartment_id')
+            ->toArray();
+
+        // Core Financial & Operational Metrics
+        $totalCount      = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))->count();
+        $occupiedCount   = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))->has('residents')->count();
+        $billableCount   = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))->billable()->count();
+        $expectedMonthly = (float) Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))->billable()->sum('monthly_fee');
+
+        $thisMonthCollected = (float) Payment::where('tenant_id', $tenantId)
+            ->where('status', '!=', 'DRAFT')
+            ->whereMonth('payment_date', now()->month)
+            ->whereYear('payment_date', now()->year)
+            ->sum('amount_paid');
+
+        $paidUnitsCount = count($paidApartmentIdsThisMonth);
+        $unpaidUnitsCount = max(0, $billableCount - $paidUnitsCount);
+        $collectionRate = $billableCount > 0 ? round(($paidUnitsCount / $billableCount) * 100, 1) : 0;
+        $totalArrears = max(0, $expectedMonthly - $thisMonthCollected);
+
+        // Apartments Tab Query
+        $apartmentsQuery = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))
             ->with(['building', 'residents']);
 
-        // Filters
         if ($request->filled('building_id')) {
-            $query->where('building_id', $request->building_id);
+            $apartmentsQuery->where('building_id', $request->building_id);
         }
 
         if ($request->filled('search')) {
-            $query->where('unit_number', 'like', "%{$request->search}%");
+            $apartmentsQuery->where('unit_number', 'like', "%{$request->search}%");
         }
 
         if ($request->filled('status')) {
             if ($request->status === 'VACANT') {
-                $query->whereDoesntHave('residents');
+                $apartmentsQuery->whereDoesntHave('residents');
             } elseif ($request->status === 'OCCUPIED') {
-                $query->whereHas('residents');
+                $apartmentsQuery->whereHas('residents');
+            }
+        }
+
+        if ($request->filled('payment_status')) {
+            if ($request->payment_status === 'PAID') {
+                $apartmentsQuery->whereIn('id', $paidApartmentIdsThisMonth);
+            } elseif ($request->payment_status === 'UNPAID') {
+                $apartmentsQuery->whereNotIn('id', $paidApartmentIdsThisMonth);
             }
         }
 
         if ($request->filled('billable')) {
-            $query->where('is_billable', $request->billable === '1');
+            $apartmentsQuery->where('is_billable', $request->billable === '1');
         }
 
-        $apartments = $query->orderBy('building_id')
+        $apartments = $apartmentsQuery->orderBy('building_id')
             ->orderByRaw('LENGTH(unit_number) ASC, unit_number ASC')
-            ->paginate(25)
+            ->paginate(25, ['*'], 'apts_page')
             ->withQueryString();
 
-        $totalCount      = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))->count();
-        $occupiedCount   = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))->has('residents')->count();
-        $billableCount   = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))->billable()->count();
-        $expectedMonthly = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))->billable()->sum('monthly_fee');
+        // Receipts Tab Query
+        $paymentsQuery = Payment::where('tenant_id', $tenantId)
+            ->with(['apartment.building', 'apartment.residents', 'recorder']);
 
-        return view('portal.apartments.index', compact('apartments', 'buildings', 'isComplex', 'totalCount', 'occupiedCount', 'billableCount', 'expectedMonthly'));
+        if ($request->filled('receipt_apt_id')) {
+            $paymentsQuery->where('apartment_id', $request->receipt_apt_id);
+        }
+
+        if ($request->filled('payment_method')) {
+            $paymentsQuery->where('payment_method', $request->payment_method);
+        }
+
+        if ($request->filled('receipt_search')) {
+            $searchTerm = $request->receipt_search;
+            $paymentsQuery->where(function ($q) use ($searchTerm) {
+                $q->where('receipt_number', 'like', "%{$searchTerm}%")
+                  ->orWhereHas('apartment', fn ($sq) => $sq->where('unit_number', 'like', "%{$searchTerm}%"));
+            });
+        }
+
+        $payments = $paymentsQuery->orderByDesc('payment_date')
+            ->paginate(25, ['*'], 'receipts_page')
+            ->withQueryString();
+
+        return view('portal.apartments.index', compact(
+            'tab',
+            'apartments',
+            'payments',
+            'buildings',
+            'allApartments',
+            'paidApartmentIdsThisMonth',
+            'isComplex',
+            'totalCount',
+            'occupiedCount',
+            'billableCount',
+            'expectedMonthly',
+            'thisMonthCollected',
+            'paidUnitsCount',
+            'unpaidUnitsCount',
+            'collectionRate',
+            'totalArrears'
+        ));
     }
 
     public function store(Request $request)

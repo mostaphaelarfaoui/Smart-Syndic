@@ -18,48 +18,7 @@ class PaymentController extends Controller
 
     public function index(Request $request)
     {
-        $tenant = auth()->user()->tenant;
-        $tenantId = auth()->user()->tenant_id;
-
-        $apartments = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))
-            ->with(['building', 'residents'])
-            ->orderBy('building_id')
-            ->orderByRaw('LENGTH(unit_number) ASC, unit_number ASC')
-            ->get();
-
-        $query = Payment::where('tenant_id', $tenantId)
-            ->with(['apartment.building', 'apartment.residents', 'recorder']);
-
-        // Search & Filters
-        if ($request->filled('apartment_id')) {
-            $query->where('apartment_id', $request->apartment_id);
-        }
-
-        if ($request->filled('payment_method')) {
-            $query->where('payment_method', $request->payment_method);
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('month')) {
-            $query->whereJsonContains('covered_months', $request->month);
-        }
-
-        $payments = $query->orderByDesc('payment_date')->paginate(20)->withQueryString();
-
-        // Metrics
-        $totalCollected = Payment::where('tenant_id', $tenantId)->where('status', '!=', 'DRAFT')->sum('amount_paid');
-        $thisMonthCollected = Payment::where('tenant_id', $tenantId)
-            ->where('status', '!=', 'DRAFT')
-            ->whereMonth('payment_date', now()->month)
-            ->whereYear('payment_date', now()->year)
-            ->sum('amount_paid');
-
-        $isComplex = $tenant && ($tenant->property_type === 'COMPLEX');
-
-        return view('portal.payments.index', compact('payments', 'apartments', 'totalCollected', 'thisMonthCollected', 'isComplex'));
+        return redirect()->route('portal.apartments.index', array_merge(['tab' => 'receipts'], $request->all()));
     }
 
     public function store(Request $request)

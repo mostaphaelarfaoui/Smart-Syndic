@@ -13,20 +13,8 @@ class CommunityController extends Controller
 {
     public function index(Request $request)
     {
-        $tenantId = auth()->user()->tenant_id;
-        $tab      = $request->input('tab', 'suggestions');
-
-        $suggestions = Suggestion::where('tenant_id', $tenantId)
-            ->with(['user', 'apartment'])
-            ->latest('created_at')
-            ->paginate(15, ['*'], 'suggestions_page');
-
-        $polls = Poll::where('tenant_id', $tenantId)
-            ->with(['options.votes'])
-            ->latest('created_at')
-            ->paginate(15, ['*'], 'polls_page');
-
-        return view('portal.community.index', compact('tab', 'suggestions', 'polls'));
+        $tab = $request->input('tab', 'suggestions');
+        return redirect()->route('portal.residents.index', array_merge(['tab' => $tab], $request->all()));
     }
 
     public function updateSuggestionStatus(Request $request, $id)

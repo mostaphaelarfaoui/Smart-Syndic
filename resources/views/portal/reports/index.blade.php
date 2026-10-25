@@ -1,336 +1,681 @@
 @extends('layouts.dashboard')
 
-@section('title', 'مركز التقارير المالية — ' . $tenant->name)
+@section('title', 'التقارير والإحصائيات — ' . $tenant->name)
 
 @section('content')
 
-{{-- Header --}}
-<div class="page-header">
+{{-- Header with Tab Navigation --}}
+<div class="page-header" style="margin-bottom:1.5rem;">
     <div>
-        <h1 class="page-title">
+        <h1 class="page-title" style="display:flex; align-items:center; gap:0.5rem;">
             <span>📑</span>
-            <span>مركز التقارير المالية والمحاسبية الرسمية (PDF)</span>
+            <span>التقارير والإحصائيات</span>
         </h1>
-        <p class="page-subtitle">استخراج بيانات مالية معتمدة وفق القانون 18.00 المنظم للملكية المشتركة، مع التفقيط العربي والخاتم الرسمي</p>
+        <p class="page-subtitle">التقارير المالية الرسمية المعتمدة (PDF)، الرسوم البيانية السنوية، وسجل الرقابة والعمليات</p>
     </div>
 
-    <div class="page-actions">
-        <button type="button" class="btn btn-secondary" onclick="openFinancialReportModal('revenues')" style="font-weight:700;">
-            <span>📈 تقرير المداخيل</span>
-        </button>
-        <button type="button" class="btn btn-secondary" onclick="openFinancialReportModal('expenses')" style="font-weight:700;">
-            <span>📉 تقرير المصاريف</span>
-        </button>
-        <button type="button" class="btn btn-primary" onclick="openFinancialReportModal('both')" style="font-weight:800; display:inline-flex; align-items:center; gap:0.5rem; background:linear-gradient(135deg, #0d9488 0%, #059669 100%); border:none; box-shadow:0 4px 14px rgba(13,148,136,0.35);">
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <span>⚙️ تخصيص تقرير متعدد الشهور</span>
-        </button>
+    {{-- Tabs Switcher --}}
+    <div style="display:flex; align-items:center; gap:0.4rem; background:var(--bg-surface); padding:0.35rem; border:1px solid var(--border-color); border-radius:var(--radius-lg); flex-wrap:wrap;">
+        <a href="{{ route('portal.reports.index', ['tab' => 'reports']) }}" 
+           class="btn btn-sm {{ $tab === 'reports' ? 'btn-primary' : 'btn-secondary' }}" 
+           style="font-weight:800; border-radius:var(--radius-md);">
+            📑 التقارير المالية (PDF)
+        </a>
+        <a href="{{ route('portal.reports.index', ['tab' => 'analytics', 'year' => $year]) }}" 
+           class="btn btn-sm {{ $tab === 'analytics' ? 'btn-primary' : 'btn-secondary' }}" 
+           style="font-weight:800; border-radius:var(--radius-md);">
+            📊 التحليلات والرسوم البيانية
+        </a>
+        <a href="{{ route('portal.reports.index', ['tab' => 'audit']) }}" 
+           class="btn btn-sm {{ $tab === 'audit' ? 'btn-primary' : 'btn-secondary' }}" 
+           style="font-weight:800; border-radius:var(--radius-md);">
+            🛡️ سجل العمليات والرقابة
+        </a>
     </div>
 </div>
 
-{{-- Quick Period Cards Grid --}}
-<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:1.5rem; margin-bottom:2rem;">
-
-    {{-- 1. Current Month Card --}}
-    <div class="card" style="padding:1.5rem; border:2px solid rgba(13,148,136,0.3); border-radius:var(--radius-lg); position:relative; overflow:hidden;">
-        <div style="position:absolute; top:1rem; left:1rem;">
-            <span class="badge badge-success" style="font-size:0.75rem;">الشهر الحالي</span>
-        </div>
-        <div style="display:flex; align-items:center; gap:0.85rem; margin-bottom:1rem;">
-            <div style="width:44px; height:44px; border-radius:10px; background:rgba(13,148,136,0.12); color:var(--brand-primary); display:flex; align-items:center; justify-content:center; font-size:1.4rem;">
-                📅
-            </div>
-            <div>
-                <h3 style="margin:0; font-size:1.15rem; font-weight:800; color:var(--text-primary);">
-                    {{ $currentMonthData['period_title'] }}
-                </h3>
-                <span style="font-size:0.82rem; color:var(--text-secondary);">تقرير دوري شامل حتى تاريخ اليوم</span>
-            </div>
-        </div>
-
-        {{-- Mini KPIs --}}
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1.25rem;">
-            <div style="background:var(--bg-secondary, #f8fafc); padding:0.75rem 1rem; border-radius:8px;">
-                <div style="font-size:0.75rem; color:var(--text-secondary);">المداخيل المحصلة</div>
-                <div class="num" style="font-size:1.1rem; font-weight:800; color:#10b981;">
-                    {{ number_format($currentMonthData['total_revenues'], 2) }} <small style="font-size:0.75rem;">د.م</small>
-                </div>
-            </div>
-            <div style="background:var(--bg-secondary, #f8fafc); padding:0.75rem 1rem; border-radius:8px;">
-                <div style="font-size:0.75rem; color:var(--text-secondary);">المصاريف والنفقات</div>
-                <div class="num" style="font-size:1.1rem; font-weight:800; color:#f43f5e;">
-                    {{ number_format($currentMonthData['total_expenses'], 2) }} <small style="font-size:0.75rem;">د.م</small>
-                </div>
-            </div>
-        </div>
-
-        {{-- Net Balance --}}
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0.85rem; background:rgba(13,148,136,0.06); border-radius:8px; margin-bottom:0.75rem; font-size:0.85rem;">
-            <span style="color:var(--text-secondary);">الفارق الصافي للشهر:</span>
-            <strong class="num" style="font-size:0.95rem; color:{{ $currentMonthData['net_balance'] >= 0 ? '#10b981' : '#f43f5e' }};">
-                {{ ($currentMonthData['net_balance'] >= 0 ? '+' : '') . number_format($currentMonthData['net_balance'], 2) }} د.م
-            </strong>
-        </div>
-
-        {{-- Apartment Collection Status --}}
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.5rem 0.85rem; background:rgba(15,23,42,0.03); border-radius:8px; margin-bottom:1.25rem; font-size:0.8rem;">
-            <span style="color:var(--text-secondary);">🏢 حالة أداء الشقق:</span>
-            <div style="display:flex; gap:0.4rem; align-items:center;">
-                <span class="badge badge-success" style="font-size:0.75rem;">{{ $currentMonthData['paid_apartments_count'] }} خالصة ✓</span>
-                <span class="badge badge-danger" style="font-size:0.75rem;">{{ $currentMonthData['unpaid_apartments_count'] }} متأخرة ✗</span>
-            </div>
-        </div>
-
-        {{-- Actions --}}
-        <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
-            <a href="{{ route('portal.reports.financial-pdf', ['start_month' => $currentMonth, 'end_month' => $currentMonth, 'scope' => 'both', 'mode' => 'download']) }}" target="_blank" class="btn btn-primary" style="flex:1; justify-content:center; font-weight:800; font-size:0.85rem; background:linear-gradient(135deg, #0d9488 0%, #059669 100%);">
-                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                <span>تحميل PDF</span>
-            </a>
-            <a href="{{ route('portal.reports.financial-pdf', ['start_month' => $currentMonth, 'end_month' => $currentMonth, 'scope' => 'both', 'mode' => 'preview']) }}" target="_blank" class="btn btn-secondary" style="font-weight:700; font-size:0.85rem;" title="معاينة التقرير مباشرة في المتصفح">
-                <span>👁️ معاينة</span>
-            </a>
-        </div>
-    </div>
-
-    {{-- 2. Last Month Card --}}
-    <div class="card" style="padding:1.5rem; border:1px solid var(--border-color); border-radius:var(--radius-lg); position:relative; overflow:hidden;">
-        <div style="position:absolute; top:1rem; left:1rem;">
-            <span class="badge badge-neutral" style="font-size:0.75rem;">الشهر الماضي</span>
-        </div>
-        <div style="display:flex; align-items:center; gap:0.85rem; margin-bottom:1rem;">
-            <div style="width:44px; height:44px; border-radius:10px; background:rgba(99,102,241,0.12); color:#6366f1; display:flex; align-items:center; justify-content:center; font-size:1.4rem;">
-                ⏮️
-            </div>
-            <div>
-                <h3 style="margin:0; font-size:1.15rem; font-weight:800; color:var(--text-primary);">
-                    {{ $lastMonthData['period_title'] }}
-                </h3>
-                <span style="font-size:0.82rem; color:var(--text-secondary);">الحساب الختامي للشهر المنصرم</span>
-            </div>
-        </div>
-
-        {{-- Mini KPIs --}}
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1.25rem;">
-            <div style="background:var(--bg-secondary, #f8fafc); padding:0.75rem 1rem; border-radius:8px;">
-                <div style="font-size:0.75rem; color:var(--text-secondary);">المداخيل المحصلة</div>
-                <div class="num" style="font-size:1.1rem; font-weight:800; color:#10b981;">
-                    {{ number_format($lastMonthData['total_revenues'], 2) }} <small style="font-size:0.75rem;">د.م</small>
-                </div>
-            </div>
-            <div style="background:var(--bg-secondary, #f8fafc); padding:0.75rem 1rem; border-radius:8px;">
-                <div style="font-size:0.75rem; color:var(--text-secondary);">المصاريف والنفقات</div>
-                <div class="num" style="font-size:1.1rem; font-weight:800; color:#f43f5e;">
-                    {{ number_format($lastMonthData['total_expenses'], 2) }} <small style="font-size:0.75rem;">د.م</small>
-                </div>
-            </div>
-        </div>
-
-        {{-- Net Balance --}}
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0.85rem; background:rgba(99,102,241,0.06); border-radius:8px; margin-bottom:0.75rem; font-size:0.85rem;">
-            <span style="color:var(--text-secondary);">الفارق الصافي للشهر:</span>
-            <strong class="num" style="font-size:0.95rem; color:{{ $lastMonthData['net_balance'] >= 0 ? '#10b981' : '#f43f5e' }};">
-                {{ ($lastMonthData['net_balance'] >= 0 ? '+' : '') . number_format($lastMonthData['net_balance'], 2) }} د.م
-            </strong>
-        </div>
-
-        {{-- Apartment Collection Status --}}
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.5rem 0.85rem; background:rgba(15,23,42,0.03); border-radius:8px; margin-bottom:1.25rem; font-size:0.8rem;">
-            <span style="color:var(--text-secondary);">🏢 حالة أداء الشقق:</span>
-            <div style="display:flex; gap:0.4rem; align-items:center;">
-                <span class="badge badge-success" style="font-size:0.75rem;">{{ $lastMonthData['paid_apartments_count'] }} خالصة ✓</span>
-                <span class="badge badge-danger" style="font-size:0.75rem;">{{ $lastMonthData['unpaid_apartments_count'] }} متأخرة ✗</span>
-            </div>
-        </div>
-
-        {{-- Actions --}}
-        <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
-            <a href="{{ route('portal.reports.financial-pdf', ['start_month' => $lastMonth, 'end_month' => $lastMonth, 'scope' => 'both', 'mode' => 'download']) }}" target="_blank" class="btn btn-secondary" style="flex:1; justify-content:center; font-weight:700; font-size:0.85rem;">
-                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                <span>تحميل PDF</span>
-            </a>
-            <a href="{{ route('portal.reports.financial-pdf', ['start_month' => $lastMonth, 'end_month' => $lastMonth, 'scope' => 'both', 'mode' => 'preview']) }}" target="_blank" class="btn btn-secondary" style="font-weight:700; font-size:0.85rem;" title="معاينة التقرير مباشرة في المتصفح">
-                <span>👁️ معاينة</span>
-            </a>
-        </div>
-    </div>
-
-    {{-- 3. Preset Quick Periods Card --}}
-    <div class="card" style="padding:1.5rem; border:1px solid var(--border-color); border-radius:var(--radius-lg);">
-        <div style="display:flex; align-items:center; gap:0.85rem; margin-bottom:1rem;">
-            <div style="width:44px; height:44px; border-radius:10px; background:rgba(245,158,11,0.12); color:#f59e0b; display:flex; align-items:center; justify-content:center; font-size:1.4rem;">
-                ⚡
-            </div>
-            <div>
-                <h3 style="margin:0; font-size:1.15rem; font-weight:800; color:var(--text-primary);">
-                    فترات دورية سريعة
-                </h3>
-                <span style="font-size:0.82rem; color:var(--text-secondary);">استخراج تقارير فصلية أو سنوية بنقرة واحدة</span>
-            </div>
-        </div>
-
-        <div style="display:flex; flex-direction:column; gap:0.65rem; margin-bottom:1rem;">
-            {{-- Last 3 Months --}}
-            @php
-                $qStart = now()->subMonths(2)->format('Y-m');
-                $qEnd   = now()->format('Y-m');
-            @endphp
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.65rem 0.85rem; background:var(--bg-secondary, #f8fafc); border-radius:8px;">
-                <div>
-                    <strong style="font-size:0.85rem; color:var(--text-primary);">آخر 3 أشهر (الربع السنوي)</strong>
-                    <div style="font-size:0.75rem; color:var(--text-secondary);">من {{ $qStart }} إلى {{ $qEnd }}</div>
-                </div>
-                <a href="{{ route('portal.reports.financial-pdf', ['start_month' => $qStart, 'end_month' => $qEnd, 'scope' => 'both', 'mode' => 'download']) }}" target="_blank" class="btn btn-sm btn-secondary" style="font-weight:700;">
-                    <span>تحميل 📥</span>
-                </a>
-            </div>
-
-            {{-- Full Current Year --}}
-            @php
-                $yStart = now()->startOfYear()->format('Y-m');
-                $yEnd   = now()->format('Y-m');
-            @endphp
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.65rem 0.85rem; background:var(--bg-secondary, #f8fafc); border-radius:8px;">
-                <div>
-                    <strong style="font-size:0.85rem; color:var(--text-primary);">تقرير سنة {{ $currentYear }} كاملة</strong>
-                    <div style="font-size:0.75rem; color:var(--text-secondary);">من يناير {{ $currentYear }} حتى الآن</div>
-                </div>
-                <a href="{{ route('portal.reports.financial-pdf', ['start_month' => $yStart, 'end_month' => $yEnd, 'scope' => 'both', 'mode' => 'download']) }}" target="_blank" class="btn btn-sm btn-secondary" style="font-weight:700;">
-                    <span>تحميل 📥</span>
-                </a>
-            </div>
-        </div>
-
-        <button type="button" onclick="openFinancialReportModal('both')" class="btn btn-secondary" style="width:100%; justify-content:center; font-weight:800; font-size:0.85rem;">
-            <span>⚙️ فتح أداة التخصيص الكاملة...</span>
-        </button>
-    </div>
-
-</div>
-
-{{-- Current Month Apartments Status Overview (Paid & Unpaid) --}}
-@if(!empty($currentMonthData['apartments_status']))
-<div class="card" style="padding:1.5rem; border-radius:var(--radius-lg); margin-bottom:2rem; border:1px solid var(--border-color);">
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.25rem;">
+{{-- TAB 1: FINANCIAL REPORTS (PDF) --}}
+@if($tab === 'reports')
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem; background:var(--bg-surface); padding:1rem 1.25rem; border:1px solid var(--border-color); border-radius:var(--radius-lg);">
         <div>
-            <h3 style="margin:0; font-size:1.15rem; font-weight:800; color:var(--text-primary); display:flex; align-items:center; gap:0.5rem;">
-                <span>🏢 كشف وضعية أداء الشقق لشهر {{ $currentMonthData['period_title'] }}</span>
-                <span class="badge badge-neutral" style="font-size:0.75rem;">نسبة التحصيل: {{ $currentMonthData['collection_rate'] }}%</span>
+            <h3 style="margin:0; font-size:1.05rem; font-weight:800; color:var(--text-primary);">
+                استخراج بيانات مالية معتمدة وفق القانون 18.00
             </h3>
-            <p style="margin:0.25rem 0 0 0; font-size:0.85rem; color:var(--text-secondary);">
-                كشف حي يوضح الشقق التي سددت واجباتها والشقق المتأخرة عن الأداء (مضمن بالتقرير الرسمي PDF)
-            </p>
+            <span style="font-size:0.82rem; color:var(--text-secondary);">تقارير مدعمة بالتفقيط العربي الرقمي، خاتم الإقامة الرسمي، وبيانات الحساب البنكي</span>
         </div>
         <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-            <span class="badge badge-success" style="font-size:0.8rem; padding:0.35rem 0.75rem;">
-                {{ $currentMonthData['paid_apartments_count'] }} شقة خالصة ✓
-            </span>
-            @if($currentMonthData['partial_apartments_count'] > 0)
-                <span class="badge badge-warning" style="font-size:0.8rem; padding:0.35rem 0.75rem;">
-                    {{ $currentMonthData['partial_apartments_count'] }} أداء جزئي ⏳
-                </span>
-            @endif
-            <span class="badge badge-danger" style="font-size:0.8rem; padding:0.35rem 0.75rem;">
-                {{ $currentMonthData['unpaid_apartments_count'] }} شقة غير خالصة ✗
-            </span>
-            <a href="{{ route('portal.reports.financial-pdf', ['start_month' => $currentMonth, 'end_month' => $currentMonth, 'scope' => 'revenues', 'mode' => 'download']) }}" target="_blank" class="btn btn-sm btn-secondary" style="font-weight:700;">
-                <span>تحميل هذا الكشف PDF 📥</span>
-            </a>
+            <button type="button" class="btn btn-secondary" onclick="openFinancialReportModal('revenues')" style="font-weight:700;">
+                <span>📈 كشف المداخيل</span>
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="openFinancialReportModal('expenses')" style="font-weight:700;">
+                <span>📉 كشف المصاريف</span>
+            </button>
+            <button type="button" class="btn btn-primary" onclick="openFinancialReportModal('both')" style="font-weight:800; display:inline-flex; align-items:center; gap:0.5rem; background:linear-gradient(135deg, #0d9488 0%, #059669 100%); border:none; box-shadow:0 4px 14px rgba(13,148,136,0.35);">
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>⚙️ تخصيص تقرير متعدد الشهور</span>
+            </button>
         </div>
     </div>
 
-    <div style="overflow-x:auto;">
-        <table class="table" style="width:100%; border-collapse:collapse; font-size:0.875rem;">
-            <thead>
-                <tr style="border-bottom:2px solid var(--border-color); text-align:right;">
-                    <th style="padding:0.65rem 0.75rem;">#</th>
-                    <th style="padding:0.65rem 0.75rem;">الشقة / العمارة</th>
-                    <th style="padding:0.65rem 0.75rem;">الساكن / المالك الرئيسي</th>
-                    <th style="padding:0.65rem 0.75rem;">الهاتف</th>
-                    <th style="padding:0.65rem 0.75rem;">الواجب</th>
-                    <th style="padding:0.65rem 0.75rem;">المؤدى</th>
-                    <th style="padding:0.65rem 0.75rem;">المتبقي</th>
-                    <th style="padding:0.65rem 0.75rem; text-align:center;">الوضعية</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($currentMonthData['apartments_status'] as $idx => $row)
-                    <tr style="border-bottom:1px solid var(--border-color); background: {{ $row['status'] === 'PAID' ? 'rgba(16,185,129,0.04)' : ($row['status'] === 'PARTIAL' ? 'rgba(245,158,11,0.04)' : 'rgba(244,63,94,0.04)') }};">
-                        <td style="padding:0.65rem 0.75rem;">{{ $idx + 1 }}</td>
-                        <td style="padding:0.65rem 0.75rem; font-weight:700;">
-                            شقة {{ $row['unit_number'] }}
-                            @if($row['building_name'] && $row['building_name'] !== '—')
-                                <small style="color:var(--text-secondary); font-weight:normal;">({{ $row['building_name'] }})</small>
-                            @endif
-                        </td>
-                        <td style="padding:0.65rem 0.75rem;">{{ $row['resident_name'] }}</td>
-                        <td style="padding:0.65rem 0.75rem;" class="num">{{ $row['phone'] }}</td>
-                        <td style="padding:0.65rem 0.75rem;" class="num">{{ number_format($row['expected_fee'], 2) }} د.م</td>
-                        <td style="padding:0.65rem 0.75rem; font-weight:700; color:{{ $row['paid_amount'] > 0 ? '#10b981' : 'inherit' }};" class="num">
-                            {{ number_format($row['paid_amount'], 2) }} د.م
-                        </td>
-                        <td style="padding:0.65rem 0.75rem; font-weight:700; color:{{ $row['remaining_due'] > 0 ? '#f43f5e' : '#10b981' }};" class="num">
-                            {{ number_format($row['remaining_due'], 2) }} د.م
-                        </td>
-                        <td style="padding:0.65rem 0.75rem; text-align:center;">
-                            @if($row['status'] === 'PAID')
-                                <span class="badge badge-success">✓ خالص</span>
-                            @elseif($row['status'] === 'PARTIAL')
-                                <span class="badge badge-warning">⏳ جزئي</span>
-                            @else
-                                <span class="badge badge-danger">✗ غير خالص</span>
-                            @endif
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
+    {{-- Quick Period Cards Grid --}}
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(340px, 1fr)); gap:1.25rem; margin-bottom:2rem;">
+
+        {{-- 1. Current Month Card --}}
+        <div class="card" style="padding:1.5rem; border:2px solid rgba(13,148,136,0.3); border-radius:var(--radius-lg); position:relative; overflow:hidden;">
+            <div style="position:absolute; top:1rem; left:1rem;">
+                <span class="badge badge-success" style="font-size:0.75rem;">الشهر الحالي</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.85rem; margin-bottom:1rem;">
+                <div style="width:44px; height:44px; border-radius:10px; background:rgba(13,148,136,0.12); color:var(--brand-primary); display:flex; align-items:center; justify-content:center; font-size:1.4rem;">
+                    📅
+                </div>
+                <div>
+                    <h3 style="margin:0; font-size:1.15rem; font-weight:800; color:var(--text-primary);">
+                        {{ $currentMonthData['period_title'] }}
+                    </h3>
+                    <span style="font-size:0.82rem; color:var(--text-secondary);">تقرير دوري شامل حتى تاريخ اليوم</span>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1.25rem;">
+                <div style="background:var(--bg-secondary, #f8fafc); padding:0.75rem 1rem; border-radius:8px;">
+                    <div style="font-size:0.75rem; color:var(--text-secondary);">المداخيل المحصلة</div>
+                    <div class="num" style="font-size:1.1rem; font-weight:800; color:#10b981;">
+                        {{ number_format($currentMonthData['total_revenues'], 2) }} <small style="font-size:0.75rem;">د.م</small>
+                    </div>
+                </div>
+                <div style="background:var(--bg-secondary, #f8fafc); padding:0.75rem 1rem; border-radius:8px;">
+                    <div style="font-size:0.75rem; color:var(--text-secondary);">المصاريف والنفقات</div>
+                    <div class="num" style="font-size:1.1rem; font-weight:800; color:#f43f5e;">
+                        {{ number_format($currentMonthData['total_expenses'], 2) }} <small style="font-size:0.75rem;">د.م</small>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0.85rem; background:rgba(13,148,136,0.06); border-radius:8px; margin-bottom:0.75rem; font-size:0.85rem;">
+                <span style="color:var(--text-secondary);">الفارق الصافي للشهر:</span>
+                <strong class="num" style="font-size:0.95rem; color:{{ $currentMonthData['net_balance'] >= 0 ? '#10b981' : '#f43f5e' }};">
+                    {{ ($currentMonthData['net_balance'] >= 0 ? '+' : '') . number_format($currentMonthData['net_balance'], 2) }} د.م
+                </strong>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.5rem 0.85rem; background:rgba(15,23,42,0.03); border-radius:8px; margin-bottom:1.25rem; font-size:0.8rem;">
+                <span style="color:var(--text-secondary);">🏢 حالة أداء الشقق:</span>
+                <div style="display:flex; gap:0.4rem; align-items:center;">
+                    <span class="badge badge-success" style="font-size:0.75rem;">{{ $currentMonthData['paid_apartments_count'] }} خالصة ✓</span>
+                    <span class="badge badge-danger" style="font-size:0.75rem;">{{ $currentMonthData['unpaid_apartments_count'] }} متأخرة ✗</span>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+                <a href="{{ route('portal.reports.financial-pdf', ['start_month' => $currentMonth, 'end_month' => $currentMonth, 'scope' => 'both', 'mode' => 'download']) }}" target="_blank" class="btn btn-primary" style="flex:1; justify-content:center; font-weight:800; font-size:0.85rem; background:linear-gradient(135deg, #0d9488 0%, #059669 100%);">
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    <span>تحميل PDF</span>
+                </a>
+                <a href="{{ route('portal.reports.financial-pdf', ['start_month' => $currentMonth, 'end_month' => $currentMonth, 'scope' => 'both', 'mode' => 'preview']) }}" target="_blank" class="btn btn-secondary" style="font-weight:700; font-size:0.85rem;" title="معاينة التقرير مباشرة في المتصفح">
+                    <span>👁️ معاينة</span>
+                </a>
+            </div>
+        </div>
+
+        {{-- 2. Last Month Card --}}
+        <div class="card" style="padding:1.5rem; border:1px solid var(--border-color); border-radius:var(--radius-lg); position:relative; overflow:hidden;">
+            <div style="position:absolute; top:1rem; left:1rem;">
+                <span class="badge badge-neutral" style="font-size:0.75rem;">الشهر الماضي</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.85rem; margin-bottom:1rem;">
+                <div style="width:44px; height:44px; border-radius:10px; background:rgba(99,102,241,0.12); color:#6366f1; display:flex; align-items:center; justify-content:center; font-size:1.4rem;">
+                    ⏮️
+                </div>
+                <div>
+                    <h3 style="margin:0; font-size:1.15rem; font-weight:800; color:var(--text-primary);">
+                        {{ $lastMonthData['period_title'] }}
+                    </h3>
+                    <span style="font-size:0.82rem; color:var(--text-secondary);">الحساب الختامي للشهر المنصرم</span>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1.25rem;">
+                <div style="background:var(--bg-secondary, #f8fafc); padding:0.75rem 1rem; border-radius:8px;">
+                    <div style="font-size:0.75rem; color:var(--text-secondary);">المداخيل المحصلة</div>
+                    <div class="num" style="font-size:1.1rem; font-weight:800; color:#10b981;">
+                        {{ number_format($lastMonthData['total_revenues'], 2) }} <small style="font-size:0.75rem;">د.م</small>
+                    </div>
+                </div>
+                <div style="background:var(--bg-secondary, #f8fafc); padding:0.75rem 1rem; border-radius:8px;">
+                    <div style="font-size:0.75rem; color:var(--text-secondary);">المصاريف والنفقات</div>
+                    <div class="num" style="font-size:1.1rem; font-weight:800; color:#f43f5e;">
+                        {{ number_format($lastMonthData['total_expenses'], 2) }} <small style="font-size:0.75rem;">د.م</small>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0.85rem; background:rgba(99,102,241,0.06); border-radius:8px; margin-bottom:0.75rem; font-size:0.85rem;">
+                <span style="color:var(--text-secondary);">الفارق الصافي للشهر:</span>
+                <strong class="num" style="font-size:0.95rem; color:{{ $lastMonthData['net_balance'] >= 0 ? '#10b981' : '#f43f5e' }};">
+                    {{ ($lastMonthData['net_balance'] >= 0 ? '+' : '') . number_format($lastMonthData['net_balance'], 2) }} د.م
+                </strong>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.5rem 0.85rem; background:rgba(15,23,42,0.03); border-radius:8px; margin-bottom:1.25rem; font-size:0.8rem;">
+                <span style="color:var(--text-secondary);">🏢 حالة أداء الشقق:</span>
+                <div style="display:flex; gap:0.4rem; align-items:center;">
+                    <span class="badge badge-success" style="font-size:0.75rem;">{{ $lastMonthData['paid_apartments_count'] }} خالصة ✓</span>
+                    <span class="badge badge-danger" style="font-size:0.75rem;">{{ $lastMonthData['unpaid_apartments_count'] }} متأخرة ✗</span>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+                <a href="{{ route('portal.reports.financial-pdf', ['start_month' => $lastMonth, 'end_month' => $lastMonth, 'scope' => 'both', 'mode' => 'download']) }}" target="_blank" class="btn btn-secondary" style="flex:1; justify-content:center; font-weight:700; font-size:0.85rem;">
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    <span>تحميل PDF</span>
+                </a>
+                <a href="{{ route('portal.reports.financial-pdf', ['start_month' => $lastMonth, 'end_month' => $lastMonth, 'scope' => 'both', 'mode' => 'preview']) }}" target="_blank" class="btn btn-secondary" style="font-weight:700; font-size:0.85rem;" title="معاينة التقرير مباشرة في المتصفح">
+                    <span>👁️ معاينة</span>
+                </a>
+            </div>
+        </div>
+
+        {{-- 3. Preset Quick Periods Card --}}
+        <div class="card" style="padding:1.5rem; border:1px solid var(--border-color); border-radius:var(--radius-lg);">
+            <div style="display:flex; align-items:center; gap:0.85rem; margin-bottom:1rem;">
+                <div style="width:44px; height:44px; border-radius:10px; background:rgba(245,158,11,0.12); color:#f59e0b; display:flex; align-items:center; justify-content:center; font-size:1.4rem;">
+                    ⚡
+                </div>
+                <div>
+                    <h3 style="margin:0; font-size:1.15rem; font-weight:800; color:var(--text-primary);">
+                        فترات دورية سريعة
+                    </h3>
+                    <span style="font-size:0.82rem; color:var(--text-secondary);">استخراج تقارير فصلية أو سنوية بنقرة واحدة</span>
+                </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:0.65rem; margin-bottom:1rem;">
+                @php
+                    $qStart = now()->subMonths(2)->format('Y-m');
+                    $qEnd   = now()->format('Y-m');
+                @endphp
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.65rem 0.85rem; background:var(--bg-secondary, #f8fafc); border-radius:8px;">
+                    <div>
+                        <strong style="font-size:0.85rem; color:var(--text-primary);">آخر 3 أشهر (الربع السنوي)</strong>
+                        <div style="font-size:0.75rem; color:var(--text-secondary);">من {{ $qStart }} إلى {{ $qEnd }}</div>
+                    </div>
+                    <a href="{{ route('portal.reports.financial-pdf', ['start_month' => $qStart, 'end_month' => $qEnd, 'scope' => 'both', 'mode' => 'download']) }}" target="_blank" class="btn btn-sm btn-secondary" style="font-weight:700;">
+                        <span>تحميل 📥</span>
+                    </a>
+                </div>
+
+                @php
+                    $yStart = now()->startOfYear()->format('Y-m');
+                    $yEnd   = now()->format('Y-m');
+                @endphp
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.65rem 0.85rem; background:var(--bg-secondary, #f8fafc); border-radius:8px;">
+                    <div>
+                        <strong style="font-size:0.85rem; color:var(--text-primary);">تقرير سنة {{ $currentYear }} كاملة</strong>
+                        <div style="font-size:0.75rem; color:var(--text-secondary);">من يناير {{ $currentYear }} حتى الآن</div>
+                    </div>
+                    <a href="{{ route('portal.reports.financial-pdf', ['start_month' => $yStart, 'end_month' => $yEnd, 'scope' => 'both', 'mode' => 'download']) }}" target="_blank" class="btn btn-sm btn-secondary" style="font-weight:700;">
+                        <span>تحميل 📥</span>
+                    </a>
+                </div>
+            </div>
+
+            <button type="button" onclick="openFinancialReportModal('both')" class="btn btn-secondary" style="width:100%; justify-content:center; font-weight:800; font-size:0.85rem;">
+                <span>⚙️ فتح أداة التخصيص الكاملة...</span>
+            </button>
+        </div>
+
     </div>
-</div>
+
+    {{-- Current Month Apartments Status Overview (Paid & Unpaid) --}}
+    @if(!empty($currentMonthData['apartments_status']))
+    <div class="card" style="padding:1.5rem; border-radius:var(--radius-lg); margin-bottom:2rem; border:1px solid var(--border-color);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.25rem;">
+            <div>
+                <h3 style="margin:0; font-size:1.15rem; font-weight:800; color:var(--text-primary); display:flex; align-items:center; gap:0.5rem;">
+                    <span>🏢 كشف وضعية أداء الشقق لشهر {{ $currentMonthData['period_title'] }}</span>
+                    <span class="badge badge-neutral" style="font-size:0.75rem;">نسبة التحصيل: {{ $currentMonthData['collection_rate'] }}%</span>
+                </h3>
+                <p style="margin:0.25rem 0 0 0; font-size:0.85rem; color:var(--text-secondary);">
+                    كشف حي يوضح الشقق التي سددت واجباتها والشقق المتأخرة عن الأداء (مضمن بالتقرير الرسمي PDF)
+                </p>
+            </div>
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                <span class="badge badge-success" style="font-size:0.8rem; padding:0.35rem 0.75rem;">
+                    {{ $currentMonthData['paid_apartments_count'] }} شقة خالصة ✓
+                </span>
+                @if($currentMonthData['partial_apartments_count'] > 0)
+                    <span class="badge badge-warning" style="font-size:0.8rem; padding:0.35rem 0.75rem;">
+                        {{ $currentMonthData['partial_apartments_count'] }} أداء جزئي ⏳
+                    </span>
+                @endif
+                <span class="badge badge-danger" style="font-size:0.8rem; padding:0.35rem 0.75rem;">
+                    {{ $currentMonthData['unpaid_apartments_count'] }} شقة غير خالصة ✗
+                </span>
+                <a href="{{ route('portal.reports.financial-pdf', ['start_month' => $currentMonth, 'end_month' => $currentMonth, 'scope' => 'revenues', 'mode' => 'download']) }}" target="_blank" class="btn btn-sm btn-secondary" style="font-weight:700;">
+                    <span>تحميل هذا الكشف PDF 📥</span>
+                </a>
+            </div>
+        </div>
+
+        <div style="overflow-x:auto;">
+            <table class="table" style="width:100%; border-collapse:collapse; font-size:0.875rem;">
+                <thead>
+                    <tr style="border-bottom:2px solid var(--border-color); text-align:right;">
+                        <th style="padding:0.65rem 0.75rem;">#</th>
+                        <th style="padding:0.65rem 0.75rem;">الشقة / العمارة</th>
+                        <th style="padding:0.65rem 0.75rem;">الساكن / المالك الرئيسي</th>
+                        <th style="padding:0.65rem 0.75rem;">الهاتف</th>
+                        <th style="padding:0.65rem 0.75rem;">الواجب</th>
+                        <th style="padding:0.65rem 0.75rem;">المؤدى</th>
+                        <th style="padding:0.65rem 0.75rem;">المتبقي</th>
+                        <th style="padding:0.65rem 0.75rem; text-align:center;">الوضعية</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($currentMonthData['apartments_status'] as $idx => $row)
+                        <tr style="border-bottom:1px solid var(--border-color); background: {{ $row['status'] === 'PAID' ? 'rgba(16,185,129,0.04)' : ($row['status'] === 'PARTIAL' ? 'rgba(245,158,11,0.04)' : 'rgba(244,63,94,0.04)') }};">
+                            <td style="padding:0.65rem 0.75rem;">{{ $idx + 1 }}</td>
+                            <td style="padding:0.65rem 0.75rem; font-weight:700;">
+                                شقة {{ $row['unit_number'] }}
+                                @if($row['building_name'] && $row['building_name'] !== '—')
+                                    <small style="color:var(--text-secondary); font-weight:normal;">({{ $row['building_name'] }})</small>
+                                @endif
+                            </td>
+                            <td style="padding:0.65rem 0.75rem;">{{ $row['resident_name'] }}</td>
+                            <td style="padding:0.65rem 0.75rem;" class="num">{{ $row['phone'] }}</td>
+                            <td style="padding:0.65rem 0.75rem;" class="num">{{ number_format($row['expected_fee'], 2) }} د.م</td>
+                            <td style="padding:0.65rem 0.75rem; font-weight:700; color:{{ $row['paid_amount'] > 0 ? '#10b981' : 'inherit' }};" class="num">
+                                {{ number_format($row['paid_amount'], 2) }} د.م
+                            </td>
+                            <td style="padding:0.65rem 0.75rem; font-weight:700; color:{{ $row['remaining_due'] > 0 ? '#f43f5e' : '#10b981' }};" class="num">
+                                {{ number_format($row['remaining_due'], 2) }} د.م
+                            </td>
+                            <td style="padding:0.65rem 0.75rem; text-align:center;">
+                                @if($row['status'] === 'PAID')
+                                    <span class="badge badge-success">✓ خالص</span>
+                                @elseif($row['status'] === 'PARTIAL')
+                                    <span class="badge badge-warning">⏳ جزئي</span>
+                                @else
+                                    <span class="badge badge-danger">✗ غير خالص</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @endif
+
+    {{-- Features & Legal Info Banner --}}
+    <div class="card" style="padding:1.5rem 1.75rem; border-radius:var(--radius-lg); background:linear-gradient(135deg, rgba(13,148,136,0.05) 0%, rgba(99,102,241,0.03) 100%); border:1px solid rgba(13,148,136,0.18);">
+        <h3 style="margin:0 0 1rem 0; font-size:1.1rem; font-weight:800; color:var(--text-primary); display:flex; align-items:center; gap:0.5rem;">
+            <span>⚖️ مميزات التقرير المالي المعتمد في Smart Syndic</span>
+        </h3>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.25rem;">
+            <div style="display:flex; gap:0.75rem;">
+                <div style="font-size:1.4rem;">📊</div>
+                <div>
+                    <strong style="font-size:0.9rem; color:var(--text-primary);">جداول تفصيلية بالدفعات والمصاريف</strong>
+                    <p style="margin:0.25rem 0 0 0; font-size:0.82rem; color:var(--text-secondary);">
+                        يسرد التقرير جميع عمليات التحصيل مع أرقام الشقق، والشهور المغطاة، وتفاصيل الفواتير والموردين وأصناف المصاريف.
+                    </p>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:0.75rem;">
+                <div style="font-size:1.4rem;">✍️</div>
+                <div>
+                    <strong style="font-size:0.9rem; color:var(--text-primary);">تفقيط المبالغ كتابةً باللغة العربية</strong>
+                    <p style="margin:0.25rem 0 0 0; font-size:0.82rem; color:var(--text-secondary);">
+                        يتم تحويل الأرقام تلقائياً إلى نصوص عربية قانونية (مثال: فقط خمسة آلاف وثلاثمائة درهم مغربي لا غير) لمنع أي تلاعب.
+                    </p>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:0.75rem;">
+                <div style="font-size:1.4rem;">🏛️</div>
+                <div>
+                    <strong style="font-size:0.9rem; color:var(--text-primary);">الخاتم الرسمي ومصادقة السانديك</strong>
+                    <p style="margin:0.25rem 0 0 0; font-size:0.82rem; color:var(--text-secondary);">
+                        يتضمن التقرير خاتم السانديك الرقمي وبيانات الإقامة وتوقيع المسير، جاهز للعرض في الجمع العام أو إرساله للملاك.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
 @endif
 
-{{-- Features & Legal Info Banner --}}
-<div class="card" style="padding:1.5rem 1.75rem; border-radius:var(--radius-lg); background:linear-gradient(135deg, rgba(13,148,136,0.05) 0%, rgba(99,102,241,0.03) 100%); border:1px solid rgba(13,148,136,0.18);">
-    <h3 style="margin:0 0 1rem 0; font-size:1.1rem; font-weight:800; color:var(--text-primary); display:flex; align-items:center; gap:0.5rem;">
-        <span>⚖️ مميزات التقرير المالي المعتمد في Smart Syndic</span>
-    </h3>
-    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.25rem;">
-        <div style="display:flex; gap:0.75rem;">
-            <div style="font-size:1.4rem;">📊</div>
-            <div>
-                <strong style="font-size:0.9rem; color:var(--text-primary);">جداول تفصيلية بالدفعات والمصاريف</strong>
-                <p style="margin:0.25rem 0 0 0; font-size:0.82rem; color:var(--text-secondary);">
-                    يسرد التقرير جميع عمليات التحصيل مع أرقام الشقق، والشهور المغطاة، وتفاصيل الفواتير والموردين وأصناف المصاريف.
-                </p>
+{{-- TAB 2: ANNUAL ANALYTICS & CHARTS --}}
+@if($tab === 'analytics')
+    {{-- Year Selector Form --}}
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem; background:var(--bg-surface); padding:1rem 1.25rem; border:1px solid var(--border-color); border-radius:var(--radius-lg);">
+        <div>
+            <h3 style="margin:0; font-size:1.05rem; font-weight:800; color:var(--text-primary);">
+                التحليل البياني والتدفقات المالية لسنة {{ $year }}
+            </h3>
+            <span style="font-size:0.82rem; color:var(--text-secondary);">مقارنة شهرية بين المداخيل والمصاريف ونسب العجز أو الفائض المالي</span>
+        </div>
+        <form method="GET" action="{{ route('portal.reports.index') }}" style="display:flex; align-items:center; gap:0.5rem;">
+            <input type="hidden" name="tab" value="analytics">
+            <label style="font-weight:700; font-size:0.9rem; color:var(--text-secondary);">السنة:</label>
+            <select name="year" class="form-select" onchange="this.form.submit()" style="width:auto; min-width:110px; font-weight:800;">
+                @for($y = now()->year; $y >= now()->year - 4; $y--)
+                    <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
+                @endfor
+            </select>
+        </form>
+    </div>
+
+    {{-- Annual KPI Cards --}}
+    <div class="kpi-grid" style="margin-bottom:1.5rem;">
+        <div class="kpi-card">
+            <div class="kpi-card-header">
+                <span class="kpi-label">إجمالي مداخيل سنة {{ $year }}</span>
+                <div class="kpi-icon-box emerald">📈</div>
+            </div>
+            <div class="kpi-value num" style="color:var(--color-success);">
+                {{ number_format($totalYearInflow, 2) }} <span class="unit">د.م</span>
+            </div>
+            <div class="kpi-footer">
+                <span>مجموع تحصيلات اشتراكات السكان</span>
             </div>
         </div>
 
-        <div style="display:flex; gap:0.75rem;">
-            <div style="font-size:1.4rem;">✍️</div>
-            <div>
-                <strong style="font-size:0.9rem; color:var(--text-primary);">تفقيط المبالغ كتابةً باللغة العربية</strong>
-                <p style="margin:0.25rem 0 0 0; font-size:0.82rem; color:var(--text-secondary);">
-                    يتم تحويل الأرقام تلقائياً إلى نصوص عربية قانونية (مثال: فقط خمسة آلاف وثلاثمائة درهم مغربي لا غير) لمنع أي تلاعب.
-                </p>
+        <div class="kpi-card">
+            <div class="kpi-card-header">
+                <span class="kpi-label">إجمالي نفقات سنة {{ $year }}</span>
+                <div class="kpi-icon-box rose">📉</div>
+            </div>
+            <div class="kpi-value num" style="color:var(--color-danger);">
+                {{ number_format($totalYearOutflow, 2) }} <span class="unit">د.م</span>
+            </div>
+            <div class="kpi-footer">
+                <span>مجموع فواتير ومصاريف الإقامة</span>
             </div>
         </div>
 
-        <div style="display:flex; gap:0.75rem;">
-            <div style="font-size:1.4rem;">🏛️</div>
-            <div>
-                <strong style="font-size:0.9rem; color:var(--text-primary);">الخاتم الرسمي ومصادقة السانديك</strong>
-                <p style="margin:0.25rem 0 0 0; font-size:0.82rem; color:var(--text-secondary);">
-                    يتضمن التقرير خاتم السانديك الرقمي وبيانات الإقامة وتوقيع المسير، جاهز للعرض في الجمع العام أو إرساله للملاك.
-                </p>
+        <div class="kpi-card">
+            <div class="kpi-card-header">
+                <span class="kpi-label">الرصيد الصافي (الفائض / العجز)</span>
+                <div class="kpi-icon-box {{ $totalYearNet >= 0 ? 'emerald' : 'rose' }}">⚖️</div>
+            </div>
+            <div class="kpi-value num" style="color: {{ $totalYearNet >= 0 ? 'var(--color-success)' : 'var(--color-danger)' }};">
+                {{ number_format($totalYearNet, 2) }} <span class="unit">د.م</span>
+            </div>
+            <div class="kpi-footer">
+                <span>{{ $totalYearNet >= 0 ? 'فائض مالي متاح بالخزينة ✓' : 'عجز مالي مسجل ⚠' }}</span>
             </div>
         </div>
     </div>
-</div>
+
+    {{-- Interactive Charts Row --}}
+    <div class="grid-2" style="margin-bottom:1.5rem;">
+        {{-- Monthly Inflow vs Outflow Bar Chart --}}
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span>📊 التدفق المالي الشهري لسنة {{ $year }}</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div style="height:320px; width:100%;">
+                    <canvas id="annualFlowCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+
+        {{-- Expense Categories Donut Chart --}}
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span>🧹 توزيع المصاريف حسب الصنف</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div style="height:320px; width:100%;">
+                    <canvas id="categoryDonutCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- 12-Month Table Breakdown --}}
+    <div class="card" style="border-radius:var(--radius-lg); border:1px solid var(--border-color); overflow:hidden;">
+        <div class="card-header">
+            <div class="card-title">
+                <span>📋 الكشف المالي التفصيلي لشهور سنة {{ $year }}</span>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="min-width:140px;">الشهر</th>
+                        <th style="min-width:140px;">المداخيل المحصلة</th>
+                        <th style="min-width:140px;">المصاريف والنفقات</th>
+                        <th style="min-width:140px;">الصافي الشهري</th>
+                        <th style="text-align:center; min-width:110px;">حالة الرصيد</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($monthlyBreakdown as $row)
+                        <tr>
+                            <td>
+                                <strong>{{ $row['month_name'] }} {{ $year }}</strong>
+                            </td>
+                            <td>
+                                <span class="num" style="font-weight:800; color:var(--color-success);">
+                                    {{ number_format($row['inflow'], 2) }} د.م
+                                </span>
+                            </td>
+                            <td>
+                                <span class="num" style="font-weight:800; color:var(--color-danger);">
+                                    {{ number_format($row['outflow'], 2) }} د.م
+                                </span>
+                            </td>
+                            <td>
+                                <span class="num" style="font-weight:800; color: {{ $row['net'] >= 0 ? 'var(--color-success)' : 'var(--color-danger)' }};">
+                                    {{ number_format($row['net'], 2) }} د.م
+                                </span>
+                            </td>
+                            <td style="text-align:center;">
+                                @if($row['inflow'] == 0 && $row['outflow'] == 0)
+                                    <span class="badge badge-neutral">لا توجد حركات</span>
+                                @elseif($row['net'] >= 0)
+                                    <span class="badge badge-success">✓ فائض</span>
+                                @else
+                                    <span class="badge badge-danger">⚠ عجز</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+@endif
+
+{{-- TAB 3: AUDIT TRAIL & LOGS --}}
+@if($tab === 'audit')
+    <div class="filter-card" style="margin-bottom:1.5rem; background:var(--bg-surface); padding:1rem 1.25rem; border:1px solid var(--border-color); border-radius:var(--radius-lg);">
+        <form method="GET" action="{{ route('portal.reports.index') }}" class="filter-form" style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+            <input type="hidden" name="tab" value="audit">
+
+            <select name="action" class="form-select" style="min-width:240px; font-weight:700;">
+                <option value="">جميع أنواع العمليات</option>
+                <option value="PAYMENT_RECORDED" {{ request('action') == 'PAYMENT_RECORDED' ? 'selected' : '' }}>تسجيل أداء / دفعة</option>
+                <option value="PAYMENT_CONFIRMED" {{ request('action') == 'PAYMENT_CONFIRMED' ? 'selected' : '' }}>تأكيد وصل أداء</option>
+                <option value="EXPENSE_RECORDED" {{ request('action') == 'EXPENSE_RECORDED' ? 'selected' : '' }}>تسجيل مصروف جديد</option>
+                <option value="EXPENSE_DELETED" {{ request('action') == 'EXPENSE_DELETED' ? 'selected' : '' }}>حذف مصروف</option>
+                <option value="RESIDENT_APPROVED" {{ request('action') == 'RESIDENT_APPROVED' ? 'selected' : '' }}>تفعيل حساب ساكن</option>
+                <option value="APARTMENT_VACATED" {{ request('action') == 'APARTMENT_VACATED' ? 'selected' : '' }}>تفريغ شقة وتصفير الحساب</option>
+            </select>
+
+            <button type="submit" class="btn btn-primary" style="font-weight:700;">
+                <span>تطبيق الفلترة</span>
+            </button>
+
+            @if(request('action'))
+                <a href="{{ route('portal.reports.index', ['tab' => 'audit']) }}" class="btn btn-secondary" style="font-weight:700;">
+                    <span>إلغاء الفلتر</span>
+                </a>
+            @endif
+        </form>
+    </div>
+
+    <div class="card" style="border-radius:var(--radius-lg); border:1px solid var(--border-color); overflow:hidden;">
+        <div class="card-header">
+            <div class="card-title">
+                <span>🛡️ سجل العمليات الرقابي غير القابل للتعديل</span>
+            </div>
+            <span class="badge badge-neutral">{{ $auditLogs->total() }} عملية مسجلة</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="min-width:140px;">المسؤول / الفاعل</th>
+                        <th style="min-width:130px;">نوع العملية</th>
+                        <th style="min-width:250px;">التفاصيل والبيانات</th>
+                        <th style="min-width:110px;">عنوان IP</th>
+                        <th style="min-width:140px;">التاريخ والوقت</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($auditLogs as $log)
+                        <tr>
+                            <td>
+                                <strong>{{ $log->actor?->full_name ?? 'النظام الآلي' }}</strong>
+                                <div style="font-size:0.75rem; color:var(--text-muted);">{{ $log->actor?->email }}</div>
+                            </td>
+                            <td>
+                                <span class="badge badge-info" style="font-size:0.8rem;">
+                                    {{ match($log->action) {
+                                        'PAYMENT_RECORDED' => '💳 تسجيل أداء',
+                                        'PAYMENT_CONFIRMED' => '✓ تأكيد وصل',
+                                        'EXPENSE_RECORDED' => '🧾 تسجيل مصروف',
+                                        'EXPENSE_DELETED' => '🗑️ حذف مصروف',
+                                        'RESIDENT_APPROVED' => '👥 تفعيل ساكن',
+                                        'APARTMENT_VACATED' => '🚪 تفريغ شقة',
+                                        default => $log->action
+                                    } }}
+                                </span>
+                            </td>
+                            <td>
+                                @if(is_array($log->metadata) && !empty($log->metadata))
+                                    <div style="display:flex; flex-wrap:wrap; gap:0.4rem; max-width:400px;">
+                                        @foreach($log->metadata as $k => $v)
+                                            <span class="badge badge-neutral num" style="font-size:0.72rem;">
+                                                <strong>{{ $k }}:</strong> {{ is_array($v) ? json_encode($v, JSON_UNESCAPED_UNICODE) : $v }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <span style="color:var(--text-muted); font-size:0.8rem;">—</span>
+                                @endif
+                            </td>
+                            <td class="num" style="color:var(--text-muted); font-size:0.85rem;">
+                                {{ $log->ip_address ?? '—' }}
+                            </td>
+                            <td class="num" style="font-size:0.85rem;">
+                                {{ $log->created_at->format('Y-m-d H:i') }}
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" style="text-align:center; padding:2rem; color:var(--text-muted);">
+                                لا توجد سجلات مطابقة للبحث
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if($auditLogs->hasPages())
+            <div style="padding:1rem; border-top:1px solid var(--border-color);">
+                {{ $auditLogs->links() }}
+            </div>
+        @endif
+    </div>
+@endif
 
 @endsection
+
+@push('scripts')
+@if($tab === 'analytics')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // 1. Annual Flow Chart
+        const flowCtx = document.getElementById('annualFlowCanvas');
+        if (flowCtx && typeof Chart !== 'undefined') {
+            new Chart(flowCtx, {
+                type: 'bar',
+                data: {
+                    labels: @json($chartLabels),
+                    datasets: [
+                        {
+                            label: 'المداخيل (د.م)',
+                            data: @json($chartInflows),
+                            backgroundColor: 'rgba(16, 185, 129, 0.85)',
+                            borderRadius: 6,
+                        },
+                        {
+                            label: 'المصاريف (د.م)',
+                            data: @json($chartOutflows),
+                            backgroundColor: 'rgba(244, 63, 94, 0.85)',
+                            borderRadius: 6,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { font: { family: 'Cairo', weight: 'bold' } } }
+                    },
+                    scales: {
+                        x: { ticks: { font: { family: 'Cairo' } } },
+                        y: { ticks: { font: { family: 'Cairo' } } }
+                    }
+                }
+            });
+        }
+
+        // 2. Category Doughnut Chart
+        const catCtx = document.getElementById('categoryDonutCanvas');
+        if (catCtx && typeof Chart !== 'undefined') {
+            const catLabels = @json($categoryLabels);
+            const catData = @json($categoryData);
+            const catColors = @json($categoryColors);
+
+            new Chart(catCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: catLabels.length ? catLabels : ['لا توجد مصاريف مسجلة'],
+                    datasets: [{
+                        data: catData.length ? catData : [1],
+                        backgroundColor: catColors.length ? catColors : ['#cbd5e1'],
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: 'Cairo' } } }
+                    }
+                }
+            });
+        }
+    });
+</script>
+@endif
+@endpush

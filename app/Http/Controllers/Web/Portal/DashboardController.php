@@ -153,6 +153,12 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        $allApartments = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))
+            ->billable()
+            ->with(['building', 'residents'])
+            ->get()
+            ->sortBy('unit_number', SORT_NATURAL);
+
         return view('portal.dashboard', compact(
             'tenant',
             'user',
@@ -178,6 +184,7 @@ class DashboardController extends Controller
             'recentPayments',
             'pendingUsers',
             'unpaidApartments',
+            'allApartments',
             'chartLabels',
             'chartInflows',
             'chartOutflows'

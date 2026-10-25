@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Web\Portal;
 use App\Events\ResidentApproved;
 use App\Http\Controllers\Controller;
 use App\Models\Apartment;
+use App\Models\Poll;
+use App\Models\Suggestion;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -14,18 +16,20 @@ class ResidentController extends Controller
     public function index(Request $request)
     {
         $tenantId = auth()->user()->tenant_id;
+        $tab = $request->input('tab', 'residents');
 
-        $query = User::where('tenant_id', $tenantId)
+        // Residents Query
+        $residentsQuery = User::where('tenant_id', $tenantId)
             ->where('role', 'RESIDENT')
-            ->with(['apartments']);
+            ->with(['apartments.building']);
 
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $residentsQuery->where('status', $request->status);
         }
 
         if ($request->filled('search')) {
             $s = $request->search;
-            $query->where(function ($q) use ($s) {
+            $residentsQuery->where(function ($q) use ($s) {
                 $q->where('first_name', 'like', "%{$s}%")
                   ->orWhere('last_name', 'like', "%{$s}%")
                   ->orWhere('email', 'like', "%{$s}%")
@@ -33,14 +37,42 @@ class ResidentController extends Controller
             });
         }
 
-        $residents = $query->latest('created_at')->paginate(20)->withQueryString();
+        $residents = $residentsQuery->latest('created_at')->paginate(20, ['*'], 'residents_page')->withQueryString();
 
         $pendingCount = User::where('tenant_id', $tenantId)->where('role', 'RESIDENT')->where('status', 'PENDING')->count();
         $activeCount  = User::where('tenant_id', $tenantId)->where('role', 'RESIDENT')->where('status', 'ACTIVE')->count();
 
+        // Suggestions / Complaints Query
+        $suggestions = Suggestion::where('tenant_id', $tenantId)
+            ->with(['user', 'apartment'])
+            ->latest('created_at')
+            ->paginate(15, ['*'], 'suggestions_page')
+            ->withQueryString();
+
+        $pendingSuggestionsCount = Suggestion::where('tenant_id', $tenantId)->where('status', 'PENDING')->count();
+
+        // Polls Query
+        $polls = Poll::where('tenant_id', $tenantId)
+            ->with(['options.votes'])
+            ->latest('created_at')
+            ->paginate(15, ['*'], 'polls_page')
+            ->withQueryString();
+
+        $activePollsCount = Poll::where('tenant_id', $tenantId)->where('is_active', true)->count();
+
         $tenant = auth()->user()->tenant;
 
-        return view('portal.residents.index', compact('residents', 'pendingCount', 'activeCount', 'tenant'));
+        return view('portal.residents.index', compact(
+            'tab',
+            'residents',
+            'pendingCount',
+            'activeCount',
+            'suggestions',
+            'pendingSuggestionsCount',
+            'polls',
+            'activePollsCount',
+            'tenant'
+        ));
     }
 
     public function approve($id)

@@ -4,6 +4,195 @@
 
 @section('content')
 
+<div x-data="dashboardPage()">
+
+{{-- Direct Modal 1: Record Payment / Quick Collection --}}
+<div class="modal-overlay" x-show="paymentModal" x-cloak style="z-index:99990;">
+    <div class="modal-dialog" style="max-width:680px; width:95%;" @click.away="paymentModal = false">
+        <div class="modal-header">
+            <h3 class="modal-title">استخلاص واجب شهري فوري</h3>
+            <button type="button" class="icon-btn" @click="paymentModal = false">✕</button>
+        </div>
+        <form method="POST" action="{{ route('portal.payments.store') }}" enctype="multipart/form-data">
+            @csrf
+            <div class="modal-body">
+                {{-- Apartment Selection --}}
+                <div class="form-group">
+                    <label class="form-label" style="font-weight:700;">الشقة المعنية</label>
+                    <select name="apartment_id" class="form-select" required x-model="selectedApartmentId" @change="onApartmentChange($event)">
+                        <option value="">-- اختر الشقة المعنية --</option>
+                        @php
+                            $groupedApts = $allApartments->groupBy(function($a) {
+                                $b = $a->building;
+                                if (!$b) return 'العمارة العامة';
+                                $block = $b->block ? " (بلوك {$b->block})" : '';
+                                return $b->name . $block;
+                            });
+                        @endphp
+                        @foreach($groupedApts as $groupName => $apts)
+                            <optgroup label="🏢 {{ $groupName }}">
+                                @foreach($apts as $apt)
+                                    @php
+                                        $cleanUnit = str_starts_with(trim($apt->unit_number), 'شقة') ? $apt->unit_number : 'شقة ' . $apt->unit_number;
+                                        $residentName = $apt->residents->first()?->full_name;
+                                    @endphp
+                                    <option value="{{ $apt->id }}" data-fee="{{ (float) $apt->monthly_fee }}">
+                                        {{ $cleanUnit }} {{ $residentName ? "({$residentName})" : '(شاغرة)' }}
+                                    </option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Interactive Multi-Month Selection --}}
+                <div class="form-group" style="background:var(--bg-secondary); padding:1.15rem; border-radius:12px; border:1px solid var(--border-color); margin-bottom:1.25rem;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.85rem;">
+                        <label class="form-label" style="margin:0; font-weight:800; font-size:0.92rem; color:var(--text-primary);">
+                            الشهور المستخلصة
+                            <span style="font-size:0.78rem; font-weight:normal; color:var(--text-muted); margin-right:4px;">(يمكنك تحديد عدة أشهر)</span>
+                        </label>
+                        <div style="display:flex; align-items:center; gap:0.4rem; background:var(--bg-surface); padding:3px 6px; border-radius:8px; border:1px solid var(--border-color);">
+                            <button type="button" class="btn btn-sm btn-secondary" style="padding:0.2rem 0.55rem; font-size:0.75rem; border-radius:6px; cursor:pointer;" @click="changeYear(-1)">◀</button>
+                            <strong class="num" style="font-size:0.95rem; min-width:55px; text-align:center; color:var(--text-primary); font-weight:800;" x-text="selectedYear"></strong>
+                            <button type="button" class="btn btn-sm btn-secondary" style="padding:0.2rem 0.55rem; font-size:0.75rem; border-radius:6px; cursor:pointer;" @click="changeYear(1)">▶</button>
+                        </div>
+                    </div>
+
+                    {{-- Month Pills Grid --}}
+                    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:0.45rem; margin-bottom:0.85rem;">
+                        <template x-for="(monthObj, idx) in currentYearMonths" :key="monthObj.key">
+                            <button type="button" 
+                                    @click="toggleMonth(monthObj.key)"
+                                    :style="isMonthSelected(monthObj.key) 
+                                        ? 'background:linear-gradient(135deg, #0d9488 0%, #059669 100%); color:#ffffff; border-color:#0d9488; font-weight:800; box-shadow:0 2px 6px rgba(13,148,136,0.35);' 
+                                        : 'background:var(--bg-surface); color:var(--text-primary); border-color:var(--border-color); font-weight:600;'"
+                                    style="padding:0.55rem 0.35rem; border:1px solid; border-radius:8px; font-size:0.84rem; cursor:pointer; text-align:center; transition:all 0.15s ease;">
+                                <span x-text="monthObj.name"></span>
+                                <span x-show="isMonthSelected(monthObj.key)" style="font-size:0.75rem; margin-right:3px;">✓</span>
+                            </button>
+                        </template>
+                    </div>
+
+                    <input type="hidden" name="covered_months" :value="selectedMonths.join(',')">
+
+                    <div style="display:flex; align-items:center; justify-content:space-between; font-size:0.84rem; padding-top:0.6rem; border-top:1px dashed var(--border-color);">
+                        <span style="color:var(--brand-primary); font-weight:700;">
+                            ✨ عدد الأشهر المحددة: <span class="num" style="font-weight:900;" x-text="selectedMonths.length"></span> شهر
+                        </span>
+                        <button type="button" class="btn btn-link btn-sm" style="padding:0; font-size:0.8rem; color:var(--brand-secondary); text-decoration:underline; font-weight:700; cursor:pointer;" @click="selectCurrentMonthOnly()">
+                            إعادة ضبط للشهر الحالي فقط
+                        </button>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight:700;">المبلغ الإجمالي المؤدى (درهم)</label>
+                        <input type="number" step="0.01" name="amount_paid" class="form-control" x-model="amountPaid" placeholder="المبلغ الإجمالي" required>
+                        <small style="color:var(--text-muted); font-size:0.72rem;" x-show="selectedApartmentFee > 0">
+                            الواجب الشهري للشقة: <strong class="num" x-text="selectedApartmentFee + ' د.م'"></strong>
+                        </small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight:700;">طريقة الأداء</label>
+                        <select name="payment_method" class="form-select" required>
+                            <option value="CASH">💵 نقداً (صندوق الإقامة)</option>
+                            <option value="BANK_TRANSFER">🏦 تحويل بنكي</option>
+                            <option value="CHEQUE">📝 شيك بنكي</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight:700;">تاريخ الأداء</label>
+                        <input type="date" name="payment_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">إثبات الأداء أو التوصيل البنكي (اختياري)</label>
+                        <input type="file" name="bank_receipt_proof" class="form-control" accept="image/*">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">ملاحظات إضافية (اختياري)</label>
+                    <textarea name="notes" class="form-control" rows="2" placeholder="ملاحظات حول طريقة الأداء أو رقم الشيك..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @click="paymentModal = false">إلغاء</button>
+                <button type="submit" class="btn btn-primary" style="font-weight:700;">
+                    <span>تأكيد واستخراج التوصيل ✓</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Direct Modal 2: Record Expense --}}
+<div class="modal-overlay" x-show="expenseModal" x-cloak style="z-index:99990;">
+    <div class="modal-dialog" @click.away="expenseModal = false">
+        <div class="modal-header">
+            <h3 class="modal-title">تسجيل مصروف أو فاتورة جديدة</h3>
+            <button type="button" class="icon-btn" @click="expenseModal = false">✕</button>
+        </div>
+        <form method="POST" action="{{ route('portal.expenses.store') }}" enctype="multipart/form-data">
+            @csrf
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">عنوان المصروف أو الخدمة</label>
+                    <input type="text" name="title" class="form-control" placeholder="مثال: إصلاح عطل إنارة المدخل" required>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                    <div class="form-group">
+                        <label class="form-label">المبلغ (درهم)</label>
+                        <input type="number" step="0.01" name="amount" class="form-control" placeholder="350.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">الصنف / النوع</label>
+                        <select name="category" class="form-select" required>
+                            <option value="CLEANING">🧹 النظافة ومواد التطهير</option>
+                            <option value="ELEVATOR">🛗 صيانة المصعد</option>
+                            <option value="SECURITY">🔒 الحراسة والأمن</option>
+                            <option value="WATER_ELECTRICITY">💡 فاتورة الماء والكهرباء</option>
+                            <option value="GARDENING">🌿 العناية بالحديقة</option>
+                            <option value="MAINTENANCE">🔧 صيانة عامة وإصلاحات</option>
+                            <option value="OTHER">📋 مصاريف إدارية أخرى</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                    <div class="form-group">
+                        <label class="form-label">طريقة الأداء والخصم</label>
+                        <select name="payment_method" class="form-select" required>
+                            <option value="CASH">💵 نقداً (يخصم من الصندوق)</option>
+                            <option value="BANK_TRANSFER">🏦 تحويل (يخصم من البنك)</option>
+                            <option value="CHEQUE">📝 شيك بنكي</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">تاريخ الصرف</label>
+                        <input type="date" name="expense_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">صورة الفاتورة أو وصل الشراء (اختياري)</label>
+                    <input type="file" name="invoice_proof" class="form-control" accept="image/*,application/pdf">
+                    <small style="color:var(--text-muted); font-size:0.75rem;">يمكنك إرفاق صورة للفاتورة لحفظها في الأرشيف المالي</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @click="expenseModal = false">إلغاء</button>
+                <button type="submit" class="btn btn-danger">تسجيل وخصم المصروف</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 {{-- 1. Executive Welcome & Property Status --}}
 <div class="card" style="margin-bottom:1.5rem; background:linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.98) 100%); border:1px solid rgba(13, 148, 136, 0.25); border-radius:var(--radius-lg); padding:1.5rem 1.75rem; color:#fff; position:relative; overflow:hidden;">
     <div style="position:absolute; left:-30px; bottom:-30px; width:160px; height:160px; background:radial-gradient(circle, rgba(13,148,136,0.18) 0%, transparent 70%); border-radius:50%; pointer-events:none;"></div>
@@ -72,30 +261,30 @@
     </div>
 </div>
 
-{{-- 2. Daily Operations Launchpad --}}
+{{-- 2. Daily Operations Launchpad (Direct Action Triggers) --}}
 <div style="margin-bottom:1.5rem;">
     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1rem;">
-        {{-- Action 1: Record Payment --}}
-        <a href="{{ route('portal.payments.index') }}" class="card action-launchpad-card" style="text-decoration:none; margin:0; padding:1.1rem 1.25rem; display:flex; align-items:center; gap:1rem; border:1px solid var(--border-color); border-radius:var(--radius-md); transition:all 0.2s ease; background:var(--bg-card);">
+        {{-- Direct Action 1: Record Payment Modal --}}
+        <div @click="openQuickPayment()" class="card action-launchpad-card" style="cursor:pointer; margin:0; padding:1.1rem 1.25rem; display:flex; align-items:center; gap:1rem; border:1px solid var(--border-color); border-radius:var(--radius-md); transition:all 0.2s ease; background:var(--bg-card);">
             <div style="width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0; box-shadow:0 3px 8px rgba(16,185,129,0.3);">
                 💳
             </div>
             <div>
                 <div style="font-weight:900; font-size:0.98rem; color:var(--text-primary); margin-bottom:0.2rem;">استخلاص واجب شهري</div>
-                <div style="font-size:0.78rem; color:var(--text-muted);">تسجيل استلام وإصدار وصل فوري</div>
+                <div style="font-size:0.78rem; color:var(--color-success); font-weight:700;">فتح نافذة الاستخلاص الفوري ⚡</div>
             </div>
-        </a>
+        </div>
 
-        {{-- Action 2: Record Expense --}}
-        <a href="{{ route('portal.expenses.index') }}" class="card action-launchpad-card" style="text-decoration:none; margin:0; padding:1.1rem 1.25rem; display:flex; align-items:center; gap:1rem; border:1px solid var(--border-color); border-radius:var(--radius-md); transition:all 0.2s ease; background:var(--bg-card);">
+        {{-- Direct Action 2: Record Expense Modal --}}
+        <div @click="expenseModal = true" class="card action-launchpad-card" style="cursor:pointer; margin:0; padding:1.1rem 1.25rem; display:flex; align-items:center; gap:1rem; border:1px solid var(--border-color); border-radius:var(--radius-md); transition:all 0.2s ease; background:var(--bg-card);">
             <div style="width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg, #f43f5e 0%, #e11d48 100%); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0; box-shadow:0 3px 8px rgba(244,63,94,0.3);">
                 💸
             </div>
             <div>
                 <div style="font-weight:900; font-size:0.98rem; color:var(--text-primary); margin-bottom:0.2rem;">تسجيل مصروف أو نفقة</div>
-                <div style="font-size:0.78rem; color:var(--text-muted);">صيانة، حراسة، كهرباء، نظافة...</div>
+                <div style="font-size:0.78rem; color:var(--color-danger); font-weight:700;">تسجيل فاتورة جديدة ⚡</div>
             </div>
-        </a>
+        </div>
 
         {{-- Action 3: Apartments Status --}}
         <a href="{{ route('portal.apartments.index') }}" class="card action-launchpad-card" style="text-decoration:none; margin:0; padding:1.1rem 1.25rem; display:flex; align-items:center; gap:1rem; border:1px solid var(--border-color); border-radius:var(--radius-md); transition:all 0.2s ease; background:var(--bg-card);">
@@ -103,7 +292,7 @@
                 🏢
             </div>
             <div>
-                <div style="font-weight:900; font-size:0.98rem; color:var(--text-primary); margin-bottom:0.2rem;">إدارة الشقق والوحدات</div>
+                <div style="font-weight:900; font-size:0.98rem; color:var(--text-primary); margin-bottom:0.2rem;">إدارة الشقق والتحصيل</div>
                 <div style="font-size:0.78rem; color:var(--text-muted);">
                     @if($unpaidUnitsCount > 0)
                         <span style="color:var(--color-warning); font-weight:700;">{{ $unpaidUnitsCount }} شقة لم تسدد بعد</span>
@@ -114,14 +303,14 @@
             </div>
         </a>
 
-        {{-- Action 4: Financial Report PDF --}}
+        {{-- Direct Action 4: Financial Report PDF Modal --}}
         <div onclick="openFinancialReportModal('both')" class="card action-launchpad-card" style="margin:0; padding:1.1rem 1.25rem; display:flex; align-items:center; gap:1rem; border:1px solid var(--border-color); border-radius:var(--radius-md); transition:all 0.2s ease; background:var(--bg-card); cursor:pointer;">
             <div style="width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg, #d97706 0%, #b45309 100%); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0; box-shadow:0 3px 8px rgba(217,119,6,0.3);">
                 📑
             </div>
             <div>
                 <div style="font-weight:900; font-size:0.98rem; color:var(--text-primary); margin-bottom:0.2rem;">تقرير الحسابات (PDF)</div>
-                <div style="font-size:0.78rem; color:var(--text-muted);">كشف معتمد ومختوم للطباعة</div>
+                <div style="font-size:0.78rem; color:var(--color-warning); font-weight:700;">كشف معتمد ومختوم ⚡</div>
             </div>
         </div>
     </div>
@@ -419,12 +608,13 @@
                                         @endif
                                     </div>
                                 </div>
-                                <a href="{{ route('portal.payments.index') }}" 
-                                   class="btn btn-sm btn-secondary" 
-                                   style="padding:0.25rem 0.55rem; font-size:0.75rem; border-radius:6px; font-weight:700;" 
-                                   title="تسجيل استخلاص لهذه الشقة">
+                                <button type="button" 
+                                        @click="openPaymentForApartment('{{ $uApt->id }}', {{ (float) $uApt->monthly_fee }})" 
+                                        class="btn btn-sm btn-secondary" 
+                                        style="padding:0.25rem 0.55rem; font-size:0.75rem; border-radius:6px; font-weight:700; cursor:pointer;" 
+                                        title="تسجيل استخلاص فوري لهذه الشقة">
                                     + استخلاص
-                                </a>
+                                </button>
                             </div>
                         @endforeach
                     </div>
@@ -446,10 +636,94 @@
     </div>
 </div>
 
+</div> {{-- End x-data="dashboardPage()" --}}
+
 @endsection
 
 @push('scripts')
 <script>
+    function dashboardPage() {
+        return {
+            paymentModal: false,
+            expenseModal: false,
+            selectedApartmentId: '',
+            selectedApartmentFee: 0,
+            amountPaid: '',
+            selectedMonths: ['{{ now()->format('Y-m') }}'],
+            selectedYear: {{ now()->year }},
+            arabicMonthNames: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليوز', 'غشت', 'شتنبر', 'أكتوبر', 'نونبر', 'دجنبر'],
+
+            get currentYearMonths() {
+                let months = [];
+                for (let m = 1; m <= 12; m++) {
+                    let mStr = m < 10 ? '0' + m : '' + m;
+                    months.push({
+                        key: this.selectedYear + '-' + mStr,
+                        name: this.arabicMonthNames[m - 1]
+                    });
+                }
+                return months;
+            },
+
+            openQuickPayment() {
+                this.selectedApartmentId = '';
+                this.selectedApartmentFee = 0;
+                this.amountPaid = '';
+                this.selectedMonths = ['{{ now()->format('Y-m') }}'];
+                this.selectedYear = {{ now()->year }};
+                this.paymentModal = true;
+            },
+
+            openPaymentForApartment(aptId, fee) {
+                this.selectedApartmentId = aptId;
+                this.selectedApartmentFee = parseFloat(fee);
+                this.selectedMonths = ['{{ now()->format('Y-m') }}'];
+                this.selectedYear = {{ now()->year }};
+                this.recalculateTotal();
+                this.paymentModal = true;
+            },
+
+            onApartmentChange(e) {
+                let opt = e.target.selectedOptions[0];
+                if (opt && opt.dataset.fee) {
+                    this.selectedApartmentFee = parseFloat(opt.dataset.fee);
+                    this.recalculateTotal();
+                }
+            },
+
+            toggleMonth(mKey) {
+                let idx = this.selectedMonths.indexOf(mKey);
+                if (idx > -1) {
+                    if (this.selectedMonths.length > 1) {
+                        this.selectedMonths.splice(idx, 1);
+                    }
+                } else {
+                    this.selectedMonths.push(mKey);
+                }
+                this.recalculateTotal();
+            },
+
+            isMonthSelected(mKey) {
+                return this.selectedMonths.includes(mKey);
+            },
+
+            changeYear(delta) {
+                this.selectedYear += delta;
+            },
+
+            selectCurrentMonthOnly() {
+                this.selectedYear = {{ now()->year }};
+                this.selectedMonths = ['{{ now()->format('Y-m') }}'];
+                this.recalculateTotal();
+            },
+
+            recalculateTotal() {
+                if (this.selectedApartmentFee > 0) {
+                    this.amountPaid = (this.selectedApartmentFee * this.selectedMonths.length).toFixed(2);
+                }
+            }
+        };
+    }
     document.addEventListener('DOMContentLoaded', function () {
         const ctx = document.getElementById('monthlyFlowCanvas');
         if (!ctx) return;
