@@ -89,7 +89,7 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
   String _filter = 'ALL'; // ALL, EXEMPTED, ARREARS, SETTLED, VACANT
   String _sortBy = 'NUMBER_ASC'; // NUMBER_ASC, NUMBER_DESC, NAME_ASC, FLOOR_ASC
   String? _selectedBuildingId; // null = all buildings
-  final Set<String> _collapsedBuildingIds = {};
+  final Set<String> _expandedBuildingIds = {}; // Hidden/collapsed by default for complex
 
   @override
   void dispose() {
@@ -598,23 +598,28 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
     final bId = building['id']?.toString() ?? '';
     final bName = building['name']?.toString() ?? 'عمارة';
     final bBlock = building['block']?.toString();
-    final isCollapsed = _collapsedBuildingIds.contains(bId);
+    final isExpanded = _expandedBuildingIds.contains(bId) ||
+        (_selectedBuildingId == bId) ||
+        _searchController.text.isNotEmpty;
 
     final arrearsCount = apartments.where((a) => a.isBillable && !a.isSettled).length;
     final vacantCount = apartments.where((a) => a.resident == null).length;
     final settledCount = apartments.where((a) => a.isBillable && a.resident != null && a.isSettled).length;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withAlpha(35), width: 1.2),
+        border: Border.all(
+          color: isExpanded ? AppColors.primary.withAlpha(50) : AppColors.border,
+          width: isExpanded ? 1.4 : 1.0,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(6),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: Colors.black.withAlpha(isExpanded ? 8 : 4),
+            blurRadius: isExpanded ? 10 : 5,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -625,29 +630,29 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
           InkWell(
             onTap: () {
               setState(() {
-                if (isCollapsed) {
-                  _collapsedBuildingIds.remove(bId);
+                if (_expandedBuildingIds.contains(bId)) {
+                  _expandedBuildingIds.remove(bId);
                 } else {
-                  _collapsedBuildingIds.add(bId);
+                  _expandedBuildingIds.add(bId);
                 }
               });
             },
             borderRadius: BorderRadius.vertical(
               top: const Radius.circular(15),
-              bottom: isCollapsed ? const Radius.circular(15) : Radius.zero,
+              bottom: isExpanded ? Radius.zero : const Radius.circular(15),
             ),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: AppColors.primary.withAlpha(12),
+                color: isExpanded ? AppColors.primary.withAlpha(12) : Colors.white,
                 borderRadius: BorderRadius.vertical(
                   top: const Radius.circular(15),
-                  bottom: isCollapsed ? const Radius.circular(15) : Radius.zero,
+                  bottom: isExpanded ? Radius.zero : const Radius.circular(15),
                 ),
                 border: Border(
-                  bottom: isCollapsed
-                      ? BorderSide.none
-                      : BorderSide(color: AppColors.primary.withAlpha(25), width: 1),
+                  bottom: isExpanded
+                      ? BorderSide(color: AppColors.primary.withAlpha(25), width: 1)
+                      : BorderSide.none,
                 ),
               ),
               child: Row(
@@ -657,10 +662,14 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
                     width: 38,
                     height: 38,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withAlpha(25),
+                      color: isExpanded ? AppColors.primary.withAlpha(25) : AppColors.background,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.apartment_rounded, color: AppColors.primary, size: 22),
+                    child: Icon(
+                      Icons.apartment_rounded,
+                      color: isExpanded ? AppColors.primary : AppColors.textSecondary,
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(width: 10),
 
@@ -755,13 +764,12 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: isExpanded ? AppColors.primary.withAlpha(20) : AppColors.background,
                       shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.border),
                     ),
                     child: Icon(
-                      isCollapsed ? Icons.keyboard_arrow_down_rounded : Icons.keyboard_arrow_up_rounded,
-                      color: AppColors.textSecondary,
+                      isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                      color: isExpanded ? AppColors.primary : AppColors.textSecondary,
                       size: 20,
                     ),
                   ),
@@ -770,8 +778,8 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
             ),
           ),
 
-          // Building Apartments List (if not collapsed)
-          if (!isCollapsed)
+          // Building Apartments List (only if expanded)
+          if (isExpanded)
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 10, 10, 2),
               child: apartments.isEmpty
@@ -910,11 +918,48 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
                 ),
               ),
               const Spacer(),
-              Text(
-                'مرتبة: ${_getSortLabel()}',
-                style: GoogleFonts.cairo(
-                  fontSize: 11,
-                  color: AppColors.textLight,
+              // Quick Expand / Collapse all toggle
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    final allActiveIds = activeBuildings.map((b) => b['id']?.toString() ?? '').toSet();
+                    if (_expandedBuildingIds.containsAll(allActiveIds)) {
+                      _expandedBuildingIds.clear();
+                    } else {
+                      _expandedBuildingIds.addAll(allActiveIds);
+                    }
+                  });
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withAlpha(15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _expandedBuildingIds.containsAll(activeBuildings.map((b) => b['id']?.toString() ?? '').toSet())
+                            ? Icons.unfold_less_rounded
+                            : Icons.unfold_more_rounded,
+                        size: 15,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _expandedBuildingIds.containsAll(activeBuildings.map((b) => b['id']?.toString() ?? '').toSet())
+                            ? 'طي الكل'
+                            : 'بسط الكل',
+                        style: GoogleFonts.cairo(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
