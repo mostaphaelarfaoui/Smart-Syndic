@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/services/api_service.dart';
+import '../../../core/utils/number_utils.dart';
 import '../../../models/payment_model.dart';
 import '../../../providers/syndic_provider.dart';
 import '../../../widgets/empty_state.dart';
@@ -338,7 +339,7 @@ class _SyndicPaymentsTabState extends State<SyndicPaymentsTab> {
                                             borderRadius: BorderRadius.circular(8),
                                           ),
                                           child: Text(
-                                            'شقة ${payment.apartmentUnit ?? "-"}',
+                                            formatUnitLabel(payment.apartmentUnit),
                                             style: GoogleFonts.cairo(
                                               fontSize: 13,
                                               fontWeight: FontWeight.bold,

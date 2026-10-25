@@ -189,7 +189,7 @@ class ApartmentDetailsDialog extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'شقة ${apartment.unitNumber}',
+                          formatUnitLabel(apartment.unitNumber),
                           style: GoogleFonts.cairo(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -760,7 +760,7 @@ class ApartmentDetailsDialog extends StatelessWidget {
                       Navigator.pop(context);
                       showDialog(
                         context: context,
-                        builder: (_) => const RecordPaymentDialog(),
+                        builder: (_) => RecordPaymentDialog(initialApartmentId: apartment.id),
                       );
                     },
                     icon: const Icon(Icons.add_circle_outline, size: 18),

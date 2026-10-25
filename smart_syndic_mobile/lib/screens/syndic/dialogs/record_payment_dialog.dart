@@ -7,10 +7,14 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/utils/number_utils.dart';
+import '../../../models/apartment_model.dart';
+import '../../../providers/auth_provider.dart';
 import '../../../providers/syndic_provider.dart';
 
 class RecordPaymentDialog extends StatefulWidget {
-  const RecordPaymentDialog({super.key});
+  final String? initialApartmentId;
+
+  const RecordPaymentDialog({super.key, this.initialApartmentId});
 
   @override
   State<RecordPaymentDialog> createState() => _RecordPaymentDialogState();
@@ -18,6 +22,7 @@ class RecordPaymentDialog extends StatefulWidget {
 
 class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
   final _formKey = GlobalKey<FormState>();
+  String? _selectedBuildingId;
   String? _selectedApartmentId;
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _chequeRefController = TextEditingController();
@@ -40,9 +45,21 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
     _selectedMonths.add(currentMonthStr);
 
     final syndicProvider = Provider.of<SyndicProvider>(context, listen: false);
-    if (syndicProvider.apartments.isNotEmpty) {
-      _selectedApartmentId = syndicProvider.apartments.first.id;
-      _amountController.text = syndicProvider.apartments.first.monthlyFee.toStringAsFixed(0);
+    final allApts = syndicProvider.apartments;
+
+    if (allApts.isNotEmpty) {
+      ApartmentModel selectedApt;
+      if (widget.initialApartmentId != null) {
+        selectedApt = allApts.firstWhere(
+          (a) => a.id == widget.initialApartmentId,
+          orElse: () => allApts.first,
+        );
+      } else {
+        selectedApt = allApts.first;
+      }
+      _selectedApartmentId = selectedApt.id;
+      _selectedBuildingId = selectedApt.buildingId ?? selectedApt.buildingName;
+      _amountController.text = selectedApt.monthlyFee.toStringAsFixed(0);
     }
   }
 
@@ -53,12 +70,58 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
     super.dispose();
   }
 
+  /// Natural comparison for alphanumeric unit numbers (e.g. "1", "2", "10", "A1", "A2")
+  int _naturalCompare(String a, String b) {
+    final strA = a.trim();
+    final strB = b.trim();
+    if (strA == strB) return 0;
+    if (strA.isEmpty) return 1;
+    if (strB.isEmpty) return -1;
+
+    final regExp = RegExp(r'(\d+)|(\D+)');
+    final matchesA = regExp.allMatches(strA).toList();
+    final matchesB = regExp.allMatches(strB).toList();
+
+    for (int i = 0; i < matchesA.length && i < matchesB.length; i++) {
+      final partA = matchesA[i].group(0)!;
+      final partB = matchesB[i].group(0)!;
+
+      final numA = int.tryParse(partA);
+      final numB = int.tryParse(partB);
+
+      if (numA != null && numB != null) {
+        final comp = numA.compareTo(numB);
+        if (comp != 0) return comp;
+      } else {
+        final comp = partA.toLowerCase().compareTo(partB.toLowerCase());
+        if (comp != 0) return comp;
+      }
+    }
+    return matchesA.length.compareTo(matchesB.length);
+  }
+
+  /// Filter and sort apartments for the selected building
+  List<ApartmentModel> _getApartmentsForBuilding(String? bId, List<ApartmentModel> apartments) {
+    List<ApartmentModel> list;
+    if (bId == null || bId == 'ALL') {
+      list = List<ApartmentModel>.from(apartments);
+    } else {
+      list = apartments.where((a) =>
+          a.buildingId == bId || (a.buildingId == null && a.buildingName == bId)).toList();
+    }
+    list.sort((a, b) => _naturalCompare(a.unitNumber, b.unitNumber));
+    return list;
+  }
+
   void _onApartmentChanged(String? newId) {
     setState(() {
       _selectedApartmentId = newId;
       if (newId != null) {
         final syndicProvider = Provider.of<SyndicProvider>(context, listen: false);
-        final apt = syndicProvider.apartments.firstWhere((a) => a.id == newId, orElse: () => syndicProvider.apartments.first);
+        final apt = syndicProvider.apartments.firstWhere(
+          (a) => a.id == newId,
+          orElse: () => syndicProvider.apartments.first,
+        );
         _amountController.text = (apt.monthlyFee * (_selectedMonths.isEmpty ? 1 : _selectedMonths.length)).toStringAsFixed(0);
       }
     });
@@ -76,7 +139,10 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
 
       if (_selectedApartmentId != null) {
         final syndicProvider = Provider.of<SyndicProvider>(context, listen: false);
-        final apt = syndicProvider.apartments.firstWhere((a) => a.id == _selectedApartmentId, orElse: () => syndicProvider.apartments.first);
+        final apt = syndicProvider.apartments.firstWhere(
+          (a) => a.id == _selectedApartmentId,
+          orElse: () => syndicProvider.apartments.first,
+        );
         _amountController.text = (apt.monthlyFee * _selectedMonths.length).toStringAsFixed(0);
       }
     });
@@ -165,6 +231,64 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
   @override
   Widget build(BuildContext context) {
     final syndic = context.watch<SyndicProvider>();
+    final auth = context.watch<AuthProvider>();
+    final allApartments = syndic.apartments;
+
+    final propertyType = auth.tenant?.propertyType ?? '';
+    final buildings = syndic.buildings;
+
+    // Distinct buildings list
+    final List<Map<String, dynamic>> availableBuildings = [];
+    final Set<String> seenBIds = {};
+    for (final b in buildings) {
+      final id = b['id']?.toString() ?? '';
+      if (id.isNotEmpty && !seenBIds.contains(id)) {
+        seenBIds.add(id);
+        availableBuildings.add({
+          'id': id,
+          'name': b['name']?.toString() ?? 'عمارة',
+          'block': b['block']?.toString(),
+        });
+      }
+    }
+    for (final a in allApartments) {
+      final bId = a.buildingId ?? a.buildingName ?? 'default';
+      if (!seenBIds.contains(bId)) {
+        seenBIds.add(bId);
+        availableBuildings.add({
+          'id': bId,
+          'name': a.buildingName ?? 'عمارة',
+          'block': a.block,
+        });
+      }
+    }
+
+    final isComplex = propertyType == 'RESIDENTIAL_COMPLEX' ||
+                      propertyType == 'MULTI_BUILDING_COMPLEX' ||
+                      availableBuildings.length > 1;
+
+    // In complex mode, default to the first building if not set or invalid
+    if (isComplex && availableBuildings.isNotEmpty) {
+      if (_selectedBuildingId == null || !availableBuildings.any((b) => b['id']?.toString() == _selectedBuildingId)) {
+        _selectedBuildingId = availableBuildings.first['id']?.toString();
+      }
+    }
+
+    // Filter apartments for current building
+    final currentApartments = _getApartmentsForBuilding(
+      isComplex ? _selectedBuildingId : null,
+      allApartments,
+    );
+
+    // Ensure _selectedApartmentId is valid
+    if (currentApartments.isNotEmpty) {
+      if (_selectedApartmentId == null || !currentApartments.any((a) => a.id == _selectedApartmentId)) {
+        _selectedApartmentId = currentApartments.first.id;
+        _amountController.text = (currentApartments.first.monthlyFee * (_selectedMonths.isEmpty ? 1 : _selectedMonths.length)).toStringAsFixed(0);
+      }
+    } else {
+      _selectedApartmentId = null;
+    }
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -212,27 +336,74 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
                 ),
                 const SizedBox(height: 20),
 
+                // In Complex: Dedicated Building Dropdown to cleanly separate buildings and apartments
+                if (isComplex && availableBuildings.length > 1) ...[
+                  DropdownButtonFormField<String>(
+                    key: ValueKey('b_$_selectedBuildingId'),
+                    isExpanded: true,
+                    initialValue: _selectedBuildingId,
+                    decoration: const InputDecoration(
+                      labelText: 'العمارة / البلوك',
+                      prefixIcon: Icon(Icons.apartment_rounded, color: AppColors.primary),
+                    ),
+                    items: availableBuildings.map((b) {
+                      final bId = b['id']?.toString();
+                      final bName = b['name']?.toString() ?? 'عمارة';
+                      final bBlock = b['block']?.toString();
+                      final bCount = allApartments.where((a) =>
+                          a.buildingId == bId || (a.buildingId == null && a.buildingName == bName)).length;
+                      final label = '$bName${bBlock != null && bBlock.isNotEmpty ? " (بلوك $bBlock)" : ""} - $bCount شقق';
+
+                      return DropdownMenuItem<String>(
+                        value: bId,
+                        child: Text(label, overflow: TextOverflow.ellipsis),
+                      );
+                    }).toList(),
+                    onChanged: (newBId) {
+                      setState(() {
+                        _selectedBuildingId = newBId;
+                        final bApts = _getApartmentsForBuilding(newBId, allApartments);
+                        if (bApts.isNotEmpty) {
+                          _selectedApartmentId = bApts.first.id;
+                          _amountController.text = (bApts.first.monthlyFee * (_selectedMonths.isEmpty ? 1 : _selectedMonths.length)).toStringAsFixed(0);
+                        } else {
+                          _selectedApartmentId = null;
+                          _amountController.text = '0';
+                        }
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
                 // Apartment dropdown
                 DropdownButtonFormField<String>(
+                  key: ValueKey('apt_$_selectedApartmentId'),
                   isExpanded: true,
                   initialValue: _selectedApartmentId,
-                  decoration: const InputDecoration(
-                    labelText: 'رقم الشقة / الساكن',
-                    prefixIcon: Icon(Icons.home_outlined),
+                  decoration: InputDecoration(
+                    labelText: isComplex ? 'الشقة والساكن بالعمارة المحددة' : 'رقم الشقة / الساكن',
+                    prefixIcon: const Icon(Icons.meeting_room_outlined),
                   ),
-                  items: syndic.apartments.map((apt) {
+                  items: currentApartments.map((apt) {
                     final resident = !apt.isBillable
                         ? 'شاغرة لدى المنعش العقاري (معفاة)'
                         : (apt.resident != null ? apt.resident!['name'] : 'شاغرة');
+                    final unitLabel = formatUnitLabel(apt.unitNumber);
+
                     return DropdownMenuItem<String>(
                       value: apt.id,
                       child: Text(
-                        'شقة ${apt.unitNumber} - $resident (${apt.monthlyFee.toStringAsFixed(0)} درهم)',
+                        '$unitLabel - $resident',
                         overflow: TextOverflow.ellipsis,
                       ),
                     );
                   }).toList(),
                   onChanged: _onApartmentChanged,
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'المرجو اختيار الشقة';
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
 
@@ -434,10 +605,11 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
     final monthsText = coveredMonths.isNotEmpty ? coveredMonths.join(', ') : 'واجب شهري';
     final resolvedUrl = ApiService().resolveMediaUrl(receiptUrl);
     final linkText = resolvedUrl.isNotEmpty ? '\nرابط تحميل الوصل:\n$resolvedUrl' : '';
+    final formattedUnit = formatUnitLabel(unitNumber);
 
     final message = Uri.encodeComponent(
       'السلام عليكم ورحمة الله وبركاته،\n'
-      'نؤكد لكم استلام واجب السانديك للشقة $unitNumber بمبلغ ${amountPaid.toStringAsFixed(0)} درهم.\n'
+      'نؤكد لكم استلام واجب السانديك لـ $formattedUnit بمبلغ ${amountPaid.toStringAsFixed(0)} درهم.\n'
       'رقم الوصل: $receiptNumber\n'
       'الشهور المغطاة: $monthsText\n'
       'المستحقات المتبقية على الشقة: ${remainingArrears.toStringAsFixed(0)} درهم\n'
@@ -479,6 +651,8 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final formattedUnit = formatUnitLabel(unitNumber);
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       backgroundColor: Colors.white,
@@ -554,7 +728,7 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
                     const Divider(height: 16),
                     _buildRow(
                       label: 'الشقة والساكن',
-                      value: 'شقة $unitNumber - $residentName',
+                      value: '$formattedUnit - $residentName',
                     ),
                     const Divider(height: 16),
                     _buildRow(
@@ -598,7 +772,6 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
                         style: GoogleFonts.cairo(
                           fontSize: 11,
                           color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
@@ -607,45 +780,47 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              // Primary Action: View/Download Receipt
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              // Action Buttons
+              if (receiptUrl != null && receiptUrl!.isNotEmpty) ...[
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () => _viewReceipt(context),
+                  icon: const Icon(Icons.picture_as_pdf_outlined, size: 20),
+                  label: Text(
+                    'عرض وتحميل الوصل الرسمي (PDF)',
+                    style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
                 ),
-                onPressed: () => _viewReceipt(context),
-                icon: const Icon(Icons.download_rounded, size: 20),
-                label: Text(
-                  'معاينة وتحميل الوصل فوراً',
-                  style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-              const SizedBox(height: 10),
+                const SizedBox(height: 10),
+              ],
 
-              // Secondary Action: Share via WhatsApp
-              OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF25D366),
-                  side: const BorderSide(color: Color(0xFF25D366)),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              if (residentPhone != null && residentPhone!.isNotEmpty) ...[
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.success,
+                    side: const BorderSide(color: AppColors.success),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () => _shareWhatsApp(context),
+                  icon: const Icon(Icons.chat, color: AppColors.success, size: 20),
+                  label: Text(
+                    'إرسال إشعار الدفع عبر واتساب',
+                    style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
                 ),
-                onPressed: () => _shareWhatsApp(context),
-                icon: const Icon(Icons.chat, size: 18, color: Color(0xFF25D366)),
-                label: Text(
-                  'مشاركة الوصل مع الساكن عبر واتساب',
-                  style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.bold),
-                ),
-              ),
-              const SizedBox(height: 8),
+                const SizedBox(height: 10),
+              ],
 
-              // Dismiss
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: Text(
-                  'تم / إغلاق',
+                  'إغلاق',
                   style: GoogleFonts.cairo(
                     color: AppColors.textSecondary,
                     fontWeight: FontWeight.bold,
@@ -669,40 +844,26 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Expanded(
-          flex: 4,
-          child: Text(
-            label,
-            style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary),
+        Text(
+          label,
+          style: GoogleFonts.cairo(
+            fontSize: 12,
+            color: AppColors.textSecondary,
           ),
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          flex: 5,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: Text(
-                  value,
-                  textAlign: TextAlign.end,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2,
-                  style: GoogleFonts.cairo(
-                    fontSize: 13,
-                    color: valueColor ?? AppColors.textPrimary,
-                    fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-                  ),
-                ),
-              ),
-              if (trailing != null) ...[
-                const SizedBox(width: 4),
-                trailing,
-              ],
-            ],
+        const Spacer(),
+        Text(
+          value,
+          style: GoogleFonts.cairo(
+            fontSize: 12,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+            color: valueColor ?? AppColors.textPrimary,
           ),
         ),
+        if (trailing != null) ...[
+          const SizedBox(width: 6),
+          trailing,
+        ],
       ],
     );
   }
