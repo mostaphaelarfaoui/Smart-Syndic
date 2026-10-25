@@ -41,7 +41,10 @@ class ApartmentController extends Controller
             $query->where('is_billable', $request->billable === '1');
         }
 
-        $apartments = $query->orderBy('unit_number')->paginate(20)->withQueryString();
+        $apartments = $query->orderBy('building_id')
+            ->orderByRaw('LENGTH(unit_number) ASC, unit_number ASC')
+            ->paginate(20)
+            ->withQueryString();
 
         return view('portal.apartments.index', compact('apartments', 'buildings'));
     }

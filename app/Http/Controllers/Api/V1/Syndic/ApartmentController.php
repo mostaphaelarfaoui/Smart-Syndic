@@ -36,12 +36,16 @@ class ApartmentController extends Controller
             ->get();
 
         $result = $buildings->map(function ($building) {
+            $sortedApartments = $building->apartments->sort(function ($a, $b) {
+                return strnatcasecmp($a->unit_number, $b->unit_number);
+            })->values();
+
             return [
                 'id'           => $building->id,
                 'block'        => $building->block,
                 'name'         => $building->name,
                 'total_floors' => $building->total_floors,
-                'apartments'   => $building->apartments->map(function ($apt) use ($building) {
+                'apartments'   => $sortedApartments->map(function ($apt) use ($building) {
                     $resident = $apt->residents->first();
                     $confirmedPayments = $apt->payments->filter(fn ($p) => $p->status !== 'DRAFT');
                     $totalPaid = (float) $confirmedPayments->sum('amount_paid');
