@@ -118,7 +118,15 @@ class SyndicProvider extends ChangeNotifier {
       notifyListeners();
 
       if (response is Map<String, dynamic>) {
-        return (response['payment'] as Map<String, dynamic>?) ?? response;
+        final payment = (response['payment'] as Map<String, dynamic>?) ?? response;
+        if (response['payments'] != null) {
+          return {
+            ...payment,
+            'payments': response['payments'],
+            'receipts_count': response['receipts_count'],
+          };
+        }
+        return payment;
       }
       return {'success': true};
     } catch (e) {

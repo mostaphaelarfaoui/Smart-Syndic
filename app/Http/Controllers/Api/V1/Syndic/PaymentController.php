@@ -35,7 +35,7 @@ class PaymentController extends Controller
             );
         }
 
-        $payment = $this->paymentService->recordPayment(
+        $payments = $this->paymentService->recordPayments(
             $data,
             $request->user()->id,
             $request->user()->tenant_id,
@@ -43,13 +43,22 @@ class PaymentController extends Controller
 
         // Feature 12: Auto-confirm and deliver to resident unless explicitly marked as draft
         if (! $request->boolean('save_as_draft', false)) {
-            $payment = $this->paymentService->confirmPayment($payment, $request->user()->id);
-            $payment = $this->paymentService->sendToResident($payment, $request->user()->id);
+            foreach ($payments as &$payment) {
+                $payment = $this->paymentService->confirmPayment($payment, $request->user()->id);
+                $payment = $this->paymentService->sendToResident($payment, $request->user()->id);
+            }
+            unset($payment);
         }
 
+        $formattedPayments = array_map(fn ($p) => $this->formatPayment($p), $payments);
+
         return response()->json([
-            'message' => __('payments.recorded'),
-            'payment' => $this->formatPayment($payment),
+            'message'        => count($payments) > 1
+                ? 'تم استخلاص وتسجيل ' . count($payments) . ' وصولات منفصلة بنجاح (وصل لكل شهر).'
+                : __('payments.recorded'),
+            'payment'        => $formattedPayments[0],
+            'payments'       => $formattedPayments,
+            'receipts_count' => count($payments),
         ], 201);
     }
 

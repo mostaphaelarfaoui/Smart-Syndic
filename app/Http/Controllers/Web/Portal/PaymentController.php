@@ -87,31 +87,40 @@ class PaymentController extends Controller
             );
         }
 
-        $payment = $this->paymentService->recordPayment(
+        $payments = $this->paymentService->recordPayments(
             $validated,
             auth()->id(),
             $tenantId
         );
 
         // Auto-confirm
-        $this->paymentService->confirmPayment($payment, auth()->id());
-        $this->paymentService->sendToResident($payment, auth()->id());
+        foreach ($payments as $payment) {
+            $this->paymentService->confirmPayment($payment, auth()->id());
+            $this->paymentService->sendToResident($payment, auth()->id());
+        }
+
+        $receiptNumbers = implode(', ', array_map(fn ($p) => $p->receipt_number, $payments));
+        $totalPaid = array_sum(array_map(fn ($p) => (float) $p->amount_paid, $payments));
 
         // In-app notification
         app(\App\Services\NotificationService::class)->send(
             user: auth()->user(),
-            title: 'تم استخلاص دفعة مالية جديدة',
-            message: "تم استخلاص دفعة بقيمة {$payment->amount_paid} درهم برقم وصل {$payment->receipt_number}.",
+            title: 'تم استخلاص دفعات مالية جديدة',
+            message: count($payments) > 1
+                ? "تم استخلاص " . count($payments) . " وصولات بقيمة إجمالية {$totalPaid} درهم (أرقام الوصولات: {$receiptNumbers})."
+                : "تم استخلاص دفعة بقيمة {$totalPaid} درهم برقم وصل {$receiptNumbers}.",
             type: 'success',
             url: route('portal.payments.index'),
             icon: '💰',
             extra: [
                 'target_screen' => 'payments',
-                'target_id'     => $payment->id,
+                'target_id'     => $payments[0]->id,
             ]
         );
 
-        return back()->with('success', "تم تسجيل واستخلاص الدفعة بنجاح برقم وصل: {$payment->receipt_number}");
+        return back()->with('success', count($payments) > 1
+            ? "تم تسجيل واستخلاص " . count($payments) . " وصولات بنجاح (وصل لكل شهر): {$receiptNumbers}"
+            : "تم تسجيل واستخلاص الدفعة بنجاح برقم وصل: {$receiptNumbers}");
     }
 
     public function confirm($id)

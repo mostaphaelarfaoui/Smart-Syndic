@@ -184,10 +184,11 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
         final residentName = apt?.resident != null ? (apt!.resident!['name'] ?? 'ساكن الإقامة') : 'شاغرة';
         final residentPhone = apt?.resident != null ? apt!.resident!['phone'] as String? : null;
         final remainingArrears = apt?.arrears ?? 0.0;
+        final rawPayments = result['payments'] as List?;
+        final generatedPayments = rawPayments?.map((e) => Map<String, dynamic>.from(e as Map)).toList();
         final coveredCopy = List<String>.from(_selectedMonths);
 
         Navigator.pop(context, true);
-
 
         // Show dedicated receipt success modal dialog with direct download & WhatsApp actions
         showDialog(
@@ -202,6 +203,7 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
             receiptUrl: receiptUrl,
             coveredMonths: coveredCopy,
             remainingArrears: remainingArrears,
+            generatedPayments: generatedPayments,
           ),
         );
       } else {
@@ -552,6 +554,7 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
   final String? receiptUrl;
   final List<String> coveredMonths;
   final double remainingArrears;
+  final List<Map<String, dynamic>>? generatedPayments;
 
   const PaymentReceiptSuccessDialog({
     super.key,
@@ -563,10 +566,15 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
     this.receiptUrl,
     required this.coveredMonths,
     required this.remainingArrears,
+    this.generatedPayments,
   });
 
-  void _viewReceipt(BuildContext context) {
-    if (receiptUrl == null || receiptUrl!.isEmpty) {
+  void _viewReceipt(BuildContext context, [String? specificUrl, String? specificReceiptNo, double? specificAmount]) {
+    final url = specificUrl ?? receiptUrl;
+    final rNo = specificReceiptNo ?? receiptNumber;
+    final amt = specificAmount ?? amountPaid;
+
+    if (url == null || url.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('رابط الوصل غير متوفر حالياً')),
       );
@@ -574,17 +582,20 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
     }
     ReceiptViewerScreen.open(
       context,
-      receiptUrl: receiptUrl!,
-      receiptNumber: receiptNumber,
+      receiptUrl: url,
+      receiptNumber: rNo,
       residentName: residentName,
       residentPhone: residentPhone,
       unitNumber: unitNumber,
-      amountPaid: amountPaid,
+      amountPaid: amt,
     );
   }
 
-  void _downloadReceipt(BuildContext context) {
-    if (receiptUrl == null || receiptUrl!.isEmpty) {
+  void _downloadReceipt(BuildContext context, [String? specificUrl, String? specificReceiptNo]) {
+    final url = specificUrl ?? receiptUrl;
+    final rNo = specificReceiptNo ?? receiptNumber;
+
+    if (url == null || url.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('رابط الوصل غير متوفر حالياً')),
       );
@@ -592,8 +603,8 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
     }
     ReceiptViewerScreen.downloadDirectly(
       context,
-      receiptUrl: receiptUrl!,
-      receiptNumber: receiptNumber,
+      receiptUrl: url,
+      receiptNumber: rNo,
     );
   }
 
@@ -604,14 +615,27 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
     final linkText = resolvedUrl.isNotEmpty ? '\nرابط تحميل الوصل:\n$resolvedUrl' : '';
     final formattedUnit = formatUnitLabel(unitNumber);
 
+    final String receiptsListText;
+    if (generatedPayments != null && generatedPayments!.length > 1) {
+      final buffer = StringBuffer();
+      buffer.writeln('تفاصيل الوصولات الصادرة (وصل لكل شهر):');
+      for (final p in generatedPayments!) {
+        final m = (p['covered_months'] as List?)?.join(', ') ?? '';
+        final r = p['receipt_number'] ?? '';
+        final a = parseDouble(p['amount_paid']).toStringAsFixed(0);
+        buffer.writeln('• شهر $m: وصل $r بمبلغ $a درهم');
+      }
+      receiptsListText = buffer.toString();
+    } else {
+      receiptsListText = 'رقم الوصل: $receiptNumber\nالشهور المغطاة: $monthsText$linkText';
+    }
+
     final message = Uri.encodeComponent(
       'السلام عليكم ورحمة الله وبركاته،\n'
-      'نؤكد لكم استلام واجب السانديك لـ $formattedUnit بمبلغ ${amountPaid.toStringAsFixed(0)} درهم.\n'
-      'رقم الوصل: $receiptNumber\n'
-      'الشهور المغطاة: $monthsText\n'
-      'المستحقات المتبقية على الشقة: ${remainingArrears.toStringAsFixed(0)} درهم\n'
-      '$linkText\n\n'
-      'تم إيداع الوصل أيضاً في حسابكم الخاص بالتطبيق (ركن الإيصالات).\n'
+      'نؤكد لكم استلام واجب السانديك لـ $formattedUnit بمبلغ إجمالي ${amountPaid.toStringAsFixed(0)} درهم.\n\n'
+      '$receiptsListText\n'
+      'المستحقات المتبقية على الشقة: ${remainingArrears.toStringAsFixed(0)} درهم\n\n'
+      'تم إيداع الوصولات في حسابكم الخاص بالتطبيق (ركن الإيصالات).\n'
       'شكراً لالتزامكم وحسن تعاونكم 🙏\n'
       'إدارة السانديك',
     );
@@ -635,8 +659,9 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
     }
   }
 
-  void _copyReceiptNumber(BuildContext context) {
-    Clipboard.setData(ClipboardData(text: receiptNumber));
+  void _copyReceiptNumber(BuildContext context, [String? rNo]) {
+    final textToCopy = rNo ?? receiptNumber;
+    Clipboard.setData(ClipboardData(text: textToCopy));
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('تم نسخ رقم الوصل بنجاح ✓'),
@@ -649,6 +674,7 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final formattedUnit = formatUnitLabel(unitNumber);
+    final hasMultiReceipts = generatedPayments != null && generatedPayments!.length > 1;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -681,7 +707,9 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
               const SizedBox(height: 16),
 
               Text(
-                'تم تأكيد الدفع وإصدار الوصل بنجاح',
+                hasMultiReceipts
+                    ? 'تم تأكيد الدفع وإصدار ${generatedPayments!.length} وصولات بنجاح'
+                    : 'تم تأكيد الدفع وإصدار الوصل بنجاح',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.cairo(
                   fontSize: 18,
@@ -691,7 +719,9 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'تم خصم المبلغ من متأخرات الشقة وإيداع الوصل في حساب الساكن الخاص',
+                hasMultiReceipts
+                    ? 'تم إصدار وصل رسمي منفصل لكل شهر وإيداعها في حساب الساكن'
+                    : 'تم خصم المبلغ من متأخرات الشقة وإيداع الوصل في حساب الساكن الخاص',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.cairo(
                   fontSize: 12,
@@ -700,7 +730,7 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              // Details Container
+              // Summary Container
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -710,19 +740,6 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    _buildRow(
-                      label: 'رقم الوصل الرسمي',
-                      value: receiptNumber,
-                      isBold: true,
-                      trailing: IconButton(
-                        icon: const Icon(Icons.copy, size: 16, color: AppColors.primary),
-                        tooltip: 'نسخ رقم الوصل',
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        onPressed: () => _copyReceiptNumber(context),
-                      ),
-                    ),
-                    const Divider(height: 16),
                     _buildRow(
                       label: 'الشقة والساكن',
                       value: '$formattedUnit - $residentName',
@@ -734,11 +751,33 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
                       valueColor: AppColors.success,
                       isBold: true,
                     ),
-                    const Divider(height: 16),
-                    _buildRow(
-                      label: 'الشهور المغطاة',
-                      value: coveredMonths.isNotEmpty ? coveredMonths.join(', ') : 'واجب شهري',
-                    ),
+                    if (!hasMultiReceipts) ...[
+                      const Divider(height: 16),
+                      _buildRow(
+                        label: 'رقم الوصل الرسمي',
+                        value: receiptNumber,
+                        isBold: true,
+                        trailing: IconButton(
+                          icon: const Icon(Icons.copy, size: 16, color: AppColors.primary),
+                          tooltip: 'نسخ رقم الوصل',
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () => _copyReceiptNumber(context),
+                        ),
+                      ),
+                      const Divider(height: 16),
+                      _buildRow(
+                        label: 'الشهور المغطاة',
+                        value: coveredMonths.isNotEmpty ? coveredMonths.join(', ') : 'واجب شهري',
+                      ),
+                    ] else ...[
+                      const Divider(height: 16),
+                      _buildRow(
+                        label: 'عدد الأشهر والوصولات',
+                        value: '${generatedPayments!.length} أشهر (${generatedPayments!.length} وصل)',
+                        isBold: true,
+                      ),
+                    ],
                     const Divider(height: 16),
                     _buildRow(
                       label: 'المستحقات المتبقية على الشقة',
@@ -749,7 +788,112 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
+
+              // Multi-Receipts List
+              if (hasMultiReceipts) ...[
+                Row(
+                  children: [
+                    const Icon(Icons.receipt_long, size: 18, color: AppColors.primary),
+                    const SizedBox(width: 6),
+                    Text(
+                      'الوصولات الصادرة (وصل لكل شهر):',
+                      style: GoogleFonts.cairo(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 220),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: generatedPayments!.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 8),
+                    itemBuilder: (context, idx) {
+                      final p = generatedPayments![idx];
+                      final pReceiptNo = p['receipt_number']?.toString() ?? 'REC-';
+                      final pUrl = p['receipt_url'] as String?;
+                      final pAmount = parseDouble(p['amount_paid']);
+                      final pMonths = (p['covered_months'] as List?)?.join(', ') ?? '';
+
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withAlpha(15),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                'شهر $pMonths',
+                                style: GoogleFonts.cairo(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    pReceiptNo,
+                                    style: GoogleFonts.cairo(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    '${pAmount.toStringAsFixed(0)} درهم',
+                                    style: GoogleFonts.cairo(
+                                      fontSize: 11,
+                                      color: AppColors.success,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (pUrl != null && pUrl.isNotEmpty) ...[
+                              IconButton(
+                                icon: const Icon(Icons.visibility_rounded, color: AppColors.primary, size: 20),
+                                tooltip: 'معاينة هذا الوصل',
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                onPressed: () => _viewReceipt(context, pUrl, pReceiptNo, pAmount),
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                icon: const Icon(Icons.download_rounded, color: AppColors.textSecondary, size: 20),
+                                tooltip: 'تحميل هذا الوصل',
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                onPressed: () => _downloadReceipt(context, pUrl, pReceiptNo),
+                              ),
+                            ],
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 14),
+              ],
 
               // Privacy Reassurance Banner
               Container(
@@ -765,7 +909,7 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'تم وضع الوصل في حساب صاحب الشقة في ركن إيصالات الدفع، ولن يظهر لباقي الشقق لضمان الخصوصية التامة.',
+                        'تم وضع جميع إيصالات الدفع في حساب صاحب الشقة في ركن إيصالات الدفع، ولن تظهر لباقي الشقق لضمان الخصوصية التامة.',
                         style: GoogleFonts.cairo(
                           fontSize: 11,
                           color: AppColors.textPrimary,
@@ -775,10 +919,10 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
 
-              // Action Buttons
-              if (receiptUrl != null && receiptUrl!.isNotEmpty) ...[
+              // Action Buttons for single receipt
+              if (!hasMultiReceipts && receiptUrl != null && receiptUrl!.isNotEmpty) ...[
                 // In-app preview button
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(

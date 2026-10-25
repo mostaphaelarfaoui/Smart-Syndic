@@ -26,62 +26,112 @@ class PaymentService
 
     /**
      * Record a new payment within a DB transaction.
-     * Payment starts as DRAFT — syndic must confirm before sending to resident.
+     * If multiple covered months are provided, delegates to recordPayments and returns the first created payment.
      *
      * @throws \Throwable
      */
     public function recordPayment(array $data, string $recordedBy, string $tenantId): Payment
     {
+        $payments = $this->recordPayments($data, $recordedBy, $tenantId);
+        return $payments[0];
+    }
+
+    /**
+     * Record payments within a DB transaction.
+     * When multiple months are selected, creates a separate Payment record and PDF receipt for EACH month.
+     * Payments start as DRAFT — syndic must confirm before sending to resident.
+     *
+     * @return Payment[]
+     * @throws \Throwable
+     */
+    public function recordPayments(array $data, string $recordedBy, string $tenantId): array
+    {
         return DB::transaction(function () use ($data, $recordedBy, $tenantId) {
             $tenant    = Tenant::findOrFail($tenantId);
             $apartment = Apartment::findOrFail($data['apartment_id']);
 
-            // Feature 13 — Atomic sequential receipt number (replaces mt_rand)
-            $receiptNumber = $tenant->nextReceiptNumber();
+            $months = $data['covered_months'] ?? [];
+            if (empty($months)) {
+                $months = [now()->format('Y-m')];
+            }
+            sort($months);
+            $monthCount = count($months);
 
-            // Calculate remaining balance
-            $totalDue  = $apartment->monthly_fee * count($data['covered_months']);
-            $remaining = max(0, $totalDue - $data['amount_paid']);
-            $isPartial = $remaining > 0;
+            $totalAmountPaid = (float) $data['amount_paid'];
+            $monthlyFee      = (float) $apartment->monthly_fee;
 
-            // Create the payment record in DRAFT state (Feature 12)
-            $payment = Payment::create([
-                'tenant_id'          => $tenantId,
-                'apartment_id'       => $data['apartment_id'],
-                'recorded_by'        => $recordedBy,
-                'amount_paid'        => $data['amount_paid'],
-                'payment_method'     => $data['payment_method'],
-                'cheque_reference'   => $data['cheque_reference'] ?? null,
-                'payment_date'       => $data['payment_date'],
-                'covered_months'     => $data['covered_months'],
-                'is_partial'         => $isPartial,
-                'remaining_balance'  => $remaining,
-                'receipt_number'     => $receiptNumber,
-                'receipt_pdf_path'   => '', // Placeholder, updated after PDF generation
-                'bank_receipt_proof' => $data['bank_receipt_proof'] ?? null,
-                'status'             => 'DRAFT', // Feature 12
-            ]);
+            // Distribute amount per month
+            $monthAmounts = [];
+            if ($monthlyFee > 0 && abs($totalAmountPaid - ($monthlyFee * $monthCount)) < 0.01) {
+                // Exact match for monthly fees
+                foreach ($months as $m) {
+                    $monthAmounts[$m] = $monthlyFee;
+                }
+            } else {
+                $basePerMonth = round($totalAmountPaid / $monthCount, 2);
+                $remainingSum = $totalAmountPaid;
+                for ($i = 0; $i < $monthCount; $i++) {
+                    $m = $months[$i];
+                    if ($i === $monthCount - 1) {
+                        $monthAmounts[$m] = max(0, round($remainingSum, 2));
+                    } else {
+                        $monthAmounts[$m] = $basePerMonth;
+                        $remainingSum -= $basePerMonth;
+                    }
+                }
+            }
 
-            // Generate PDF receipt
-            $pdfPath = $this->pdfService->generateReceipt($payment);
-            $payment->update(['receipt_pdf_path' => $pdfPath]);
+            $payments = [];
+            foreach ($months as $month) {
+                $monthPaid      = $monthAmounts[$month] ?? 0.0;
+                $monthTotalDue  = $monthlyFee > 0 ? $monthlyFee : $monthPaid;
+                $monthRemaining = max(0, $monthTotalDue - $monthPaid);
+                $isPartial      = $monthRemaining > 0;
 
-            // Audit trail
-            $this->auditService->logPayment(
-                $recordedBy,
-                $tenantId,
-                $payment->id,
-                'PAYMENT_RECORDED',
-                [
-                    'amount'         => $data['amount_paid'],
-                    'apartment_id'   => $data['apartment_id'],
-                    'covered_months' => $data['covered_months'],
-                    'receipt_number' => $receiptNumber,
-                    'status'         => 'DRAFT',
-                ]
-            );
+                // Feature 13 — Atomic sequential receipt number
+                $receiptNumber = $tenant->nextReceiptNumber();
 
-            return $payment;
+                // Create the payment record in DRAFT state (Feature 12)
+                $payment = Payment::create([
+                    'tenant_id'          => $tenantId,
+                    'apartment_id'       => $data['apartment_id'],
+                    'recorded_by'        => $recordedBy,
+                    'amount_paid'        => $monthPaid,
+                    'payment_method'     => $data['payment_method'],
+                    'cheque_reference'   => $data['cheque_reference'] ?? null,
+                    'payment_date'       => $data['payment_date'],
+                    'covered_months'     => [$month],
+                    'is_partial'         => $isPartial,
+                    'remaining_balance'  => $monthRemaining,
+                    'receipt_number'     => $receiptNumber,
+                    'receipt_pdf_path'   => '', // Placeholder, updated after PDF generation
+                    'bank_receipt_proof' => $data['bank_receipt_proof'] ?? null,
+                    'status'             => 'DRAFT', // Feature 12
+                ]);
+
+                // Generate PDF receipt for this specific month
+                $pdfPath = $this->pdfService->generateReceipt($payment);
+                $payment->update(['receipt_pdf_path' => $pdfPath]);
+
+                // Audit trail
+                $this->auditService->logPayment(
+                    $recordedBy,
+                    $tenantId,
+                    $payment->id,
+                    'PAYMENT_RECORDED',
+                    [
+                        'amount'         => $monthPaid,
+                        'apartment_id'   => $data['apartment_id'],
+                        'covered_months' => [$month],
+                        'receipt_number' => $receiptNumber,
+                        'status'         => 'DRAFT',
+                    ]
+                );
+
+                $payments[] = $payment;
+            }
+
+            return $payments;
         });
     }
 

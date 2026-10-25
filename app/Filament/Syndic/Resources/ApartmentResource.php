@@ -255,7 +255,7 @@ class ApartmentResource extends Resource
                     ])
                     ->action(function (Apartment $record, array $data) {
                         $paymentService = app(PaymentService::class);
-                        $payment = $paymentService->recordPayment([
+                        $payments = $paymentService->recordPayments([
                             'apartment_id'   => $record->id,
                             'amount_paid'    => (float) $data['amount_paid'],
                             'payment_method' => $data['payment_method'],
@@ -263,11 +263,17 @@ class ApartmentResource extends Resource
                             'covered_months' => $data['covered_months'],
                         ], auth()->id(), auth()->user()->tenant_id);
 
-                        $paymentService->confirmPayment($payment, auth()->id());
+                        foreach ($payments as $payment) {
+                            $paymentService->confirmPayment($payment, auth()->id());
+                        }
+
+                        $receiptNumbers = implode(', ', array_map(fn ($p) => $p->receipt_number, $payments));
 
                         Notification::make()
-                            ->title("تم تسجيل وتأكيد وصل أداء الشقة {$record->unit_number} بنجاح")
-                            ->body("رقم الوصل: {$payment->receipt_number}")
+                            ->title(count($payments) > 1
+                                ? "تم تسجيل وتأكيد " . count($payments) . " وصولات أداء للشقة {$record->unit_number} بنجاح"
+                                : "تم تسجيل وتأكيد وصل أداء الشقة {$record->unit_number} بنجاح")
+                            ->body("أرقام الوصولات: {$receiptNumbers}")
                             ->success()
                             ->send();
                     }),

@@ -161,20 +161,24 @@ class Tenant extends Model implements HasName
      */
     public function nextReceiptNumber(): string
     {
-        // Atomic DB increment — safe under concurrent requests
-        \Illuminate\Support\Facades\DB::table('tenants')
-            ->where('id', $this->id)
-            ->increment('receipt_sequence');
-
-        // Reload to get the incremented value
-        $this->refresh();
-
         $prefix = config('smartsyndic.receipt.prefix', 'REC');
         $year   = now()->format('Y');
-        // Use first 3 letters of tenant name as identifier
-        $tenantPrefix = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $this->name), 0, 3)) ?: 'ORG';
-        $seq    = str_pad($this->receipt_sequence, 6, '0', STR_PAD_LEFT);
 
-        return "{$prefix}-{$year}-{$tenantPrefix}-{$seq}";
+        // Derive tenant prefix: keep ORG for tenant with existing ORG receipts, otherwise 4 chars of UUID
+        $shortId = strtoupper(substr(str_replace('-', '', $this->id), 0, 4));
+        $tenantPrefix = ($this->id === '4eba3fb3-28b9-4ae7-b01f-4c689b05ceed') ? 'ORG' : $shortId;
+
+        do {
+            // Atomic DB increment — safe under concurrent requests
+            \Illuminate\Support\Facades\DB::table('tenants')
+                ->where('id', $this->id)
+                ->increment('receipt_sequence');
+
+            $this->refresh();
+            $seq = str_pad($this->receipt_sequence, 6, '0', STR_PAD_LEFT);
+            $receiptNumber = "{$prefix}-{$year}-{$tenantPrefix}-{$seq}";
+        } while (\App\Models\Payment::where('receipt_number', $receiptNumber)->exists());
+
+        return $receiptNumber;
     }
 }
