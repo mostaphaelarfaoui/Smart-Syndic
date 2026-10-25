@@ -139,6 +139,20 @@ class DashboardController extends Controller
                 ->sum('amount');
         }
 
+        // Unpaid Apartments for current month (up to 5 for quick followup)
+        $paidApartmentIds = Payment::where('tenant_id', $tenantId)
+            ->where('status', '!=', 'DRAFT')
+            ->whereIn('apartment_id', $billableApartmentIds)
+            ->whereJsonContains('covered_months', $currentMonth)
+            ->pluck('apartment_id');
+
+        $unpaidApartments = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))
+            ->billable()
+            ->whereNotIn('id', $paidApartmentIds)
+            ->with(['residents', 'building'])
+            ->limit(5)
+            ->get();
+
         return view('portal.dashboard', compact(
             'tenant',
             'user',
@@ -163,6 +177,7 @@ class DashboardController extends Controller
             'activePolls',
             'recentPayments',
             'pendingUsers',
+            'unpaidApartments',
             'chartLabels',
             'chartInflows',
             'chartOutflows'

@@ -45,18 +45,47 @@
         </div>
 
         <nav class="sidebar-menu">
-            <div class="sidebar-group-label">الرئيسية والمتابعة</div>
+            <div class="sidebar-group-label">الرئيسية</div>
             <a href="{{ route('portal.dashboard') }}" class="nav-link {{ request()->routeIs('portal.dashboard') ? 'active' : '' }}">
                 <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
                 <span>لوحة القيادة</span>
             </a>
 
-            <div class="sidebar-group-label">إدارة العقار والسكان</div>
+            <div class="sidebar-group-label">المالية والحسابات</div>
+            <a href="{{ route('portal.payments.index') }}" class="nav-link {{ request()->routeIs('portal.payments.*') ? 'active' : '' }}">
+                <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>الواجبات والتحصيل</span>
+            </a>
+
+            <a href="{{ route('portal.expenses.index') }}" class="nav-link {{ request()->routeIs('portal.expenses.*') ? 'active' : '' }}">
+                <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
+                </svg>
+                <span>المصاريف والنفقات</span>
+            </a>
+
+            <a href="{{ route('portal.reports.index') }}" class="nav-link {{ request()->routeIs('portal.reports.*') ? 'active' : '' }}">
+                <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>التقارير المالية (PDF)</span>
+            </a>
+
+            <a href="{{ route('portal.analytics.index') }}" class="nav-link {{ request()->routeIs('portal.analytics.*') ? 'active' : '' }}">
+                <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <span>التحليلات والإحصائيات</span>
+            </a>
+
+            <div class="sidebar-group-label">إدارة الإقامة والمجتمع</div>
             <a href="{{ route('portal.apartments.index') }}" class="nav-link {{ request()->routeIs('portal.apartments.*') ? 'active' : '' }}">
                 <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
                 <span>الشقق والوحدات</span>
             </a>
@@ -68,49 +97,18 @@
                 <span>السكان والمقيمين</span>
             </a>
 
-            <div class="sidebar-group-label">المالية والحسابات</div>
-            <a href="{{ route('portal.payments.index') }}" class="nav-link {{ request()->routeIs('portal.payments.*') ? 'active' : '' }}">
+            <a href="{{ route('portal.community.index') }}" class="nav-link {{ request()->routeIs('portal.community.*') ? 'active' : '' }}">
                 <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
-                <span>الواجبات الشهرية والتحصيل</span>
-            </a>
-
-            <a href="{{ route('portal.expenses.index') }}" class="nav-link {{ request()->routeIs('portal.expenses.*') ? 'active' : '' }}">
-                <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
-                </svg>
-                <span>المصاريف والخزينة</span>
-            </a>
-
-            <div class="sidebar-group-label">التقارير والأرشيف</div>
-            <a href="{{ route('portal.analytics.index') }}" class="nav-link {{ request()->routeIs('portal.analytics.*') ? 'active' : '' }}">
-                <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                <span>📊 التحليلات والإحصائيات</span>
+                <span>الشكاوى والتصويت</span>
             </a>
 
             <a href="{{ route('portal.archives.index') }}" class="nav-link {{ request()->routeIs('portal.archives.*') ? 'active' : '' }}">
                 <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                 </svg>
-                <span>🗄️ الأرشيف وسجل العمليات</span>
-            </a>
-
-            <a href="{{ route('portal.reports.index') }}" class="nav-link {{ request()->routeIs('portal.reports.*') ? 'active' : '' }}" style="font-weight:700;">
-                <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span>📑 التقارير المالية (PDF)</span>
-            </a>
-
-            <div class="sidebar-group-label">المجتمع والإعدادات</div>
-            <a href="{{ route('portal.community.index') }}" class="nav-link {{ request()->routeIs('portal.community.*') ? 'active' : '' }}">
-                <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-                <span>الشكاوى والتصويت</span>
+                <span>سجل العمليات والأرشيف</span>
             </a>
 
             <a href="{{ route('portal.settings.index') }}" class="nav-link {{ request()->routeIs('portal.settings.*') ? 'active' : '' }}">
@@ -177,16 +175,19 @@
                 </div>
             </div>
 
-            <div class="topbar-left" style="display:flex; align-items:center; gap:0.75rem;">
-                {{-- Quick PDF Financial Report Trigger --}}
-                <button type="button" onclick="openFinancialReportModal('both')" class="btn btn-primary topbar-report-btn" style="display:inline-flex; align-items:center; gap:0.45rem; padding:0.45rem 1rem; font-size:0.85rem; font-weight:800; border-radius:8px; background:linear-gradient(135deg, #0d9488 0%, #059669 100%); color:#fff; border:none; box-shadow:0 3px 8px rgba(13,148,136,0.3); cursor:pointer;" title="استخراج وتحميل تقرير مالي PDF">
-                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <span>📑 استخراج تقرير مالي PDF</span>
-                </button>
+            <div class="topbar-left" style="display:flex; align-items:center; gap:0.6rem;">
+                {{-- Quick Action Buttons in Topbar --}}
+                <a href="{{ route('portal.payments.index') }}" class="btn btn-sm btn-success" style="display:inline-flex; align-items:center; gap:0.35rem; font-weight:800; font-size:0.82rem; padding:0.4rem 0.85rem; border-radius:8px;">
+                    <span>+</span>
+                    <span>استخلاص دفعة</span>
+                </a>
 
-                <span class="badge badge-neutral" style="font-size:0.85rem; padding:0.4rem 0.9rem;">
+                <a href="{{ route('portal.expenses.index') }}" class="btn btn-sm btn-danger" style="display:inline-flex; align-items:center; gap:0.35rem; font-weight:800; font-size:0.82rem; padding:0.4rem 0.85rem; border-radius:8px;">
+                    <span>+</span>
+                    <span>تسجيل مصروف</span>
+                </a>
+
+                <span class="badge badge-neutral" style="font-size:0.82rem; padding:0.4rem 0.8rem;">
                     🗓️ {{ now()->locale('ar')->translatedFormat('l، j F Y') }}
                 </span>
 
