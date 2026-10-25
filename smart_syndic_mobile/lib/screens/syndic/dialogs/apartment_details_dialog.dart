@@ -672,81 +672,144 @@ class ApartmentDetailsDialog extends StatelessWidget {
                                         final receiptNo = p['receipt_number'] ?? '';
                                         final receiptUrl = p['receipt_url'] as String?;
                                         final months = (p['covered_months'] as List?)?.join(', ') ?? '';
+                                        final hasBottomRow = date.isNotEmpty || (receiptUrl != null && receiptUrl.isNotEmpty);
 
                                         return Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                          padding: const EdgeInsets.all(12),
                                           decoration: BoxDecoration(
                                             color: Colors.white,
                                             borderRadius: BorderRadius.circular(10),
                                             border: Border.all(color: AppColors.border),
                                           ),
-                                          child: Row(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.stretch,
                                             children: [
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                                decoration: BoxDecoration(
-                                                  color: AppColors.success.withAlpha(15),
-                                                  borderRadius: BorderRadius.circular(8),
-                                                ),
-                                                child: Text(
-                                                  months.isNotEmpty ? 'شهر $months' : 'أداء',
-                                                  style: GoogleFonts.cairo(
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: AppColors.success,
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(width: 10),
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      'وصل $receiptNo',
-                                                      style: GoogleFonts.cairo(
-                                                        fontWeight: FontWeight.bold,
-                                                        fontSize: 12.5,
-                                                        color: AppColors.textPrimary,
-                                                      ),
-                                                      overflow: TextOverflow.ellipsis,
-                                                    ),
-                                                    if (date.isNotEmpty)
-                                                      Text(
-                                                        'تاريخ: $date',
-                                                        style: GoogleFonts.cairo(
-                                                          fontSize: 10.5,
-                                                          color: AppColors.textLight,
+                                              // Row 1: Month badge & receipt number on right, amount on left
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  Expanded(
+                                                    child: Row(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        Flexible(
+                                                          child: Container(
+                                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                                            decoration: BoxDecoration(
+                                                              color: AppColors.success.withAlpha(15),
+                                                              borderRadius: BorderRadius.circular(6),
+                                                            ),
+                                                            child: Text(
+                                                              months.isNotEmpty ? 'شهر $months' : 'أداء',
+                                                              style: GoogleFonts.cairo(
+                                                                fontSize: 11,
+                                                                fontWeight: FontWeight.bold,
+                                                                color: AppColors.success,
+                                                              ),
+                                                              overflow: TextOverflow.ellipsis,
+                                                            ),
+                                                          ),
                                                         ),
+                                                        if (receiptNo.isNotEmpty) ...[
+                                                          const SizedBox(width: 8),
+                                                          Flexible(
+                                                            child: Text(
+                                                              'وصل $receiptNo',
+                                                              style: GoogleFonts.cairo(
+                                                                fontWeight: FontWeight.bold,
+                                                                fontSize: 12,
+                                                                color: AppColors.textPrimary,
+                                                              ),
+                                                              overflow: TextOverflow.ellipsis,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Text(
+                                                    '${amount.toStringAsFixed(0)} درهم',
+                                                    style: GoogleFonts.cairo(
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 13.5,
+                                                      color: AppColors.success,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              if (hasBottomRow) ...[
+                                                const SizedBox(height: 8),
+                                                const Divider(height: 1, thickness: 0.5, color: Color(0xFFEEEEEE)),
+                                                const SizedBox(height: 8),
+                                                // Row 2: Date and Action buttons
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                  children: [
+                                                    if (date.isNotEmpty)
+                                                      Row(
+                                                        mainAxisSize: MainAxisSize.min,
+                                                        children: [
+                                                          const Icon(Icons.calendar_today_outlined, size: 12, color: AppColors.textLight),
+                                                          const SizedBox(width: 4),
+                                                          Text(
+                                                            'تاريخ: $date',
+                                                            style: GoogleFonts.cairo(
+                                                              fontSize: 11,
+                                                              color: AppColors.textSecondary,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      )
+                                                    else
+                                                      const SizedBox.shrink(),
+                                                    if (receiptUrl != null && receiptUrl.isNotEmpty)
+                                                      Row(
+                                                        mainAxisSize: MainAxisSize.min,
+                                                        children: [
+                                                          InkWell(
+                                                            onTap: () => _openPdfReceipt(context, receiptUrl, receiptNo, amount),
+                                                            borderRadius: BorderRadius.circular(6),
+                                                            child: Container(
+                                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                              decoration: BoxDecoration(
+                                                                color: AppColors.primary.withAlpha(15),
+                                                                borderRadius: BorderRadius.circular(6),
+                                                              ),
+                                                              child: Row(
+                                                                mainAxisSize: MainAxisSize.min,
+                                                                children: [
+                                                                  const Icon(Icons.visibility_rounded, color: AppColors.primary, size: 14),
+                                                                  const SizedBox(width: 4),
+                                                                  Text(
+                                                                    'معاينة',
+                                                                    style: GoogleFonts.cairo(
+                                                                      fontSize: 11,
+                                                                      color: AppColors.primary,
+                                                                      fontWeight: FontWeight.bold,
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          const SizedBox(width: 6),
+                                                          InkWell(
+                                                            onTap: () => _downloadDirectReceipt(context, receiptUrl, receiptNo),
+                                                            borderRadius: BorderRadius.circular(6),
+                                                            child: Container(
+                                                              padding: const EdgeInsets.all(5),
+                                                              decoration: BoxDecoration(
+                                                                color: AppColors.background,
+                                                                border: Border.all(color: AppColors.border),
+                                                                borderRadius: BorderRadius.circular(6),
+                                                              ),
+                                                              child: const Icon(Icons.download_rounded, color: AppColors.textSecondary, size: 15),
+                                                            ),
+                                                          ),
+                                                        ],
                                                       ),
                                                   ],
-                                                ),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Text(
-                                                '${amount.toStringAsFixed(0)} درهم',
-                                                style: GoogleFonts.cairo(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 13,
-                                                  color: AppColors.textPrimary,
-                                                ),
-                                              ),
-                                              if (receiptUrl != null && receiptUrl.isNotEmpty) ...[
-                                                const SizedBox(width: 8),
-                                                IconButton(
-                                                  onPressed: () => _openPdfReceipt(context, receiptUrl, receiptNo, amount),
-                                                  icon: const Icon(Icons.visibility_rounded, color: AppColors.primary, size: 20),
-                                                  tooltip: 'معاينة الوصل داخل التطبيق',
-                                                  padding: EdgeInsets.zero,
-                                                  constraints: const BoxConstraints(),
-                                                ),
-                                                const SizedBox(width: 8),
-                                                IconButton(
-                                                  onPressed: () => _downloadDirectReceipt(context, receiptUrl, receiptNo),
-                                                  icon: const Icon(Icons.download_rounded, color: AppColors.textSecondary, size: 20),
-                                                  tooltip: 'تحميل مباشر (PDF)',
-                                                  padding: EdgeInsets.zero,
-                                                  constraints: const BoxConstraints(),
                                                 ),
                                               ],
                                             ],
