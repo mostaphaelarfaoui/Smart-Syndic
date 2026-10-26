@@ -135,7 +135,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1.25rem;
+    padding: 0.75rem;
     animation: finFadeIn 0.2s ease-out;
 }
 
@@ -150,7 +150,7 @@
     border-radius: var(--radius-lg, 16px);
     width: 620px;
     max-width: 100%;
-    max-height: 90vh;
+    max-height: 94vh;
     display: flex;
     flex-direction: column;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
@@ -166,56 +166,67 @@
     to { transform: translateY(0) scale(1); }
 }
 
+/* ─── Form Flex Container ────────────────────── */
+#finReportForm {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
 /* ─── Header ─────────────────────────────────── */
 .fin-modal-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1.25rem 1.5rem;
+    padding: 0.85rem 1.25rem;
     border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
     background: var(--bg-surface-elevated, #334155);
+    flex-shrink: 0;
 }
 
 .fin-modal-title-box {
     display: flex;
     align-items: center;
-    gap: 0.85rem;
+    gap: 0.75rem;
 }
 
 .fin-modal-icon-badge {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
     background: rgba(13, 148, 136, 0.18);
     border: 1px solid rgba(13, 148, 136, 0.35);
     color: var(--brand-primary, #0d9488);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.4rem;
+    font-size: 1.2rem;
+    flex-shrink: 0;
 }
 
 .fin-modal-title {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
     font-weight: 800;
     margin: 0;
     color: #ffffff;
 }
 
 .fin-modal-subtitle {
-    font-size: 0.82rem;
+    font-size: 0.78rem;
     color: var(--text-secondary, #94a3b8);
-    margin: 0.2rem 0 0;
+    margin: 0.15rem 0 0;
 }
 
 .fin-modal-close-btn {
     background: transparent;
     border: none;
     color: var(--text-secondary, #94a3b8);
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     cursor: pointer;
     line-height: 1;
-    padding: 0 0.5rem;
+    padding: 0 0.4rem;
     border-radius: 6px;
     transition: all 0.15s ease;
 }
@@ -227,30 +238,48 @@
 
 /* ─── Body & Form ────────────────────────────── */
 .fin-modal-body {
-    padding: 1.5rem;
+    padding: 1rem 1.25rem;
     overflow-y: auto;
+    overscroll-behavior: contain;
+    flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
-    gap: 1.35rem;
+    gap: 0.95rem;
+}
+
+.fin-modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+.fin-modal-body::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+}
+.fin-modal-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+.fin-modal-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.35);
 }
 
 .fin-form-group {
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
+    gap: 0.45rem;
 }
 
 .fin-label {
-    font-size: 0.92rem;
+    font-size: 0.88rem;
     font-weight: 800;
     color: #ffffff;
 }
 
 .fin-sublabel {
-    font-size: 0.82rem;
+    font-size: 0.78rem;
     font-weight: 700;
     color: var(--text-secondary, #cbd5e1);
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.25rem;
     display: block;
 }
 
@@ -258,7 +287,7 @@
 .fin-scope-grid {
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
+    gap: 0.45rem;
 }
 
 .fin-scope-card {
@@ -276,9 +305,9 @@
 .fin-scope-card-content {
     display: flex;
     align-items: center;
-    gap: 0.85rem;
-    padding: 0.85rem 1rem;
-    border-radius: 12px;
+    gap: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: 10px;
     border: 1.5px solid var(--border-color, rgba(255, 255, 255, 0.1));
     background: var(--bg-surface-elevated, #243044);
     transition: all 0.18s ease;
@@ -296,7 +325,7 @@
 }
 
 .fin-scope-icon {
-    font-size: 1.4rem;
+    font-size: 1.25rem;
 }
 
 .fin-scope-text {
@@ -304,15 +333,15 @@
 }
 
 .fin-scope-title {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 800;
     color: #ffffff;
 }
 
 .fin-scope-desc {
-    font-size: 0.78rem;
+    font-size: 0.74rem;
     color: var(--text-secondary, #94a3b8);
-    margin-top: 0.15rem;
+    margin-top: 0.1rem;
 }
 
 .fin-scope-tag {
@@ -441,9 +470,10 @@
     align-items: center;
     justify-content: flex-end;
     gap: 0.75rem;
-    padding: 1.1rem 1.5rem;
+    padding: 0.85rem 1.25rem;
     background: var(--bg-surface-elevated, #334155);
     border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+    flex-shrink: 0;
 }
 
 .fin-submit-btn {
@@ -451,7 +481,7 @@
     align-items: center;
     gap: 0.5rem;
     font-weight: 800;
-    padding: 0.6rem 1.25rem;
+    padding: 0.55rem 1.25rem;
 }
 </style>
 
