@@ -35,13 +35,13 @@ class FinancialReportService
      * Expense Categories Configuration
      */
     public const EXPENSE_CATEGORIES = [
-        'CLEANING'          => ['label' => 'النظافة والصيانة الصحية', 'icon' => '🧹'],
-        'ELEVATOR'          => ['label' => 'صيانة المصعد والأجهزة', 'icon' => '🛗'],
-        'SECURITY'          => ['label' => 'الحراسة والأمن', 'icon' => '🔒'],
-        'WATER_ELECTRICITY' => ['label' => 'استهلاك الماء والكهرباء', 'icon' => '💡'],
-        'GARDENING'         => ['label' => 'المساحات الخضراء والبستنة', 'icon' => '🌿'],
-        'MAINTENANCE'       => ['label' => 'الصيانة العامة والترميم', 'icon' => '🔧'],
-        'OTHER'             => ['label' => 'مصاريف وإصلاحات أخرى', 'icon' => '📋'],
+        'CLEANING'          => ['label' => 'النظافة والصيانة الصحية'],
+        'ELEVATOR'          => ['label' => 'صيانة المصعد والأجهزة'],
+        'SECURITY'          => ['label' => 'الحراسة والأمن'],
+        'WATER_ELECTRICITY' => ['label' => 'استهلاك الماء والكهرباء'],
+        'GARDENING'         => ['label' => 'المساحات الخضراء والبستنة'],
+        'MAINTENANCE'       => ['label' => 'الصيانة العامة والترميم'],
+        'OTHER'             => ['label' => 'مصاريف وإصلاحات أخرى'],
     ];
 
     /**
@@ -132,7 +132,6 @@ class FinancialReportService
         foreach (self::EXPENSE_CATEGORIES as $catKey => $catData) {
             $expensesByCategory[$catKey] = [
                 'label'      => $catData['label'],
-                'icon'       => $catData['icon'],
                 'amount'     => 0.0,
                 'count'      => 0,
                 'percentage' => 0.0,

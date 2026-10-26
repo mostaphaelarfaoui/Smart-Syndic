@@ -339,7 +339,7 @@
         <table class="header-table">
             <tr>
                 <td style="width: 55%;">
-                    <div class="residence-title">🏢 {{ $tenant->name }}</div>
+                    <div class="residence-title">{{ $tenant->name }}</div>
                     <div class="residence-meta">
                         <div><strong>الموقع العقاري:</strong> إقامة سكنية مشتركة (Loi 18-00 sur la copropriété)</div>
                         <div><strong>عدد العمارات:</strong> {{ $buildings_count }} عمارة | <strong>عدد الشقق:</strong> {{ $apartments_count }} شقة</div>
@@ -353,9 +353,9 @@
                 </td>
                 <td style="width: 45%;" class="report-badge-box">
                     @if($scope === 'revenues')
-                        <div class="report-badge">📈 تقرير المداخيل والتحصيلات الرسمية</div>
+                        <div class="report-badge">تقرير المداخيل والتحصيلات الرسمية</div>
                     @elseif($scope === 'expenses')
-                        <div class="report-badge">📉 تقرير المصاريف والنفقات المؤداة</div>
+                        <div class="report-badge">تقرير المصاريف والنفقات المؤداة</div>
                     @endif
                     <div class="report-ref">
                         <strong>رقم الوثيقة:</strong> {{ $reference_number }}
@@ -367,7 +367,7 @@
 
     {{-- Period Banner --}}
     <div class="period-card">
-        <div class="period-title">📅 النطاق الزمني للتقرير: {{ $period_title }}</div>
+        <div class="period-title">النطاق الزمني للتقرير: {{ $period_title }}</div>
         <div class="period-sub">
             {{ $period_subtitle }} — من تاريخ <span class="num">{{ $start_date->format('d/m/Y') }}</span> إلى تاريخ <span class="num">{{ $end_date->format('d/m/Y') }}</span>
         </div>
@@ -378,7 +378,7 @@
         <tr>
             @if($scope === 'both' || $scope === 'revenues')
                 <td class="kpi-box emerald" style="width: {{ $scope === 'both' ? '33.3%' : '50%' }};">
-                    <div class="kpi-box-label">💰 مجموع المداخيل المستخلصة</div>
+                    <div class="kpi-box-label">مجموع المداخيل المستخلصة</div>
                     <div class="kpi-box-val" style="color: #047857;">
                         <span class="num">{{ number_format($total_revenues, 2) }}</span> <small style="font-size: 10px;">د.م</small>
                     </div>
@@ -388,7 +388,7 @@
 
             @if($scope === 'both' || $scope === 'expenses')
                 <td class="kpi-box rose" style="width: {{ $scope === 'both' ? '33.3%' : '50%' }};">
-                    <div class="kpi-box-label">🧾 مجموع المصاريف والنفقات</div>
+                    <div class="kpi-box-label">مجموع المصاريف والنفقات</div>
                     <div class="kpi-box-val" style="color: #be123c;">
                         <span class="num">{{ number_format($total_expenses, 2) }}</span> <small style="font-size: 10px;">د.م</small>
                     </div>
@@ -398,12 +398,12 @@
 
             @if($scope === 'both')
                 <td class="kpi-box {{ $balance_status === 'SURPLUS' ? 'emerald' : 'rose' }}" style="width: 33.3%;">
-                    <div class="kpi-box-label">⚖️ الرصيد الصافي (الفائض / العجز)</div>
+                    <div class="kpi-box-label">الرصيد الصافي (الفائض / العجز)</div>
                     <div class="kpi-box-val" style="color: {{ $balance_status === 'SURPLUS' ? '#047857' : '#be123c' }};">
                         <span class="num">{{ ($net_balance >= 0 ? '+' : '') . number_format($net_balance, 2) }}</span> <small style="font-size: 10px;">د.م</small>
                     </div>
                     <div class="kpi-box-sub">
-                        {{ $balance_status === 'SURPLUS' ? 'فائض مالي متاح بالخزينة ✓' : 'عجز مالي مسجل للفترة ⚠' }}
+                        {{ $balance_status === 'SURPLUS' ? 'فائض مالي متاح بالخزينة' : 'عجز مالي مسجل للفترة' }}
                     </div>
                 </td>
             @endif
@@ -413,7 +413,7 @@
     {{-- SECTION: APARTMENTS PAYMENT STATUS (PAID & UNPAID) --}}
     @if(($scope === 'both' || $scope === 'revenues') && !empty($apartments_status))
         <div class="section-heading" style="background-color: #0d9488; color: #ffffff;">
-            🏢 كشف وضعية استخلاص اشتراكات الشقق (الخالصين وغير الخالصين) — État des Cotisations
+            كشف وضعية استخلاص اشتراكات الشقق (الخالصين وغير الخالصين) — État des Cotisations
         </div>
 
         {{-- Collection KPI Mini Bar --}}
@@ -484,17 +484,17 @@
                         </td>
                         <td class="text-center">
                             @if($row['status'] === 'PAID')
-                                <span class="badge-paid">✓ خالص</span>
+                                <span class="badge-paid">خالص</span>
                                 @if(!empty($row['receipts']))
                                     <div style="font-size: 7px; color: #047857; margin-top: 1px;">وصل: {{ $row['receipts'][0] }}</div>
                                 @endif
                             @elseif($row['status'] === 'PARTIAL')
-                                <span class="badge-partial">⏳ أداء جزئي</span>
+                                <span class="badge-partial">أداء جزئي</span>
                                 @if(!empty($row['receipts']))
                                     <div style="font-size: 7px; color: #b45309; margin-top: 1px;">وصل: {{ $row['receipts'][0] }}</div>
                                 @endif
                             @else
-                                <span class="badge-unpaid">✗ غير خالص</span>
+                                <span class="badge-unpaid">غير خالص</span>
                             @endif
                         </td>
                     </tr>
@@ -516,7 +516,7 @@
     {{-- SECTION 1: DETAILED REVENUES TABLE --}}
     @if($scope === 'both' || $scope === 'revenues')
         <div class="section-heading green">
-            📈 جدول المداخيل والتحصيلات المفصل (Recettes & Cotisations)
+            جدول المداخيل والتحصيلات المفصل (Recettes & Cotisations)
         </div>
 
         @if($payments->isEmpty())
@@ -600,7 +600,7 @@
     {{-- SECTION 2: DETAILED EXPENSES TABLE --}}
     @if($scope === 'both' || $scope === 'expenses')
         <div class="section-heading red" style="{{ $scope === 'both' ? 'page-break-before: auto;' : '' }}">
-            📉 جدول المصاريف والنفقات المؤداة (Dépenses & Charges)
+            جدول المصاريف والنفقات المؤداة (Dépenses & Charges)
         </div>
 
         @if($expenses->isEmpty())
@@ -623,13 +623,13 @@
                 <tbody>
                     @foreach($expenses as $eIndex => $expense)
                         @php
-                            $catConfig = \App\Services\FinancialReportService::EXPENSE_CATEGORIES[strtoupper($expense->category)] ?? ['label' => $expense->category, 'icon' => '📋'];
+                            $catConfig = \App\Services\FinancialReportService::EXPENSE_CATEGORIES[strtoupper($expense->category)] ?? ['label' => $expense->category];
                         @endphp
                         <tr class="{{ $eIndex % 2 === 1 ? 'even' : '' }}">
                             <td class="text-center">{{ $eIndex + 1 }}</td>
                             <td class="text-center num">{{ \Carbon\Carbon::parse($expense->expense_date)->format('d/m/Y') }}</td>
                             <td>
-                                <span class="badge-cat">{{ $catConfig['icon'] }} {{ $catConfig['label'] }}</span>
+                                <span class="badge-cat">{{ $catConfig['label'] }}</span>
                             </td>
                             <td>{{ $expense->title }}</td>
                             <td class="text-center">{{ $expense->building?->name ?? 'مرافق الإقامة العامة' }}</td>
@@ -659,7 +659,7 @@
 
             {{-- Category Breakdown Table --}}
             <div style="font-weight: bold; font-size: 9.5px; color: #0f3460; margin: 8px 0 4px;">
-                📊 الجدول التحليلي للمصاريف حسب الأصناف:
+                الجدول التحليلي للمصاريف حسب الأصناف:
             </div>
             <table class="data-table" style="margin-bottom: 14px;">
                 <thead>
@@ -674,7 +674,7 @@
                     @foreach($expenses_by_category as $catK => $catV)
                         @if($catV['count'] > 0)
                             <tr>
-                                <td>{{ $catV['icon'] }} <strong>{{ $catV['label'] }}</strong></td>
+                                <td><strong>{{ $catV['label'] }}</strong></td>
                                 <td class="text-center">{{ $catV['count'] }} عمليـة</td>
                                 <td class="text-left num" style="font-weight: bold;">{{ number_format($catV['amount'], 2) }}</td>
                                 <td class="text-center num">
@@ -691,7 +691,7 @@
     {{-- SECTION 3: SYNTHESIS & RECAPITULATION (when both) --}}
     @if($scope === 'both')
         <div class="section-heading" style="background-color: #1e293b;">
-            ⚖️ الخلاصة المحاسبية والمركز المالي للفترة
+            الخلاصة المحاسبية والمركز المالي للفترة
         </div>
         <table class="data-table" style="margin-bottom: 14px;">
             <thead>
