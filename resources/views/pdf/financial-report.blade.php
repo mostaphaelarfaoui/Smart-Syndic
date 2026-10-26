@@ -352,18 +352,13 @@
                     </div>
                 </td>
                 <td style="width: 45%;" class="report-badge-box">
-                    <div class="report-badge">
-                        @if($scope === 'both')
-                            📑 التقرير المالي والمحاسبي الشامل
-                        @elseif($scope === 'revenues')
-                            📈 تقرير المداخيل والتحصيلات الرسمية
-                        @else
-                            📉 تقرير المصاريف والنفقات المؤداة
-                        @endif
-                    </div>
+                    @if($scope === 'revenues')
+                        <div class="report-badge">📈 تقرير المداخيل والتحصيلات الرسمية</div>
+                    @elseif($scope === 'expenses')
+                        <div class="report-badge">📉 تقرير المصاريف والنفقات المؤداة</div>
+                    @endif
                     <div class="report-ref">
-                        <strong>رقم الوثيقة:</strong> {{ $reference_number }}<br>
-                        <strong>تاريخ وتوقيت الإصدار:</strong> {{ $generated_at->format('Y-m-d H:i') }}
+                        <strong>رقم الوثيقة:</strong> {{ $reference_number }}
                     </div>
                 </td>
             </tr>
@@ -473,7 +468,7 @@
                     <tr class="{{ $rowClass }}">
                         <td class="text-center">{{ $idx + 1 }}</td>
                         <td class="text-center font-bold">
-                            شقة {{ $row['unit_number'] }}
+                            {{ \Illuminate\Support\Str::startsWith(trim($row['unit_number']), 'شقة') ? $row['unit_number'] : 'شقة ' . $row['unit_number'] }}
                             @if($row['building_name'] && $row['building_name'] !== '—')
                                 <small style="color: #64748b; font-weight: normal;">({{ $row['building_name'] }})</small>
                             @endif
@@ -554,7 +549,10 @@
                             <td class="text-center font-bold" style="font-weight: bold; color: #0f3460;">{{ $payment->receipt_number }}</td>
                             <td class="text-center num">{{ \Carbon\Carbon::parse($payment->payment_date)->format('d/m/Y') }}</td>
                             <td class="text-center">
-                                شقة {{ $apt?->unit_number ?? $apt?->number ?? '-' }}
+                                @php
+                                    $aptUnit = $apt?->unit_number ?? $apt?->number ?? '-';
+                                @endphp
+                                {{ \Illuminate\Support\Str::startsWith(trim($aptUnit), 'شقة') ? $aptUnit : 'شقة ' . $aptUnit }}
                                 @if($apt?->building)
                                     <small style="color: #64748b;">({{ $apt->building->name }})</small>
                                 @endif
@@ -730,12 +728,6 @@
         </table>
     @endif
 
-    {{-- Certification & Signatures Block --}}
-    <div class="cert-box">
-        <strong>شهادة المطابقة والشفافية المالية:</strong><br>
-        يشهد مكتب السانديك القانوني لإقامة <strong>{{ $tenant->name }}</strong> بأن هذا التقرير المالي المعتمد تم استخراجه من السجلات المحاسبية الرسمية للإقامة عبر منصة <em>سمارت سانديك</em>، وهو يعكس بصورة أمينة ومطابقة لكافة المداخيل والوصولات والمصاريف المؤداة خلال النطاق الزمني المحدد أعلاه.
-    </div>
-
     <table class="sign-table">
         <tr>
             <td style="text-align: right;">
@@ -754,9 +746,7 @@
                     @if(!empty($stamp_base64))
                         <img src="{{ $stamp_base64 }}" class="stamp-preview" alt="خاتم السانديك">
                     @else
-                        <div style="height: 50px; line-height: 50px; color: #94a3b8; font-size: 8px;">
-                            (خاتم وتوقيع السانديك الرسمي)
-                        </div>
+                        <div style="height: 50px;"></div>
                     @endif
                 </div>
             </td>

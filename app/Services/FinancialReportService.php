@@ -195,9 +195,16 @@ class FinancialReportService
                 ->orWhereHas('building', fn($q) => $q->where('tenant_id', $tenant->id))
                 ->where('is_billable', true)
                 ->with(['building', 'residents'])
-                ->orderBy('building_id')
-                ->orderBy('unit_number')
-                ->get();
+                ->get()
+                ->sort(function ($a, $b) {
+                    $bA = $a->building?->name ?? '';
+                    $bB = $b->building?->name ?? '';
+                    if ($bA !== $bB) {
+                        return strnatcasecmp($bA, $bB);
+                    }
+                    return strnatcasecmp($a->unit_number ?? '', $b->unit_number ?? '');
+                })
+                ->values();
 
             $allTenantPayments = Payment::where('tenant_id', $tenant->id)
                 ->where('status', '!=', 'DRAFT')
