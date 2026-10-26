@@ -732,7 +732,7 @@
         <tr>
             <td style="text-align: right;">
                 <div style="font-size: 9px; color: #475569; margin-bottom: 4px;">
-                    <strong>حرر بتاريخ:</strong> {{ $generated_at->format('d/m/Y') }} بمدينة الإقامة
+                    <strong>حرر بتاريخ:</strong> {{ $generated_at->format('d/m/Y') }} بمدينة {{ $tenant->city ?: 'الإقامة' }}
                 </div>
                 <div style="font-size: 9px; color: #475569;">
                     <strong>السانديك المسير:</strong> {{ $actor?->full_name ?? 'إدارة السانديك' }}

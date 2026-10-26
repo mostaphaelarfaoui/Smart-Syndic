@@ -53,6 +53,7 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
 
   // Single Building Controllers (clean without default values)
   final _orgNameController = TextEditingController();
+  final _cityController = TextEditingController();
   final _singleTotalUnitsController = TextEditingController();
   final _singleFeeController = TextEditingController();
 
@@ -77,6 +78,7 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _orgNameController.dispose();
+    _cityController.dispose();
     _singleTotalUnitsController.dispose();
     _singleFeeController.dispose();
     _initialTreasuryBalanceController.dispose();
@@ -144,6 +146,7 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
       phone: cleanPhone,
       password: _passwordController.text,
       organizationName: _orgNameController.text.trim(),
+      city: _cityController.text.trim().isNotEmpty ? _cityController.text.trim() : null,
       propertyType: _propertyType,
       totalUnits: totalUnits,
       defaultMonthlyFee: defaultFee,
@@ -377,6 +380,17 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
                   prefixIcon: const Icon(Icons.home_work_outlined),
                 ),
                 validator: (v) => (v == null || v.trim().isEmpty) ? 'اسم العقار مطلوب' : null,
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                controller: _cityController,
+                decoration: const InputDecoration(
+                  labelText: 'مدينة الإقامة أو المجمع',
+                  hintText: 'مثال: الدار البيضاء، الرباط، طنجة، مراكش...',
+                  prefixIcon: Icon(Icons.location_city_outlined),
+                ),
+                validator: (v) => (v == null || v.trim().isEmpty) ? 'يرجى إدخال مدينة الإقامة أو المجمع' : null,
               ),
               const SizedBox(height: 16),
 

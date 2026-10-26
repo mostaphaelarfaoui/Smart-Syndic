@@ -28,6 +28,12 @@
                 </div>
 
                 <div class="form-group">
+                    <label class="form-label">مدينة الإقامة أو المجمع</label>
+                    <input type="text" name="city" class="form-control" value="{{ old('city', $tenant->city) }}" placeholder="مثال: الدار البيضاء، طنجة، الرباط...">
+                    <small style="color:var(--text-muted); font-size:0.75rem;">تظهر تلقائياً في التقارير الرسمية والوثائق المالية (حرر بتاريخ ... بمدينة ...)</small>
+                </div>
+
+                <div class="form-group">
                     <label class="form-label">نوع الملكية العقارية</label>
                     <select name="property_type" class="form-select" required>
                         <option value="RESIDENTIAL_COMPLEX" {{ $tenant->property_type == 'RESIDENTIAL_COMPLEX' ? 'selected' : '' }}>مجمع سكني مغلق</option>

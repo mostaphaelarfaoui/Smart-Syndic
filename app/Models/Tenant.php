@@ -23,6 +23,7 @@ class Tenant extends Model implements HasName
 
     protected $fillable = [
         'name',
+        'city',
         'property_type',
         'plan_type',
         'status',

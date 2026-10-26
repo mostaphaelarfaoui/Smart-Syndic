@@ -22,6 +22,7 @@ class RegisterSyndicRequest extends FormRequest
             'phone'             => ['required', 'string', 'regex:' . $phoneRegex, 'unique:users,phone'],
             'password'          => ['required', 'string', 'min:8', 'max:128'],
             'organization_name' => ['required', 'string', 'min:3', 'max:255'],
+            'city'              => ['nullable', 'string', 'max:100'],
             'property_type'     => ['required', 'string', 'in:SINGLE_BUILDING,MULTI_BUILDING_COMPLEX'],
             'locale'            => ['sometimes', 'string', 'in:ar,fr,en'],
             'total_units'       => ['nullable', 'integer', 'min:1', 'max:500'],

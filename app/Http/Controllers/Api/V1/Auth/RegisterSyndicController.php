@@ -25,6 +25,7 @@ class RegisterSyndicController extends Controller
             // Create tenant (organization) in PENDING_APPROVAL state awaiting SuperAdmin approval
             $tenant = Tenant::create([
                 'name'                      => $request->organization_name,
+                'city'                      => $request->city,
                 'property_type'             => $request->property_type,
                 'plan_type'                 => 'TRIAL',
                 'status'                    => 'PENDING_APPROVAL',

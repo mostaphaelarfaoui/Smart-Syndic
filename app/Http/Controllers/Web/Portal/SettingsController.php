@@ -24,6 +24,7 @@ class SettingsController extends Controller
 
         $validated = $request->validate([
             'name'                     => ['required', 'string', 'max:255'],
+            'city'                     => ['nullable', 'string', 'max:100'],
             'property_type'            => ['required', 'string'],
             'bank_rib'                 => ['nullable', 'string', 'max:50'],
             'is_transparency_enabled'  => ['boolean'],
@@ -33,6 +34,7 @@ class SettingsController extends Controller
 
         $updateData = [
             'name'                    => $validated['name'],
+            'city'                    => $validated['city'] ?? null,
             'property_type'           => $validated['property_type'],
             'bank_rib'                => $validated['bank_rib'] ?? null,
             'is_transparency_enabled' => $request->boolean('is_transparency_enabled'),
