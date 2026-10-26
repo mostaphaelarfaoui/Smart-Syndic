@@ -23,6 +23,7 @@ class _ResidenceSettingsScreenState extends State<ResidenceSettingsScreen> {
   bool _isSaving = false;
 
   final _nameController = TextEditingController();
+  final _cityController = TextEditingController();
   final _feeController = TextEditingController();
   final _ribController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -48,6 +49,7 @@ class _ResidenceSettingsScreenState extends State<ResidenceSettingsScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _cityController.dispose();
     _feeController.dispose();
     _ribController.dispose();
     _phoneController.dispose();
@@ -64,6 +66,7 @@ class _ResidenceSettingsScreenState extends State<ResidenceSettingsScreen> {
       if (tenant != null && mounted) {
         setState(() {
           _nameController.text = tenant['name']?.toString() ?? '';
+          _cityController.text = tenant['city']?.toString() ?? '';
           _propertyType = tenant['property_type']?.toString();
           _ribController.text = tenant['bank_rib']?.toString() ?? '';
           
@@ -108,6 +111,7 @@ class _ResidenceSettingsScreenState extends State<ResidenceSettingsScreen> {
 
       final payload = <String, dynamic>{
         'name': _nameController.text.trim(),
+        'city': _cityController.text.trim().isNotEmpty ? _cityController.text.trim() : null,
         'default_monthly_fee': fee,
         'apply_to_existing_apartments': _applyToExistingApartments,
         'bank_rib': cleanRib.isNotEmpty ? cleanRib : null,
@@ -279,6 +283,15 @@ class _ResidenceSettingsScreenState extends State<ResidenceSettingsScreen> {
               prefixIcon: Icon(Icons.business_outlined),
             ),
             validator: (v) => (v == null || v.trim().isEmpty) ? 'الرجاء إدخال اسم الإقامة' : null,
+          ),
+          const SizedBox(height: 14),
+          TextFormField(
+            controller: _cityController,
+            decoration: const InputDecoration(
+              labelText: 'مدينة الإقامة أو المجمع',
+              hintText: 'مثال: الدار البيضاء، الرباط، طنجة...',
+              prefixIcon: Icon(Icons.location_city_outlined),
+            ),
           ),
           if (_invitationCode != null && _invitationCode!.isNotEmpty) ...[
             const SizedBox(height: 14),

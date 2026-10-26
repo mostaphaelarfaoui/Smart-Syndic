@@ -26,6 +26,7 @@ class TenantSettingsController extends Controller
             'tenant' => [
                 'id'                        => $tenant->id,
                 'name'                      => $tenant->name,
+                'city'                      => $tenant->city,
                 'property_type'             => $tenant->property_type,
                 'bank_rib'                  => $tenant->bank_rib,
                 'default_monthly_fee'       => (float) ($tenant->default_monthly_fee ?? 200.0),
@@ -99,6 +100,7 @@ class TenantSettingsController extends Controller
 
         $rules = [
             'name'                         => ['sometimes', 'string', 'min:2', 'max:255'],
+            'city'                         => ['sometimes', 'nullable', 'string', 'max:100'],
             'bank_rib'                     => ['sometimes', 'nullable', 'string', 'max:34'],
             'default_monthly_fee'          => ['sometimes', 'numeric', 'min:0'],
             'apply_to_existing_apartments' => ['sometimes', 'boolean'],
@@ -115,7 +117,7 @@ class TenantSettingsController extends Controller
 
         $request->validate($rules);
 
-        $updateData = $request->only(['name', 'bank_rib', 'default_monthly_fee', 'is_transparency_enabled']);
+        $updateData = $request->only(['name', 'city', 'bank_rib', 'default_monthly_fee', 'is_transparency_enabled']);
 
         if ($request->has('contact_phone') || $request->has('contact_email')) {
             $currentContact = is_array($tenant->contact_info) ? $tenant->contact_info : [];
