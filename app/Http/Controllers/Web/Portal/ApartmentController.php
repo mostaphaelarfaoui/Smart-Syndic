@@ -47,6 +47,8 @@ class ApartmentController extends Controller
 
         $paidUnitsCount = count($paidApartmentIdsThisMonth);
         $unpaidUnitsCount = max(0, $billableCount - $paidUnitsCount);
+        $vacantCount = max(0, $totalCount - $occupiedCount);
+        $exemptedCount = max(0, $totalCount - $billableCount);
         $collectionRate = $billableCount > 0 ? round(($paidUnitsCount / $billableCount) * 100, 1) : 0;
         $totalArrears = max(0, $expectedMonthly - $thisMonthCollected);
 
@@ -126,6 +128,8 @@ class ApartmentController extends Controller
             'thisMonthCollected',
             'paidUnitsCount',
             'unpaidUnitsCount',
+            'vacantCount',
+            'exemptedCount',
             'collectionRate',
             'totalArrears'
         ));

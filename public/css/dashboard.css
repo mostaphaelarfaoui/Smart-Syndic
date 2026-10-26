@@ -1416,3 +1416,238 @@ input[type="month"]::-webkit-calendar-picker-indicator:hover {
     }
 }
 
+/* ==========================================================================
+   FLUTTER-INSPIRED UNIFIED COMPONENT SYSTEM (Mobile-Identical Web UI)
+   ========================================================================== */
+
+/* --- Filter Chips Bar --- */
+.flutter-chips-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.4rem;
+    scrollbar-width: thin;
+}
+
+.flutter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.38rem 0.85rem;
+    border-radius: var(--radius-full);
+    font-size: 0.82rem;
+    font-weight: 700;
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    transition: all 0.18s ease;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.flutter-chip:hover {
+    border-color: var(--brand-primary);
+    color: var(--brand-primary);
+}
+
+.flutter-chip.active {
+    background: var(--brand-primary);
+    color: #ffffff !important;
+    border-color: var(--brand-primary);
+    box-shadow: 0 3px 10px rgba(13, 148, 136, 0.25);
+}
+
+.flutter-chip .chip-count {
+    background: rgba(0, 0, 0, 0.08);
+    padding: 0.1rem 0.45rem;
+    border-radius: var(--radius-full);
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.flutter-chip.active .chip-count {
+    background: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+}
+
+/* --- View Toggle Button Group --- */
+.view-toggle-group {
+    display: inline-flex;
+    align-items: center;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.2rem;
+    gap: 0.2rem;
+}
+
+.view-toggle-btn {
+    border: none;
+    background: transparent;
+    padding: 0.35rem 0.65rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.view-toggle-btn.active {
+    background: var(--brand-primary-light);
+    color: var(--brand-primary);
+}
+
+/* --- Apartment Cards Grid --- */
+.apartment-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.1rem;
+    margin-top: 1rem;
+}
+
+.apt-flutter-card {
+    background: var(--bg-surface);
+    border-radius: 14px;
+    border: 1px solid var(--border-color);
+    padding: 1rem 1.15rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+}
+
+.apt-flutter-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.apt-flutter-card.status-settled {
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.apt-flutter-card.status-arrears {
+    border-color: rgba(244, 63, 94, 0.35);
+}
+
+.apt-flutter-card.status-exempted {
+    border-color: rgba(245, 158, 11, 0.35);
+}
+
+/* Unit Badge Box */
+.apt-badge-box {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    text-align: center;
+    font-weight: 800;
+}
+
+.apt-badge-settled {
+    background: rgba(16, 185, 129, 0.12);
+    color: var(--color-success);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.apt-badge-arrears {
+    background: rgba(244, 63, 94, 0.12);
+    color: var(--color-danger);
+    border: 1px solid rgba(244, 63, 94, 0.25);
+}
+
+.apt-badge-vacant {
+    background: rgba(148, 163, 184, 0.15);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+}
+
+.apt-badge-exempted {
+    background: rgba(245, 158, 11, 0.12);
+    color: var(--color-warning);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Contact Chip / Button */
+.apt-contact-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.28rem 0.65rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.apt-whatsapp-btn {
+    background: rgba(37, 211, 102, 0.12);
+    color: #15803d;
+    border: 1px solid rgba(37, 211, 102, 0.3);
+}
+
+.apt-whatsapp-btn:hover {
+    background: #25d366;
+    color: #ffffff;
+}
+
+.apt-phone-btn {
+    background: rgba(14, 165, 233, 0.12);
+    color: #0284c7;
+    border: 1px solid rgba(14, 165, 233, 0.3);
+}
+
+.apt-phone-btn:hover {
+    background: #0ea5e9;
+    color: #ffffff;
+}
+
+/* 2-Row Flutter Payment Receipt Card */
+.flutter-payment-item {
+    background: var(--bg-surface);
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.6rem;
+    transition: all 0.15s ease;
+}
+
+.flutter-payment-item:hover {
+    border-color: var(--brand-primary);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+}
+
+.flutter-payment-item .item-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.flutter-payment-item .item-bottom-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+[data-theme="dark"] .flutter-payment-item .item-bottom-row {
+    border-top-color: rgba(51, 65, 85, 0.6);
+}
+
+

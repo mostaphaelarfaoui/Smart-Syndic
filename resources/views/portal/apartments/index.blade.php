@@ -98,13 +98,13 @@
         </div>
     </div>
 
-    {{-- Tabs Switcher --}}
-    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:1.25rem;">
+    {{-- Tabs Switcher & View Mode Toggle --}}
+    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:1.1rem;">
         <div style="display:inline-flex; align-items:center; gap:0.4rem; background:var(--bg-surface); padding:0.35rem; border:1px solid var(--border-color); border-radius:var(--radius-lg);">
             <a href="{{ route('portal.apartments.index', ['tab' => 'apartments']) }}" 
                class="btn btn-sm {{ $tab === 'apartments' ? 'btn-primary' : 'btn-secondary' }}"
                style="font-weight:800; font-size:0.88rem; padding:0.45rem 1rem;">
-                <span>🏢 جدول الشقق والتحصيل</span>
+                <span>🏢 الشقق والواجبات</span>
                 <span class="badge badge-neutral num" style="font-size:0.75rem; margin-right:4px;">{{ $totalCount }}</span>
             </a>
             <a href="{{ route('portal.apartments.index', ['tab' => 'receipts']) }}" 
@@ -114,17 +114,79 @@
                 <span class="badge badge-neutral num" style="font-size:0.75rem; margin-right:4px;">{{ $payments->total() }}</span>
             </a>
         </div>
+
+        {{-- Flutter Cards vs Table Toggle --}}
+        <div class="view-toggle-group">
+            <button type="button" 
+                    class="view-toggle-btn" 
+                    :class="{ 'active': viewMode === 'grid' }" 
+                    @click="viewMode = 'grid'; localStorage.setItem('smart_syndic_apt_view', 'grid');"
+                    title="عرض بطاقات فلاتر الحديثة">
+                <span>🔲 بطاقات</span>
+            </button>
+            <button type="button" 
+                    class="view-toggle-btn" 
+                    :class="{ 'active': viewMode === 'table' }" 
+                    @click="viewMode = 'table'; localStorage.setItem('smart_syndic_apt_view', 'table');"
+                    title="عرض الجدول الكلاسيكي">
+                <span>📋 جدول</span>
+            </button>
+        </div>
     </div>
 
     {{-- ================= TAB 1: APARTMENTS & QUICK COLLECTION ================= --}}
     @if($tab === 'apartments')
+        {{-- Flutter-Style Filter Chips Bar --}}
+        <div class="flutter-chips-bar" style="margin-bottom:1.1rem;">
+            @php
+                $currPaymentStatus = request('payment_status');
+                $currStatus = request('status');
+                $currBillable = request('billable');
+                $isAll = empty($currPaymentStatus) && empty($currStatus) && !request()->has('billable');
+            @endphp
+            <a href="{{ route('portal.apartments.index', array_merge(request()->except(['payment_status', 'status', 'billable', 'apts_page']), ['tab' => 'apartments'])) }}" 
+               class="flutter-chip {{ $isAll ? 'active' : '' }}">
+                <span>الكل</span>
+                <span class="chip-count">{{ $totalCount }}</span>
+            </a>
+            <a href="{{ route('portal.apartments.index', array_merge(request()->except(['status', 'billable', 'apts_page']), ['tab' => 'apartments', 'payment_status' => 'PAID'])) }}" 
+               class="flutter-chip {{ $currPaymentStatus === 'PAID' ? 'active' : '' }}">
+                <span>✓ خالصة</span>
+                <span class="chip-count">{{ $paidUnitsCount }}</span>
+            </a>
+            <a href="{{ route('portal.apartments.index', array_merge(request()->except(['status', 'apts_page']), ['tab' => 'apartments', 'payment_status' => 'UNPAID', 'billable' => '1'])) }}" 
+               class="flutter-chip {{ ($currPaymentStatus === 'UNPAID' && $currBillable === '1') ? 'active' : '' }}">
+                <span>⏳ متأخرة</span>
+                <span class="chip-count">{{ $unpaidUnitsCount }}</span>
+            </a>
+            <a href="{{ route('portal.apartments.index', array_merge(request()->except(['payment_status', 'billable', 'apts_page']), ['tab' => 'apartments', 'status' => 'VACANT'])) }}" 
+               class="flutter-chip {{ $currStatus === 'VACANT' ? 'active' : '' }}">
+                <span>🚪 شاغرة</span>
+                <span class="chip-count">{{ $vacantCount }}</span>
+            </a>
+            <a href="{{ route('portal.apartments.index', array_merge(request()->except(['payment_status', 'status', 'apts_page']), ['tab' => 'apartments', 'billable' => '0'])) }}" 
+               class="flutter-chip {{ $currBillable === '0' ? 'active' : '' }}">
+                <span>🛡️ معفاة</span>
+                <span class="chip-count">{{ $exemptedCount }}</span>
+            </a>
+        </div>
+
         {{-- Filters Card --}}
         <div class="filter-card">
             <form method="GET" action="{{ route('portal.apartments.index') }}" class="filter-form">
                 <input type="hidden" name="tab" value="apartments">
+                @if(request('payment_status'))
+                    <input type="hidden" name="payment_status" value="{{ request('payment_status') }}">
+                @endif
+                @if(request('status'))
+                    <input type="hidden" name="status" value="{{ request('status') }}">
+                @endif
+                @if(request()->has('billable'))
+                    <input type="hidden" name="billable" value="{{ request('billable') }}">
+                @endif
 
                 <div class="search-box" style="flex:1; min-width:200px;">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="ابحث برقم الشقة...">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="ابحث برقم الشقة أو اسم الساكن...">
                     <span class="search-icon">🔍</span>
                 </div>
 
@@ -137,20 +199,8 @@
                     @endforeach
                 </select>
 
-                <select name="payment_status" class="form-select" style="width:auto; min-width:170px;">
-                    <option value="">حالة أداء هذا الشهر</option>
-                    <option value="PAID" {{ request('payment_status') === 'PAID' ? 'selected' : '' }}>✓ تم الأداء (خالصة)</option>
-                    <option value="UNPAID" {{ request('payment_status') === 'UNPAID' ? 'selected' : '' }}>⏳ في انتظار الأداء</option>
-                </select>
-
-                <select name="status" class="form-select" style="width:auto; min-width:160px;">
-                    <option value="">إشغال الشقة</option>
-                    <option value="OCCUPIED" {{ request('status') == 'OCCUPIED' ? 'selected' : '' }}>مأهولة (بها مقيم)</option>
-                    <option value="VACANT" {{ request('status') == 'VACANT' ? 'selected' : '' }}>شاغرة (بدون مقيم)</option>
-                </select>
-
                 <button type="submit" class="btn btn-primary">
-                    <span>تطبيق الفلترة</span>
+                    <span>بحث</span>
                 </button>
 
                 @if(request()->hasAny(['search', 'building_id', 'status', 'payment_status', 'billable']))
@@ -161,8 +211,148 @@
             </form>
         </div>
 
-        {{-- Apartments Table --}}
-        <div class="card">
+        {{-- VIEW 1: FLUTTER-STYLE APARTMENT CARDS GRID --}}
+        <div x-show="viewMode === 'grid'" x-cloak>
+            <div class="apartment-cards-grid">
+                @forelse($apartments as $apartment)
+                    @php
+                        $cleanUnit = str_starts_with(trim($apartment->unit_number), 'شقة') ? $apartment->unit_number : 'شقة ' . $apartment->unit_number;
+                        $isPaidThisMonth = in_array($apartment->id, $paidApartmentIdsThisMonth);
+                        $hasResident = $apartment->residents->isNotEmpty();
+                        $resident = $hasResident ? $apartment->residents->first() : null;
+                    @endphp
+                    <div class="apt-flutter-card {{ !$apartment->is_billable ? 'status-exempted' : ($isPaidThisMonth ? 'status-settled' : 'status-arrears') }}">
+                        <div>
+                            {{-- Top Header: Badge Box + Info + Status Tag --}}
+                            <div style="display:flex; align-items:flex-start; gap:0.75rem;">
+                                <div class="apt-badge-box {{ !$apartment->is_billable ? 'apt-badge-exempted' : (!$hasResident ? 'apt-badge-vacant' : ($isPaidThisMonth ? 'apt-badge-settled' : 'apt-badge-arrears')) }}">
+                                    <div style="font-size:1.15rem; line-height:1;">
+                                        {{ !$apartment->is_billable ? '🛡️' : (!$hasResident ? '🚪' : ($isPaidThisMonth ? '🏢' : '⚠️')) }}
+                                    </div>
+                                    <div class="num" style="font-size:0.8rem; margin-top:2px;">{{ $apartment->unit_number }}</div>
+                                </div>
+                                
+                                <div style="flex:1; min-width:0;">
+                                    <div style="display:flex; align-items:center; justify-content:space-between; gap:0.4rem;">
+                                        <h4 style="margin:0; font-size:1rem; font-weight:800; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                            {{ $cleanUnit }}
+                                        </h4>
+                                        @if(!$apartment->is_billable)
+                                            <span class="badge badge-warning" style="font-size:0.7rem; font-weight:700;">معفاة</span>
+                                        @elseif(!$hasResident)
+                                            <span class="badge badge-neutral" style="font-size:0.7rem;">شاغرة</span>
+                                        @elseif($isPaidThisMonth)
+                                            <span class="badge badge-success" style="font-size:0.7rem; font-weight:800;">✓ خالصة</span>
+                                        @else
+                                            <span class="badge badge-danger" style="font-size:0.7rem; font-weight:800;">⏳ متأخرة</span>
+                                        @endif
+                                    </div>
+
+                                    <div style="font-size:0.78rem; color:var(--text-secondary); margin-top:3px; display:flex; align-items:center; gap:0.35rem; flex-wrap:wrap;">
+                                        <span>{{ $apartment->building?->name ?? 'العمارة' }}</span>
+                                        @if($apartment->building?->block)
+                                            <span>• بلوك {{ $apartment->building->block }}</span>
+                                        @endif
+                                        <span>• الواجب: <strong class="num" style="color:var(--brand-primary);">{{ number_format($apartment->monthly_fee, 0) }} د.م</strong></span>
+                                    </div>
+
+                                    <div style="margin-top:5px; font-size:0.85rem; font-weight:700; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                        @if($hasResident)
+                                            👤 {{ $resident->full_name }}
+                                        @else
+                                            <span style="color:var(--text-muted); font-size:0.8rem;">(لا يوجد ساكن مسجل)</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Contact Row if Phone Exists --}}
+                            @if($hasResident && $resident->phone)
+                                @php
+                                    $rawPhone = $resident->phone;
+                                    $cleanPhone = preg_replace('/[^0-9]/', '', $rawPhone);
+                                    if (str_starts_with($cleanPhone, '0')) {
+                                        $cleanPhone = '212' . substr($cleanPhone, 1);
+                                    }
+                                @endphp
+                                <div style="display:flex; align-items:center; gap:0.4rem; margin-top:0.75rem;">
+                                    <a href="https://wa.me/{{ $cleanPhone }}?text={{ urlencode('السلام عليكم بخصوص الشقة ' . $apartment->unit_number) }}" 
+                                       target="_blank" 
+                                       class="apt-contact-btn apt-whatsapp-btn" 
+                                       title="مراسلة فورية عبر الواتساب">
+                                        <span>💬 واتساب</span>
+                                    </a>
+                                    <a href="tel:{{ $rawPhone }}" class="apt-contact-btn apt-phone-btn" title="اتصال هاتفي">
+                                        <span>📞 اتصال</span>
+                                    </a>
+                                    <span style="font-size:0.78rem; color:var(--text-muted); margin-right:auto;" class="num">{{ $rawPhone }}</span>
+                                </div>
+                            @endif
+                        </div>
+
+                        {{-- Action Buttons --}}
+                        <div style="margin-top:0.9rem; padding-top:0.75rem; border-top:1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; gap:0.4rem;">
+                            <button type="button" 
+                                    class="btn btn-sm {{ $isPaidThisMonth ? 'btn-secondary' : 'btn-success' }}" 
+                                    style="flex:1; font-weight:800; font-size:0.82rem; padding:0.4rem 0.65rem; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; gap:0.35rem;"
+                                    @click="openPaymentForApartment('{{ $apartment->id }}', {{ (float) $apartment->monthly_fee }})">
+                                <span>+</span>
+                                <span>استخلاص الواجب</span>
+                            </button>
+
+                            <button type="button" 
+                                    class="btn btn-sm btn-secondary" 
+                                    style="font-weight:700; font-size:0.82rem; padding:0.4rem 0.75rem; border-radius:8px; display:inline-flex; align-items:center; gap:0.35rem;"
+                                    @click="openApartmentDetails('{{ $apartment->id }}')">
+                                <span>📋 السجل</span>
+                            </button>
+
+                            @if($hasResident)
+                                <form method="POST" action="{{ route('portal.apartments.vacate', $apartment->id) }}"
+                                      data-confirm="هل تؤكد تفريغ الشقة {{ $apartment->unit_number }}؟ سيتم فك ارتباط الساكن."
+                                      data-confirm-title="تفريغ الشقة"
+                                      data-confirm-type="warning"
+                                      data-confirm-password="true"
+                                      data-confirm-btn="تفريغ الشقة"
+                                      style="margin:0;">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-secondary" style="padding:0.4rem 0.55rem; color:var(--color-warning);" title="تفريغ الشقة">
+                                        🚪
+                                    </button>
+                                </form>
+                            @endif
+
+                            <form method="POST" action="{{ route('portal.apartments.destroy', $apartment->id) }}"
+                                  data-confirm="هل أنت متأكد من حذف الشقة رقم {{ $apartment->unit_number }} نهائياً؟"
+                                  data-confirm-title="تأكيد حذف الشقة"
+                                  data-confirm-type="danger"
+                                  data-confirm-password="true"
+                                  data-confirm-btn="حذف الشقة نهائياً"
+                                  style="margin:0;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-secondary" style="padding:0.4rem 0.55rem; color:var(--color-danger);" title="حذف الشقة">
+                                    🗑️
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                @empty
+                    <div style="grid-column: 1 / -1; text-align:center; padding:3rem; background:var(--bg-surface); border-radius:14px; border:1px dashed var(--border-color); color:var(--text-muted);">
+                        لا توجد شقق مطابقة للمعايير المحددة.
+                    </div>
+                @endforelse
+            </div>
+
+            @if($apartments->hasPages())
+                <div style="margin-top:1.25rem;">
+                    {{ $apartments->links() }}
+                </div>
+            @endif
+        </div>
+
+        {{-- VIEW 2: CLASSIC TABLE VIEW --}}
+        <div x-show="viewMode === 'table'" x-cloak class="card">
             <div class="table-responsive">
                 <table class="table">
                     <thead>
@@ -225,7 +415,6 @@
                                 </td>
                                 <td style="text-align:center;">
                                     <div style="display:flex; align-items:center; justify-content:center; gap:0.4rem;">
-                                        {{-- Direct Instant Payment Button --}}
                                         <button type="button" 
                                                 class="btn btn-sm {{ $isPaidThisMonth ? 'btn-secondary' : 'btn-success' }}" 
                                                 style="display:inline-flex; align-items:center; gap:0.3rem; font-weight:800; font-size:0.78rem; padding:0.3rem 0.65rem; border-radius:6px;"
@@ -235,7 +424,6 @@
                                             <span>استخلاص</span>
                                         </button>
 
-                                        {{-- Payment History Modal --}}
                                         <button type="button" 
                                                 class="btn btn-sm btn-secondary" 
                                                 style="display:inline-flex; align-items:center; gap:0.25rem; font-weight:700; font-size:0.78rem; padding:0.3rem 0.6rem; border-radius:6px;"
@@ -246,8 +434,8 @@
 
                                         @if($apartment->residents->isNotEmpty())
                                             <form method="POST" action="{{ route('portal.apartments.vacate', $apartment->id) }}"
-                                                  data-confirm="هل تؤكد تفريغ الشقة {{ $apartment->unit_number }}؟ سيتم فك ارتباط الساكن وإعادة ضبط المبالغ والحسابات للصيغة الأولى."
-                                                  data-confirm-title="تفريغ الشقة وتصفير السجلات"
+                                                  data-confirm="هل تؤكد تفريغ الشقة {{ $apartment->unit_number }}؟ سيتم فك ارتباط الساكن."
+                                                  data-confirm-title="تفريغ الشقة"
                                                   data-confirm-type="warning"
                                                   data-confirm-password="true"
                                                   data-confirm-btn="تفريغ الشقة">
@@ -259,7 +447,7 @@
                                         @endif
 
                                         <form method="POST" action="{{ route('portal.apartments.destroy', $apartment->id) }}"
-                                              data-confirm="هل أنت متأكد من حذف الشقة رقم {{ $apartment->unit_number }} نهائياً؟ سيتم حذف كافة السجلات المرتبطة بها."
+                                              data-confirm="هل أنت متأكد من حذف الشقة رقم {{ $apartment->unit_number }} نهائياً؟"
                                               data-confirm-title="تأكيد حذف الشقة نهائياً"
                                               data-confirm-type="danger"
                                               data-confirm-password="true"
@@ -334,7 +522,114 @@
             </form>
         </div>
 
-        <div class="card">
+        {{-- VIEW 1: FLUTTER-STYLE RECEIPTS CARDS GRID --}}
+        <div x-show="viewMode === 'grid'" x-cloak>
+            <div class="apartment-cards-grid">
+                @forelse($payments as $payment)
+                    @php
+                        $resident = $payment->apartment?->residents?->first();
+                        $phone = $resident?->phone;
+                        $cleanPhone = $phone ? preg_replace('/[^0-9]/', '', $phone) : '';
+                        if ($cleanPhone && str_starts_with($cleanPhone, '0')) {
+                            $cleanPhone = '212' . substr($cleanPhone, 1);
+                        }
+                    @endphp
+                    <div class="apt-flutter-card" style="border-color:rgba(13, 148, 136, 0.25);">
+                        <div>
+                            {{-- Top Row: Month badge & Receipt Number on right, Amount on left --}}
+                            <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem; flex-wrap:wrap;">
+                                <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
+                                    @if(is_array($payment->covered_months) && !empty($payment->covered_months))
+                                        <span class="badge badge-success num" style="font-size:0.75rem; font-weight:800; padding:0.25rem 0.6rem;">
+                                            شهر {{ implode(', ', $payment->covered_months) }}
+                                        </span>
+                                    @else
+                                        <span class="badge badge-success" style="font-size:0.75rem; font-weight:800;">أداء</span>
+                                    @endif
+                                    <span style="font-weight:800; font-size:0.85rem; color:var(--text-primary);">
+                                        #{{ $payment->receipt_number }}
+                                    </span>
+                                </div>
+                                <div class="num" style="font-weight:900; font-size:1.1rem; color:var(--color-success);">
+                                    {{ number_format($payment->amount_paid, 0) }} د.م
+                                </div>
+                            </div>
+
+                            {{-- Apartment and Resident info --}}
+                            <div style="margin-top:0.6rem; display:flex; align-items:center; justify-content:space-between; gap:0.5rem;">
+                                <div>
+                                    <span class="badge badge-neutral num" style="font-size:0.8rem; font-weight:800;">
+                                        🏢 شقة {{ $payment->apartment?->unit_number ?? '—' }}
+                                    </span>
+                                    @if($payment->apartment?->building)
+                                        <span style="font-size:0.78rem; color:var(--text-secondary); margin-right:4px;">
+                                            ({{ $payment->apartment->building->name }})
+                                        </span>
+                                    @endif
+                                </div>
+                                <div style="font-size:0.85rem; font-weight:700; color:var(--text-primary);">
+                                    👤 {{ $resident?->full_name ?? 'المالك' }}
+                                </div>
+                            </div>
+
+                            {{-- Date & Payment Method Row --}}
+                            <div style="margin-top:0.5rem; font-size:0.8rem; color:var(--text-secondary); display:flex; align-items:center; justify-content:space-between;">
+                                <span>📅 تاريخ: <strong class="num">{{ $payment->payment_date ? \Carbon\Carbon::parse($payment->payment_date)->format('Y-m-d') : '—' }}</strong></span>
+                                <span class="badge badge-info" style="font-size:0.75rem;">
+                                    {{ match($payment->payment_method) {
+                                        'CASH' => '💵 نقداً',
+                                        'BANK_TRANSFER' => '🏦 تحويل بنكي',
+                                        'CHEQUE' => '📝 شيك',
+                                        default => $payment->payment_method
+                                    } }}
+                                </span>
+                            </div>
+                        </div>
+
+                        {{-- Action Buttons Footer --}}
+                        <div style="margin-top:0.85rem; padding-top:0.75rem; border-top:1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; gap:0.4rem;">
+                            @if($cleanPhone)
+                                <a href="https://wa.me/{{ $cleanPhone }}?text={{ urlencode('السلام عليكم تم إصدار وصل أداء رقم #' . $payment->receipt_number . ' بمبلغ ' . number_format($payment->amount_paid, 0) . ' درهم لشقتكم رقم ' . ($payment->apartment?->unit_number ?? '')) }}" 
+                                   target="_blank" 
+                                   class="btn btn-sm btn-secondary" 
+                                   style="color:#15803d; border-color:rgba(37,211,102,0.4); font-size:0.78rem; padding:0.35rem 0.65rem;" 
+                                   title="إرسال إشعار الوصل للساكن عبر واتساب">
+                                    <span>💬 واتساب</span>
+                                </a>
+                            @endif
+
+                            <div style="display:flex; align-items:center; gap:0.4rem; margin-right:auto;">
+                                <button type="button" 
+                                        class="btn btn-sm btn-primary" 
+                                        style="padding:0.35rem 0.75rem; font-size:0.8rem; font-weight:700;"
+                                        @click="openPreview('{{ $payment->id }}', '{{ $payment->receipt_number }}', '{{ route('receipts.download', ['payment' => $payment->id]) }}')">
+                                    <span>👁️ معاينة</span>
+                                </button>
+                                <a href="{{ route('receipts.download', ['payment' => $payment->id, 'download' => 1]) }}" 
+                                   class="btn btn-sm btn-secondary" 
+                                   style="padding:0.35rem 0.65rem; font-size:0.8rem; font-weight:700;" 
+                                   title="تحميل مباشر (PDF)">
+                                    <span>⬇️ تحميل</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div style="grid-column: 1 / -1; text-align:center; padding:3rem; background:var(--bg-surface); border-radius:14px; border:1px dashed var(--border-color); color:var(--text-muted);">
+                        لا توجد مقبوضات مطابقة للمعايير المحددة.
+                    </div>
+                @endforelse
+            </div>
+
+            @if($payments->hasPages())
+                <div style="margin-top:1.25rem;">
+                    {{ $payments->links() }}
+                </div>
+            @endif
+        </div>
+
+        {{-- VIEW 2: CLASSIC TABLE VIEW --}}
+        <div x-show="viewMode === 'table'" x-cloak class="card">
             <div class="table-responsive">
                 <table class="table">
                     <thead>
@@ -722,55 +1017,46 @@
                                     </div>
                                 </div>
 
-                                {{-- Year Payments List --}}
-                                <div class="table-responsive">
-                                    <table class="table" style="margin:0; font-size:0.85rem;">
-                                        <thead>
-                                            <tr style="background:var(--bg-surface-elevated); border-bottom:1px solid var(--border-color);">
-                                                <th style="color:var(--text-secondary); font-size:0.8rem; font-weight:700;">رقم الوصل</th>
-                                                <th style="color:var(--text-secondary); font-size:0.8rem; font-weight:700;">تاريخ الأداء</th>
-                                                <th style="color:var(--text-secondary); font-size:0.8rem; font-weight:700;">الشهور المستخلصة</th>
-                                                <th style="color:var(--text-secondary); font-size:0.8rem; font-weight:700;">المبلغ</th>
-                                                <th style="color:var(--text-secondary); font-size:0.8rem; font-weight:700;">طريقة الأداء</th>
-                                                <th style="color:var(--text-secondary); font-size:0.8rem; font-weight:700; text-align:center;">إجراءات الوصل</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <template x-for="p in yearGroup.payments" :key="p.id">
-                                                <tr>
-                                                    <td class="num" style="font-weight:800; color:var(--brand-primary);" x-text="'#' + p.receipt_number"></td>
-                                                    <td class="num" style="color:var(--text-secondary);" x-text="p.payment_date"></td>
-                                                    <td>
-                                                        <template x-for="m in p.covered_months" :key="m">
-                                                            <span class="badge badge-neutral num" style="font-size:0.72rem; font-weight:700; margin-left:3px;" x-text="m"></span>
-                                                        </template>
-                                                    </td>
-                                                    <td>
-                                                        <strong class="num" style="color:var(--color-success);" x-text="p.amount_paid.toFixed(2) + ' د.م'"></strong>
-                                                    </td>
-                                                    <td>
-                                                        <span class="badge badge-info" x-text="p.payment_method"></span>
-                                                    </td>
-                                                    <td style="text-align:center;">
-                                                        <div style="display:flex; align-items:center; justify-content:center; gap:0.3rem;">
-                                                            <button type="button" 
-                                                                    class="btn btn-sm btn-secondary" 
-                                                                    style="padding:0.25rem 0.6rem; font-size:0.78rem;" 
-                                                                    @click="openPreview(p.id, p.receipt_number, p.preview_url)">
-                                                                👁️ معاينة
-                                                            </button>
-                                                            <a :href="p.download_url" 
-                                                               class="btn btn-sm btn-primary" 
-                                                               style="padding:0.25rem 0.6rem; font-size:0.78rem;" 
-                                                               title="تحميل مباشر للوصل بصيغة PDF">
-                                                                ⬇️ تحميل
-                                                            </a>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            </template>
-                                        </tbody>
-                                    </table>
+                                {{-- Year Payments Cards List (Flutter-Identical 2-Row Layout) --}}
+                                <div style="padding:0.75rem;">
+                                    <template x-for="p in yearGroup.payments" :key="p.id">
+                                        <div class="flutter-payment-item">
+                                            {{-- Row 1: Month badge & receipt number on right, amount in bold green on left --}}
+                                            <div class="item-top-row">
+                                                <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                                                    <span class="badge badge-success num" style="font-size:0.76rem; font-weight:800; padding:0.25rem 0.6rem;">
+                                                        شهر <span x-text="p.covered_months.join(', ')"></span>
+                                                    </span>
+                                                    <span style="font-weight:800; font-size:0.88rem; color:var(--text-primary);" x-text="'وصل #' + p.receipt_number"></span>
+                                                </div>
+                                                <div class="num" style="font-weight:900; font-size:1.05rem; color:var(--color-success);" x-text="p.amount_paid.toFixed(0) + ' د.م'"></div>
+                                            </div>
+                                            
+                                            {{-- Row 2: Date + Payment Method on right, Action buttons on left --}}
+                                            <div class="item-bottom-row">
+                                                <div style="display:flex; align-items:center; gap:0.6rem; font-size:0.8rem; color:var(--text-secondary);">
+                                                    <span>📅 <span class="num" x-text="'تاريخ: ' + p.payment_date"></span></span>
+                                                    <span class="badge badge-neutral" style="font-size:0.72rem;" x-text="p.payment_method"></span>
+                                                </div>
+                                                <div style="display:flex; align-items:center; gap:0.4rem;">
+                                                    <button type="button" 
+                                                            class="btn btn-sm btn-primary" 
+                                                            style="padding:0.25rem 0.65rem; font-size:0.78rem; font-weight:700; border-radius:6px; display:inline-flex; align-items:center; gap:0.3rem;" 
+                                                            @click="openPreview(p.id, p.receipt_number, p.preview_url)">
+                                                        <span>👁️</span>
+                                                        <span>معاينة</span>
+                                                    </button>
+                                                    <a :href="p.download_url" 
+                                                       class="btn btn-sm btn-secondary" 
+                                                       style="padding:0.25rem 0.65rem; font-size:0.78rem; font-weight:700; border-radius:6px; display:inline-flex; align-items:center; gap:0.3rem;" 
+                                                       title="تحميل مباشر للوصل بصيغة PDF">
+                                                        <span>⬇️</span>
+                                                        <span>تحميل</span>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
                                 </div>
                             </div>
                         </template>
@@ -820,6 +1106,7 @@
 <script>
 function apartmentsPage() {
     return {
+        viewMode: localStorage.getItem('smart_syndic_apt_view') || 'grid',
         addModal: false,
         bulkModal: false,
         paymentModal: false,
