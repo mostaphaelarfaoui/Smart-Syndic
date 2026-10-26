@@ -1,9 +1,12 @@
+import 'package:flutter/foundation.dart';
+
 class ApiConstants {
   // Default baseUrl. For local testing:
   // - Android Emulator: 'http://10.0.2.2:8000/api/v1'
-  // - Physical Phone: 'http://<YOUR_PC_IP>:8000/api/v1'
+  // - Physical Phone: 'http://192.168.11.203:8000/api/v1'
   // - Windows / Web: 'http://127.0.0.1:8000/api/v1'
-  static const String defaultBaseUrl = 'http://192.168.11.182:8000/api/v1'; // Fast local Wi-Fi connection
+  static String get defaultBaseUrl =>
+      kIsWeb ? 'http://127.0.0.1:8000/api/v1' : 'http://192.168.11.203:8000/api/v1';
 
   // Auth endpoints
   static const String login = '/auth/login';

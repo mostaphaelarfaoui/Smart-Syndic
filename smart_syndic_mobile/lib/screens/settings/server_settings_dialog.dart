@@ -67,8 +67,8 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                _buildQuickChip('شبكة Wi-Fi الحالية (192.168.11.182)', 'http://192.168.11.182:8000/api/v1'),
                 _buildQuickChip('حاسوب محلي (127.0.0.1)', 'http://127.0.0.1:8000/api/v1'),
+                _buildQuickChip('شبكة Wi-Fi الحالية (192.168.11.203)', 'http://192.168.11.203:8000/api/v1'),
                 _buildQuickChip('محاكي أندرويد (10.0.2.2)', 'http://10.0.2.2:8000/api/v1'),
               ],
             ),
