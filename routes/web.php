@@ -32,6 +32,11 @@ Route::get('/login', function () {
     return redirect()->route('portal.login');
 })->name('login');
 
+// Redirect any legacy /super-admin requests directly to the modern platform portal
+Route::any('/super-admin/{any?}', function () {
+    return redirect()->route('superadmin.dashboard');
+})->where('any', '.*');
+
 // ─── Direct Receipt Download (Secured & Access-Controlled) ───────────────
 Route::get('/receipts/{payment}/download', function (\Illuminate\Http\Request $request, Payment $payment) {
     $isAuthorized = false;

@@ -5,6 +5,5 @@ return [
     App\Providers\AuthServiceProvider::class,
     App\Providers\EventServiceProvider::class,
     App\Providers\SmartSyndicServiceProvider::class,
-    App\Providers\Filament\SuperAdminPanelProvider::class,
     App\Providers\Filament\SyndicPanelProvider::class,
 ];
