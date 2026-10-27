@@ -27,30 +27,29 @@
         localStorage.setItem('theme', this.theme);
         document.documentElement.setAttribute('data-theme', this.theme);
     }
+}">
+
 @if(session()->has('impersonator_id'))
-    <div style="background: linear-gradient(135deg, #7c2d12 0%, #b45309 50%, #d97706 100%); color:#ffffff; padding:0.75rem 1.75rem; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:0.75rem; font-size:0.875rem; font-weight:600; box-shadow:0 4px 20px rgba(180, 83, 9, 0.45); position:sticky; top:0; z-index:999999; border-bottom: 2px solid #fef3c7;">
-        <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
-            <span style="display:inline-flex; align-items:center; gap:0.35rem; background:rgba(0,0,0,0.3); padding:0.25rem 0.65rem; border-radius:999px; font-size:0.75rem; letter-spacing:0.02em; border:1px solid rgba(255,255,255,0.2);">
-                <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#ef4444; box-shadow:0 0 8px #ef4444; animation:pulse 1.5s infinite;"></span>
-                <span>وضع الدعم الفني (Impersonation)</span>
+    {{-- Full-width Prominent Impersonation Banner --}}
+    <div id="impersonation-banner" style="background: linear-gradient(135deg, #7c2d12 0%, #b45309 50%, #ea580c 100%); color:#ffffff; padding:0.85rem 1.75rem; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:1rem; font-size:0.9rem; font-weight:700; box-shadow:0 6px 25px rgba(180, 83, 9, 0.55); position:sticky; top:0; z-index:9999999; border-bottom: 3px solid #fef3c7;">
+        <div style="display:flex; align-items:center; gap:0.85rem; flex-wrap:wrap;">
+            <span style="display:inline-flex; align-items:center; gap:0.4rem; background:rgba(0,0,0,0.35); padding:0.3rem 0.75rem; border-radius:999px; font-size:0.78rem; border:1px solid rgba(255,255,255,0.25);">
+                <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#ef4444; box-shadow:0 0 10px #ef4444; animation:pulse 1.5s infinite;"></span>
+                <span>وضع الدعم الفني (انتحال الهوية)</span>
             </span>
             <span>
-                المشرف <strong style="text-decoration:underline;">{{ session('impersonator_name', 'السوبر أدمن') }}</strong>
-                يتصفح حالياً بصفة: <strong>{{ auth()->user()->full_name }}</strong>
+                المشرف: <strong style="text-decoration:underline; color:#ffffff;">{{ session('impersonator_name', 'السوبر أدمن') }}</strong>
+                &bull; تتصفح حالياً حساب: <strong style="color:#fef08a;">{{ auth()->user()->full_name }}</strong>
                 ({{ auth()->user()->role === 'ADMIN_SYNDIC' || auth()->user()->role === 'SYNDIC' ? 'مسير سانديك' : (auth()->user()->role === 'RESIDENT' ? 'ساكن' : auth()->user()->role) }})
-                — إقامة: <strong style="color:#fef08a;">{{ auth()->user()->tenant?->name ?? 'بدون إقامة' }}</strong>
-            </span>
-            <span style="font-size:0.75rem; color:#fed7aa; background:rgba(0,0,0,0.2); padding:0.2rem 0.5rem; border-radius:4px;">
-                ⚠️ جميع الإجراءات تُسجَّل أوتوماتيكياً في سجل الرقابة
+                &bull; إقامة: <strong style="color:#fed7aa;">{{ auth()->user()->tenant?->name ?? 'بدون إقامة' }}</strong>
             </span>
         </div>
-        <form method="POST" action="{{ route('impersonate.leave') }}" style="margin:0;">
-            @csrf
-            <button type="submit" style="background:#ffffff; color:#9a3412; border:none; padding:0.45rem 1.1rem; border-radius:8px; font-weight:800; font-size:0.825rem; cursor:pointer; display:inline-flex; align-items:center; gap:0.5rem; box-shadow:0 2px 8px rgba(0,0,0,0.25); transition:all 0.2s ease;">
-                <span>إنهاء الجلسة والعودة للوحة السوبر أدمن</span>
-                <span style="font-size:1rem;">&larr;</span>
-            </button>
-        </form>
+        <div style="display:flex; align-items:center; gap:0.75rem;">
+            <a href="{{ route('impersonate.leave') }}" id="btn-leave-impersonation" style="background:#ffffff; color:#9a3412; text-decoration:none; padding:0.55rem 1.35rem; border-radius:10px; font-weight:900; font-size:0.9rem; display:inline-flex; align-items:center; gap:0.6rem; box-shadow:0 4px 14px rgba(0,0,0,0.35); border:2px solid #ffffff; transition:all 0.2s ease; cursor:pointer;" onmouseover="this.style.transform='scale(1.04)'; this.style.background='#fef3c7';" onmouseout="this.style.transform='scale(1)'; this.style.background='#ffffff';">
+                <span>🔙 إنهاء الجلسة والعودة للوحة السوبر أدمن</span>
+                <span style="font-size:1.1rem; line-height:1;">&larr;</span>
+            </a>
+        </div>
     </div>
 @endif
 
@@ -117,6 +116,18 @@
             </a>
         </nav>
 
+        {{-- Impersonation Alert & Return in Sidebar --}}
+        @if(session()->has('impersonator_id'))
+            <div style="margin: 0.75rem 1rem; padding: 0.85rem; background: rgba(234, 88, 12, 0.15); border: 1px solid #f97316; border-radius: 12px; text-align: center;">
+                <div style="font-size: 0.75rem; color: #fb923c; font-weight: 700; margin-bottom: 0.4rem;">
+                    🛡️ جلسة دعم فني نشطة
+                </div>
+                <a href="{{ route('impersonate.leave') }}" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: #ea580c; color: #ffffff; text-decoration: none; padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.82rem; font-weight: 800; box-shadow: 0 2px 8px rgba(234, 88, 12, 0.35);">
+                    <span>🔙 رجوع للسوبر أدمن</span>
+                </a>
+            </div>
+        @endif
+
         {{-- User Snippet in Sidebar Footer --}}
         <div class="sidebar-footer">
             <div class="user-snippet">
@@ -158,6 +169,12 @@
             </div>
 
             <div class="topbar-left" style="display:flex; align-items:center; gap:0.6rem;">
+                @if(session()->has('impersonator_id'))
+                    <a href="{{ route('impersonate.leave') }}" style="background: linear-gradient(135deg, #ea580c, #c2410c); color: #ffffff; text-decoration: none; padding: 0.45rem 1rem; border-radius: 8px; font-weight: 800; font-size: 0.82rem; display: inline-flex; align-items: center; gap: 0.4rem; box-shadow: 0 2px 8px rgba(234, 88, 12, 0.4); border: 1px solid #fdba74;">
+                        <span>🔙 العودة للسوبر أدمن</span>
+                    </a>
+                @endif
+
                 <span class="badge badge-neutral" style="font-size:0.82rem; padding:0.4rem 0.8rem;">
                     🗓️ {{ now()->locale('ar')->translatedFormat('l، j F Y') }}
                 </span>

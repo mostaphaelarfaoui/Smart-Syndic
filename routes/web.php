@@ -242,7 +242,7 @@ Route::middleware(['auth:web', 'role:SUPER_ADMIN'])->prefix('platform')->name('s
 });
 
 // ─── Leave Impersonation Session ─────────────────────────────────────────
-Route::post('/impersonate/leave', [SuperAdminController::class, 'leaveImpersonation'])->name('impersonate.leave')->middleware('auth:web');
+Route::match(['get', 'post'], '/impersonate/leave', [SuperAdminController::class, 'leaveImpersonation'])->name('impersonate.leave')->middleware('auth:web');
 
 // ─── Real-Time Notifications Hub ─────────────────────────────────────────
 Route::middleware('auth:web')->prefix('portal/notifications')->name('notifications.')->group(function () {

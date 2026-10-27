@@ -691,26 +691,37 @@ class SuperAdminController extends Controller
     public function leaveImpersonation()
     {
         if (!session()->has('impersonator_id')) {
+            if (auth()->user()?->role === 'SUPER_ADMIN') {
+                return redirect()->route('superadmin.dashboard');
+            }
             return redirect()->route('portal.dashboard');
         }
 
         $superAdminId = session('impersonator_id');
-        $superAdmin = User::findOrFail($superAdminId);
+        $superAdmin = User::find($superAdminId);
+        if (!$superAdmin) {
+            $superAdmin = User::where('role', 'SUPER_ADMIN')->first();
+        }
+
         $impersonatedUser = auth()->user();
 
-        AuditLog::record(
-            actorId: $superAdmin->id,
-            action: 'SUPERADMIN_IMPERSONATE_STOP',
-            targetTenantId: $impersonatedUser?->tenant_id,
-            metadata: [
-                'returned_from_user' => $impersonatedUser?->full_name,
-                'returned_at'        => now()->toDateTimeString(),
-            ]
-        );
+        if ($superAdmin) {
+            AuditLog::record(
+                actorId: $superAdmin->id,
+                action: 'SUPERADMIN_IMPERSONATE_STOP',
+                targetTenantId: $impersonatedUser?->tenant_id,
+                metadata: [
+                    'returned_from_user' => $impersonatedUser?->full_name,
+                    'returned_at'        => now()->toDateTimeString(),
+                ]
+            );
+        }
 
         session()->forget(['impersonator_id', 'impersonator_name']);
 
-        Auth::login($superAdmin);
+        if ($superAdmin) {
+            Auth::login($superAdmin);
+        }
 
         return redirect()->route('superadmin.dashboard')->with('success', 'تم إنهاء وضع الدعم الفني والعودة بنجاح إلى لوحة تحكم السوبر أدمن.');
     }
