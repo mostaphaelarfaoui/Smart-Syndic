@@ -20,12 +20,51 @@
             <span>طباعة التقرير (Print)</span>
         </button>
 
-        <a href="{{ route('superadmin.reports.export-csv') }}" class="btn btn-primary" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); border:none;">
+        <a href="{{ route('superadmin.reports.export-csv', request()->query()) }}" class="btn btn-primary" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); border:none;">
             <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             <span>تصدير تقرير كامل (Excel / CSV)</span>
         </a>
+    </div>
+</div>
+
+{{-- Date Range & Period Filter (Priority 10) --}}
+<div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-body" style="padding:1rem 1.25rem;">
+        <form method="GET" action="{{ route('superadmin.reports.index') }}" style="display:flex; flex-wrap:wrap; align-items:flex-end; gap:1rem;">
+            <div class="form-group" style="margin:0; min-width:180px;">
+                <label class="form-label" style="font-size:0.8rem; margin-bottom:0.35rem;">النطاق الزمني للتقرير</label>
+                <select name="period" class="form-select" onchange="this.form.submit()">
+                    <option value="ALL" {{ request('period', 'ALL') === 'ALL' ? 'selected' : '' }}>كامل المدة (منذ البداية)</option>
+                    <option value="THIS_MONTH" {{ request('period') === 'THIS_MONTH' ? 'selected' : '' }}>الشهر الحالي</option>
+                    <option value="LAST_MONTH" {{ request('period') === 'LAST_MONTH' ? 'selected' : '' }}>الشهر الماضي</option>
+                    <option value="THIS_YEAR" {{ request('period') === 'THIS_YEAR' ? 'selected' : '' }}>السنة الحالية</option>
+                    <option value="CUSTOM" {{ (request('date_from') || request('date_to')) && request('period') !== 'THIS_MONTH' && request('period') !== 'LAST_MONTH' && request('period') !== 'THIS_YEAR' ? 'selected' : '' }}>نطاق مخصص</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin:0;">
+                <label class="form-label" style="font-size:0.8rem; margin-bottom:0.35rem;">من تاريخ</label>
+                <input type="date" name="date_from" value="{{ $summary['date_from'] ?? request('date_from') }}" class="form-input">
+            </div>
+
+            <div class="form-group" style="margin:0;">
+                <label class="form-label" style="font-size:0.8rem; margin-bottom:0.35rem;">إلى تاريخ</label>
+                <input type="date" name="date_to" value="{{ $summary['date_to'] ?? request('date_to') }}" class="form-input">
+            </div>
+
+            <div style="display:flex; gap:0.5rem;">
+                <button type="submit" class="btn btn-primary btn-sm" style="padding:0.6rem 1.25rem;">
+                    تطبيق
+                </button>
+                @if(request()->anyFilled(['period', 'date_from', 'date_to']) && request('period') !== 'ALL')
+                    <a href="{{ route('superadmin.reports.index') }}" class="btn btn-secondary btn-sm" style="padding:0.6rem 1rem;">
+                        إلغاء التصفية
+                    </a>
+                @endif
+            </div>
+        </form>
     </div>
 </div>
 

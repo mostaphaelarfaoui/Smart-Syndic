@@ -200,6 +200,55 @@
     </div>
 </div>
 
+{{-- Visual Analytics & Growth Trends (Priority 3) --}}
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:1.5rem; margin-bottom:1.5rem;">
+    {{-- Growth Chart --}}
+    <div class="card">
+        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <h3 class="card-title">📈 وتيرة نمو المنصة (آخر 6 أشهر)</h3>
+                <p class="card-subtitle">تطور تسجيل الإقامات السكنية والمستخدمين الجدد</p>
+            </div>
+            <div style="display:flex; gap:0.75rem; font-size:0.75rem;">
+                <span style="display:inline-flex; align-items:center; gap:0.35rem;">
+                    <span style="width:10px; height:10px; border-radius:3px; background:#6366f1;"></span>
+                    <span>الإقامات</span>
+                </span>
+                <span style="display:inline-flex; align-items:center; gap:0.35rem;">
+                    <span style="width:10px; height:10px; border-radius:3px; background:#10b981;"></span>
+                    <span>المستخدمون</span>
+                </span>
+            </div>
+        </div>
+        <div class="card-body" style="padding:1.25rem; height:280px; position:relative;">
+            <canvas id="growthChart"></canvas>
+        </div>
+    </div>
+
+    {{-- Financial Turnover Chart --}}
+    <div class="card">
+        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <h3 class="card-title">💰 حجم المعاملات والسيولة (GTV)</h3>
+                <p class="card-subtitle">إجمالي المقبوضات والنفقات المدارة عبر المنصة (بالدرهم المغربي)</p>
+            </div>
+            <div style="display:flex; gap:0.75rem; font-size:0.75rem;">
+                <span style="display:inline-flex; align-items:center; gap:0.35rem;">
+                    <span style="width:10px; height:10px; border-radius:3px; background:#0ea5e9;"></span>
+                    <span>المقبوضات</span>
+                </span>
+                <span style="display:inline-flex; align-items:center; gap:0.35rem;">
+                    <span style="width:10px; height:10px; border-radius:3px; background:#f43f5e;"></span>
+                    <span>المصاريف</span>
+                </span>
+            </div>
+        </div>
+        <div class="card-body" style="padding:1.25rem; height:280px; position:relative;">
+            <canvas id="financialChart"></canvas>
+        </div>
+    </div>
+</div>
+
 {{-- Two Columns: Left = Recent Organizations / Right = Security & Threat Stream --}}
 <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem;">
     {{-- Left: Organizations --}}
@@ -228,7 +277,9 @@
                         @forelse($recentTenants as $tenant)
                             <tr>
                                 <td>
-                                    <div style="font-weight:700;">{{ $tenant->name }}</div>
+                                    <a href="{{ route('superadmin.tenants.show', $tenant->id) }}" style="font-weight:700; color:var(--brand-primary); text-decoration:none;">
+                                        {{ $tenant->name }}
+                                    </a>
                                     <div style="font-size:0.75rem; color:var(--text-muted); font-family:monospace;">{{ substr($tenant->id, 0, 8) }}...</div>
                                 </td>
                                 <td>{{ $tenant->city ?? '—' }}</td>
@@ -473,5 +524,136 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const labels = {!! json_encode($chartLabels) !!};
+    const tenantsData = {!! json_encode($chartTenants) !!};
+    const usersData = {!! json_encode($chartUsers) !!};
+    const paymentsData = {!! json_encode($chartPayments) !!};
+    const expensesData = {!! json_encode($chartExpenses) !!};
+
+    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)';
+    const textColor = isDark ? '#94a3b8' : '#64748b';
+
+    // Chart 1: Growth Trend
+    const ctxGrowth = document.getElementById('growthChart');
+    if (ctxGrowth && typeof Chart !== 'undefined') {
+        new Chart(ctxGrowth, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'الإقامات الجديدة',
+                        data: tenantsData,
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.12)',
+                        borderWidth: 2.5,
+                        fill: true,
+                        tension: 0.35,
+                        pointBackgroundColor: '#6366f1',
+                        pointRadius: 4,
+                    },
+                    {
+                        label: 'المستخدمون الجدد',
+                        data: usersData,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 2.5,
+                        fill: true,
+                        tension: 0.35,
+                        pointBackgroundColor: '#10b981',
+                        pointRadius: 4,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        rtl: true,
+                        titleFont: { family: 'inherit' },
+                        bodyFont: { family: 'inherit' }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: gridColor },
+                        ticks: { color: textColor, font: { family: 'inherit', size: 11 } }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: gridColor },
+                        ticks: { color: textColor, font: { family: 'inherit', size: 11 }, precision: 0 }
+                    }
+                }
+            }
+        });
+    }
+
+    // Chart 2: Financial Turnover
+    const ctxFinancial = document.getElementById('financialChart');
+    if (ctxFinancial && typeof Chart !== 'undefined') {
+        new Chart(ctxFinancial, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'المقبوضات (درهم)',
+                        data: paymentsData,
+                        backgroundColor: '#0ea5e9',
+                        borderRadius: 6,
+                    },
+                    {
+                        label: 'المصاريف (درهم)',
+                        data: expensesData,
+                        backgroundColor: '#f43f5e',
+                        borderRadius: 6,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        rtl: true,
+                        titleFont: { family: 'inherit' },
+                        bodyFont: { family: 'inherit' },
+                        callbacks: {
+                            label: function (context) {
+                                return context.dataset.label + ': ' + Number(context.raw).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) + ' DH';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: textColor, font: { family: 'inherit', size: 11 } }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: gridColor },
+                        ticks: {
+                            color: textColor,
+                            font: { family: 'inherit', size: 11 },
+                            callback: function(val) {
+                                return val >= 1000 ? (val / 1000) + 'k' : val;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
 
 @endsection

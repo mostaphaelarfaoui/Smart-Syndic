@@ -228,4 +228,78 @@
     </div>
 </div>
 
+{{-- Backup Management & Storage Snapshots (Priority 8) --}}
+<div class="card" style="margin-top:1.5rem;">
+    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+        <div>
+            <h3 class="card-title">💾 إدارة النسخ الاحتياطية المحفوظة (Snapshots)</h3>
+            <p class="card-subtitle">قائمة بالنسخ الاحتياطية المتوفرة على السيرفر مع إمكانية التحميل أو الحذف</p>
+        </div>
+        <form method="POST" action="{{ route('superadmin.server.backup.create') }}">
+            @csrf
+            <button type="submit" class="btn btn-primary btn-sm" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); border:none; display:inline-flex; align-items:center; gap:0.4rem; padding:0.55rem 1rem; font-weight:700;">
+                <span>➕</span>
+                <span>إنشاء وحفظ نسخة احتياطية جديدة الآن</span>
+            </button>
+        </form>
+    </div>
+    <div class="card-body" style="padding:0;">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>اسم ملف النسخة</th>
+                        <th>الحجم</th>
+                        <th>تاريخ الإنشاء</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($backupFiles as $backup)
+                        <tr>
+                            <td>
+                                <div style="display:flex; align-items:center; gap:0.5rem;">
+                                    <span style="font-size:1.1rem;">📦</span>
+                                    <strong class="num" style="font-size:0.9rem;">{{ $backup['filename'] }}</strong>
+                                </div>
+                            </td>
+                            <td class="num">
+                                <span class="badge badge-info">{{ $backup['size_mb'] > 0 ? $backup['size_mb'] . ' MB' : $backup['size_kb'] . ' KB' }}</span>
+                            </td>
+                            <td class="num" style="font-size:0.85rem;">
+                                <div>{{ $backup['created_at']->format('Y/m/d H:i') }}</div>
+                                <div style="font-size:0.72rem; color:var(--text-muted);">{{ $backup['created_at']->diffForHumans() }}</div>
+                            </td>
+                            <td>
+                                <div style="display:flex; align-items:center; gap:0.5rem;">
+                                    <a href="{{ route('superadmin.server.backup.download-file', $backup['filename']) }}" class="btn btn-sm btn-secondary" style="font-size:0.75rem;">
+                                        ⬇️ تحميل
+                                    </a>
+                                    <form method="POST" action="{{ route('superadmin.server.backup.delete-file', $backup['filename']) }}"
+                                          data-confirm="هل تؤكد حذف هذه النسخة الاحتياطية نهائياً من السيرفر؟"
+                                          data-confirm-title="حذف نسخة احتياطية"
+                                          data-confirm-type="danger"
+                                          data-confirm-btn="حذف الملف">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-secondary" style="color:#ef4444; font-size:0.75rem;">
+                                            🗑️ حذف
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" style="text-align:center; padding:2.5rem; color:var(--text-muted);">
+                                لا توجد نسخ احتياطية محفوظة حالياً على السيرفر. اضغط على الزر أعلاه لإنشاء أول نسخة وحفظها محلياً.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 @endsection

@@ -2,10 +2,16 @@
 @section('title', 'دليل المستخدمين الشامل')
 
 @section('content')
-<div class="page-header" style="margin-bottom:1.5rem;">
+<div class="page-header" style="margin-bottom:1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
     <div>
         <h1 class="page-title">👥 دليل المستخدمين الشامل</h1>
         <p class="page-subtitle">البحث والتحكم في جميع مستخدمي المنصة — سانديك، ملاك، وسكان</p>
+    </div>
+    <div>
+        <button type="button" class="btn btn-primary" onclick="document.getElementById('modal-create-superadmin').style.display='flex'" style="display:inline-flex; align-items:center; gap:0.4rem; font-weight:700;">
+            <span>➕</span>
+            <span>إضافة مشرف عام (سوبر أدمن) جديد</span>
+        </button>
     </div>
 </div>
 
@@ -281,4 +287,79 @@
         </div>
     @endif
 </div>
+
+{{-- Modal Create Super Admin (Priority 7) --}}
+<div id="modal-create-superadmin" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); backdrop-filter:blur(4px); z-index:99999; align-items:center; justify-content:center; padding:1.5rem;">
+    <div class="card" style="width:100%; max-width:540px; box-shadow:0 20px 40px rgba(0,0,0,0.4); max-height:90vh; overflow-y:auto;">
+        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding:1.25rem 1.5rem;">
+            <div>
+                <h3 class="card-title" style="margin:0; display:flex; align-items:center; gap:0.5rem;">
+                    <span>🛡️</span>
+                    <span>إنشاء حساب مشرف عام (سوبر أدمن) جديد</span>
+                </h3>
+                <p class="card-subtitle" style="margin-top:0.25rem;">يمنح هذا الحساب صلاحيات تحكم كاملة في المنصة والخوادم</p>
+            </div>
+            <button type="button" class="icon-btn" onclick="document.getElementById('modal-create-superadmin').style.display='none'" style="border:none; background:transparent; font-size:1.25rem; color:var(--text-muted); cursor:pointer;">
+                ✕
+            </button>
+        </div>
+
+        <form method="POST" action="{{ route('superadmin.users.create-superadmin') }}" style="padding:1.5rem;">
+            @csrf
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                <div class="form-group" style="margin:0;">
+                    <label class="form-label" style="font-size:0.85rem; margin-bottom:0.35rem;">الاسم الشخصي *</label>
+                    <input type="text" name="first_name" required class="form-input" placeholder="محمد">
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label class="form-label" style="font-size:0.85rem; margin-bottom:0.35rem;">الاسم العائلي *</label>
+                    <input type="text" name="last_name" required class="form-input" placeholder="العلوي">
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                <div class="form-group" style="margin:0;">
+                    <label class="form-label" style="font-size:0.85rem; margin-bottom:0.35rem;">البريد الإلكتروني *</label>
+                    <input type="email" name="email" required class="form-input" placeholder="admin@smartsyndic.ma">
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label class="form-label" style="font-size:0.85rem; margin-bottom:0.35rem;">رقم الهاتف</label>
+                    <input type="tel" name="phone" class="form-input" placeholder="+212 600 000000">
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.25rem;">
+                <div class="form-group" style="margin:0;">
+                    <label class="form-label" style="font-size:0.85rem; margin-bottom:0.35rem;">كلمة المرور * (8 أحرف+)</label>
+                    <input type="password" name="password" required minlength="8" class="form-input">
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label class="form-label" style="font-size:0.85rem; margin-bottom:0.35rem;">تأكيد كلمة المرور *</label>
+                    <input type="password" name="password_confirmation" required minlength="8" class="form-input">
+                </div>
+            </div>
+
+            <div style="background:rgba(239, 68, 68, 0.08); border:1px solid rgba(239,68,68,0.25); border-radius:var(--radius-md); padding:1rem; margin-bottom:1.5rem;">
+                <label class="form-label" style="color:#ef4444; font-weight:700; margin-bottom:0.35rem; font-size:0.85rem;">
+                    🔒 تأكيد أمني: كلمة مرورك الحالية (السوبر أدمن الحالي) *
+                </label>
+                <input type="password" name="current_admin_password" required class="form-input" placeholder="أدخل كلمة مرورك الحالية لتفويض العملية" style="width:100%; border-color:rgba(239,68,68,0.4);">
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.35rem;">
+                    إجراء إلزامي لحماية أمان المنصة ومنع إنشاء حسابات إدارية دون تفويض.
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:0.75rem;">
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('modal-create-superadmin').style.display='none'">
+                    إلغاء
+                </button>
+                <button type="submit" class="btn btn-primary" style="padding:0.6rem 1.5rem; font-weight:700;">
+                    ✓ إنشاء وتفعيل السوبر أدمن
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @endsection

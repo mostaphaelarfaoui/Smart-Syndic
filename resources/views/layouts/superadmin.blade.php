@@ -93,6 +93,13 @@
                 <span>🛡️ الأمان ورصد النصب</span>
             </a>
 
+            <a href="{{ route('superadmin.login-history.index') }}" class="nav-link {{ request()->routeIs('superadmin.login-history.*') ? 'active' : '' }}">
+                <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                </svg>
+                <span>🔑 سجل جلسات الدخول</span>
+            </a>
+
             <a href="{{ route('superadmin.audit.index') }}" class="nav-link {{ request()->routeIs('superadmin.audit.*') ? 'active' : '' }}">
                 <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -121,6 +128,13 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                 </svg>
                 <span>📜 سجل الأخطاء الحي (Logs)</span>
+            </a>
+
+            <a href="{{ route('superadmin.api-stats.index') }}" class="nav-link {{ request()->routeIs('superadmin.api-stats.*') ? 'active' : '' }}">
+                <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                <span>📱 إحصائيات API وتطبيق الهاتف</span>
             </a>
         </nav>
 
@@ -151,6 +165,108 @@
                 <div class="residence-chip">
                     <span style="color:#6366f1;">⚡</span>
                     <span>Smart Syndic Platform</span>
+                </div>
+            </div>
+
+            {{-- Global Search Bar (Priority 5) --}}
+            <div class="topbar-center" style="flex:1; max-width:440px; margin:0 1.25rem; position:relative;" x-data="{
+                open: false,
+                query: '',
+                results: { tenants: [], users: [] },
+                loading: false,
+                async search() {
+                    if (this.query.trim().length < 2) {
+                        this.results = { tenants: [], users: [] };
+                        this.open = false;
+                        return;
+                    }
+                    this.loading = true;
+                    try {
+                        const res = await fetch(`{{ route('superadmin.search') }}?q=` + encodeURIComponent(this.query), {
+                            headers: { 'Accept': 'application/json' }
+                        });
+                        this.results = await res.json();
+                        this.open = true;
+                    } catch(e) {
+                        console.error(e);
+                    } finally {
+                        this.loading = false;
+                    }
+                }
+            }" @click.outside="open = false" @keydown.escape="open = false" @keydown.window.ctrl.k.prevent="$refs.globalSearchInput.focus()">
+                <div style="position:relative;">
+                    <input type="text"
+                           x-ref="globalSearchInput"
+                           x-model="query"
+                           @input.debounce.250ms="search()"
+                           @focus="if(query.trim().length >= 2) open = true"
+                           class="form-input"
+                           placeholder="بحث سريع في الإقامات والمستخدمين..."
+                           style="width:100%; padding-right:2.4rem; padding-left:4.2rem; border-radius:999px; font-size:0.825rem; height:36px; background:var(--bg-main); border:1px solid var(--border-color);">
+                    
+                    <span style="position:absolute; right:0.75rem; top:50%; transform:translateY(-50%); color:var(--text-muted); pointer-events:none;">
+                        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </span>
+
+                    <span style="position:absolute; left:0.6rem; top:50%; transform:translateY(-50%); font-size:0.65rem; color:var(--text-muted); background:var(--bg-card); border:1px solid var(--border-color); padding:0.1rem 0.35rem; border-radius:4px; font-family:monospace;">
+                        Ctrl+K
+                    </span>
+                </div>
+
+                {{-- Dropdown Search Results --}}
+                <div x-show="open"
+                     x-transition
+                     style="position:absolute; top:calc(100% + 6px); right:0; left:0; background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-lg); box-shadow:0 12px 30px rgba(0,0,0,0.35); z-index:99999; max-height:400px; overflow-y:auto; padding:0.5rem; display:none;">
+                    
+                    {{-- Loading Indicator --}}
+                    <div x-show="loading" style="padding:1rem; text-align:center; color:var(--text-muted); font-size:0.8rem;">
+                        <span>جاري البحث في المنصة...</span>
+                    </div>
+
+                    {{-- No Results --}}
+                    <div x-show="!loading && results.tenants.length === 0 && results.users.length === 0" style="padding:1rem; text-align:center; color:var(--text-muted); font-size:0.8rem;">
+                        لا توجد نتائج مطابقة لـ "<span x-text="query"></span>"
+                    </div>
+
+                    {{-- Tenants Results --}}
+                    <template x-if="results.tenants.length > 0">
+                        <div style="margin-bottom:0.5rem;">
+                            <div style="font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; padding:0.25rem 0.5rem;">
+                                🏢 الإقامات السكنية
+                            </div>
+                            <template x-for="t in results.tenants" :key="t.id">
+                                <a :href="t.url" style="display:flex; justify-content:space-between; align-items:center; padding:0.45rem 0.65rem; border-radius:var(--radius-md); text-decoration:none; color:inherit; transition:background 0.15s;" onmouseover="this.style.background='var(--bg-main)'" onmouseout="this.style.background='transparent'">
+                                    <div>
+                                        <div style="font-weight:700; font-size:0.85rem;" x-text="t.name"></div>
+                                        <div style="font-size:0.72rem; color:var(--text-muted);" x-text="t.city"></div>
+                                    </div>
+                                    <span class="badge badge-info" style="font-size:0.65rem;" x-text="t.status"></span>
+                                </a>
+                            </template>
+                        </div>
+                    </template>
+
+                    {{-- Users Results --}}
+                    <template x-if="results.users.length > 0">
+                        <div>
+                            <div style="font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; padding:0.25rem 0.5rem;">
+                                👥 المستخدمون والحسابات
+                            </div>
+                            <template x-for="u in results.users" :key="u.id">
+                                <a :href="u.url" style="display:flex; justify-content:space-between; align-items:center; padding:0.45rem 0.65rem; border-radius:var(--radius-md); text-decoration:none; color:inherit; transition:background 0.15s;" onmouseover="this.style.background='var(--bg-main)'" onmouseout="this.style.background='transparent'">
+                                    <div>
+                                        <div style="font-weight:700; font-size:0.85rem;" x-text="u.name"></div>
+                                        <div style="font-size:0.72rem; color:var(--text-muted);">
+                                            <span x-text="u.email"></span> • <span x-text="u.tenant_name"></span>
+                                        </div>
+                                    </div>
+                                    <span class="badge badge-neutral" style="font-size:0.65rem;" x-text="u.role"></span>
+                                </a>
+                            </template>
+                        </div>
+                    </template>
                 </div>
             </div>
 

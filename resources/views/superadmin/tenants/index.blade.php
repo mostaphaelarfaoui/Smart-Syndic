@@ -60,7 +60,9 @@
                 @forelse($tenants as $tenant)
                     <tr>
                         <td>
-                            <strong style="font-size:0.95rem;">{{ $tenant->name }}</strong>
+                            <a href="{{ route('superadmin.tenants.show', $tenant->id) }}" style="font-weight:700; font-size:0.95rem; color:var(--brand-primary); text-decoration:none;">
+                                {{ $tenant->name }}
+                            </a>
                         </td>
                         <td>
                             <span class="badge badge-neutral">
@@ -92,6 +94,9 @@
                         </td>
                         <td>
                             <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
+                                <a href="{{ route('superadmin.tenants.show', $tenant->id) }}" class="btn btn-sm btn-secondary" style="padding:0.25rem 0.55rem; font-size:0.75rem;" title="عرض تفاصيل الإقامة">
+                                    👁️ تفاصيل
+                                </a>
                                 @if($tenant->status === 'PENDING_APPROVAL')
                                     <form method="POST" action="{{ route('superadmin.tenants.approve', $tenant->id) }}">
                                         @csrf

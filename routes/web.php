@@ -174,9 +174,11 @@ Route::middleware(['auth:web', 'role:ADMIN_SYNDIC,SUPER_ADMIN'])->prefix('portal
 // ─── Super Admin Central Portal ──────────────────────────────────────────
 Route::middleware(['auth:web', 'role:SUPER_ADMIN'])->prefix('platform')->name('superadmin.')->group(function () {
     Route::get('/', [SuperAdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/search', [SuperAdminController::class, 'globalSearch'])->name('search');
     
     // Tenants & Organizations
     Route::get('/tenants', [SuperAdminController::class, 'tenants'])->name('tenants.index');
+    Route::get('/tenants/{id}', [SuperAdminController::class, 'showTenant'])->name('tenants.show');
     Route::post('/tenants/{id}/approve', [SuperAdminController::class, 'approveTenant'])->name('tenants.approve');
     Route::post('/tenants/{id}/reject', [SuperAdminController::class, 'rejectTenant'])->name('tenants.reject');
     Route::post('/tenants/{id}/suspend', [SuperAdminController::class, 'suspendTenant'])->name('tenants.suspend');
@@ -184,6 +186,7 @@ Route::middleware(['auth:web', 'role:SUPER_ADMIN'])->prefix('platform')->name('s
 
     // Global Users Directory
     Route::get('/users', [SuperAdminController::class, 'users'])->name('users.index');
+    Route::post('/users/create-superadmin', [SuperAdminController::class, 'storeSuperAdmin'])->name('users.create-superadmin');
     Route::post('/users/{id}/toggle-status', [SuperAdminController::class, 'toggleUserStatus'])->name('users.toggle-status');
     Route::post('/users/{id}/reset-password', [SuperAdminController::class, 'resetUserPassword'])->name('users.reset-password');
     Route::post('/users/{id}/unblock', [SuperAdminController::class, 'unblockUser'])->name('users.unblock');
@@ -192,9 +195,15 @@ Route::middleware(['auth:web', 'role:SUPER_ADMIN'])->prefix('platform')->name('s
     Route::get('/server', [SuperAdminController::class, 'server'])->name('server.index');
     Route::post('/server/vacuum', [SuperAdminController::class, 'vacuumDb'])->name('server.vacuum');
     Route::get('/server/backup', [SuperAdminController::class, 'backupDb'])->name('server.backup');
+    Route::post('/server/backup/create', [SuperAdminController::class, 'createBackupSnapshot'])->name('server.backup.create');
+    Route::get('/server/backup/download/{filename}', [SuperAdminController::class, 'downloadBackupSnapshot'])->name('server.backup.download-file');
+    Route::delete('/server/backup/{filename}', [SuperAdminController::class, 'deleteBackupSnapshot'])->name('server.backup.delete-file');
+    Route::get('/api-stats', [SuperAdminController::class, 'apiStats'])->name('api-stats.index');
+    Route::delete('/api-stats/tokens/{id}', [SuperAdminController::class, 'revokeApiToken'])->name('api-stats.revoke-token');
 
     // Security, Fraud & Firewall
     Route::get('/security', [SuperAdminController::class, 'security'])->name('security.index');
+    Route::get('/login-history', [SuperAdminController::class, 'loginHistory'])->name('login-history.index');
     Route::post('/security/incidents/{id}/resolve', [SuperAdminController::class, 'resolveIncident'])->name('security.incidents.resolve');
     Route::post('/security/block-ip', [SuperAdminController::class, 'blockIp'])->name('security.block-ip');
     Route::delete('/security/unblock-ip/{id}', [SuperAdminController::class, 'unblockIp'])->name('security.unblock-ip');

@@ -53,8 +53,7 @@
     49 => 'App\\Providers\\AuthServiceProvider',
     50 => 'App\\Providers\\EventServiceProvider',
     51 => 'App\\Providers\\SmartSyndicServiceProvider',
-    52 => 'App\\Providers\\Filament\\SuperAdminPanelProvider',
-    53 => 'App\\Providers\\Filament\\SyndicPanelProvider',
+    52 => 'App\\Providers\\Filament\\SyndicPanelProvider',
   ),
   'eager' => 
   array (
@@ -95,8 +94,7 @@
     34 => 'App\\Providers\\AuthServiceProvider',
     35 => 'App\\Providers\\EventServiceProvider',
     36 => 'App\\Providers\\SmartSyndicServiceProvider',
-    37 => 'App\\Providers\\Filament\\SuperAdminPanelProvider',
-    38 => 'App\\Providers\\Filament\\SyndicPanelProvider',
+    37 => 'App\\Providers\\Filament\\SyndicPanelProvider',
   ),
   'deferred' => 
   array (

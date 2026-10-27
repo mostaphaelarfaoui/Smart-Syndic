@@ -27,7 +27,32 @@
         localStorage.setItem('theme', this.theme);
         document.documentElement.setAttribute('data-theme', this.theme);
     }
-}">
+@if(session()->has('impersonator_id'))
+    <div style="background: linear-gradient(135deg, #7c2d12 0%, #b45309 50%, #d97706 100%); color:#ffffff; padding:0.75rem 1.75rem; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:0.75rem; font-size:0.875rem; font-weight:600; box-shadow:0 4px 20px rgba(180, 83, 9, 0.45); position:sticky; top:0; z-index:999999; border-bottom: 2px solid #fef3c7;">
+        <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+            <span style="display:inline-flex; align-items:center; gap:0.35rem; background:rgba(0,0,0,0.3); padding:0.25rem 0.65rem; border-radius:999px; font-size:0.75rem; letter-spacing:0.02em; border:1px solid rgba(255,255,255,0.2);">
+                <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#ef4444; box-shadow:0 0 8px #ef4444; animation:pulse 1.5s infinite;"></span>
+                <span>وضع الدعم الفني (Impersonation)</span>
+            </span>
+            <span>
+                المشرف <strong style="text-decoration:underline;">{{ session('impersonator_name', 'السوبر أدمن') }}</strong>
+                يتصفح حالياً بصفة: <strong>{{ auth()->user()->full_name }}</strong>
+                ({{ auth()->user()->role === 'ADMIN_SYNDIC' || auth()->user()->role === 'SYNDIC' ? 'مسير سانديك' : (auth()->user()->role === 'RESIDENT' ? 'ساكن' : auth()->user()->role) }})
+                — إقامة: <strong style="color:#fef08a;">{{ auth()->user()->tenant?->name ?? 'بدون إقامة' }}</strong>
+            </span>
+            <span style="font-size:0.75rem; color:#fed7aa; background:rgba(0,0,0,0.2); padding:0.2rem 0.5rem; border-radius:4px;">
+                ⚠️ جميع الإجراءات تُسجَّل أوتوماتيكياً في سجل الرقابة
+            </span>
+        </div>
+        <form method="POST" action="{{ route('impersonate.leave') }}" style="margin:0;">
+            @csrf
+            <button type="submit" style="background:#ffffff; color:#9a3412; border:none; padding:0.45rem 1.1rem; border-radius:8px; font-weight:800; font-size:0.825rem; cursor:pointer; display:inline-flex; align-items:center; gap:0.5rem; box-shadow:0 2px 8px rgba(0,0,0,0.25); transition:all 0.2s ease;">
+                <span>إنهاء الجلسة والعودة للوحة السوبر أدمن</span>
+                <span style="font-size:1rem;">&larr;</span>
+            </button>
+        </form>
+    </div>
+@endif
 
 <div class="app-wrapper">
     {{-- Sidebar Navigation --}}
@@ -116,21 +141,6 @@
 
     {{-- Main Area --}}
     <main class="app-main">
-        @if(session()->has('impersonator_id'))
-            <div style="background: linear-gradient(90deg, #92400e, #b45309, #d97706); color:#ffffff; padding:0.65rem 1.5rem; display:flex; justify-content:space-between; align-items:center; font-size:0.875rem; font-weight:600; box-shadow:0 3px 12px rgba(0,0,0,0.25); position:sticky; top:0; z-index:9999;">
-                <div style="display:flex; align-items:center; gap:0.6rem;">
-                    <span style="font-size:1.2rem;">👤</span>
-                    <span>وضع الدعم الفني: أنت تتصفح حالياً بصفتك السانديك <strong>{{ auth()->user()->full_name }}</strong> (إقامة: <strong>{{ auth()->user()->tenant?->name }}</strong>)</span>
-                </div>
-                <form method="POST" action="{{ route('impersonate.leave') }}" style="margin:0;">
-                    @csrf
-                    <button type="submit" style="background:#ffffff; color:#92400e; border:none; padding:0.35rem 0.9rem; border-radius:6px; font-weight:700; font-size:0.8rem; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; box-shadow:0 2px 4px rgba(0,0,0,0.15); transition:transform 0.15s ease;">
-                        <span>إنهاء التقمص والعودة للسوبر أدمن</span>
-                        <span>&larr;</span>
-                    </button>
-                </form>
-            </div>
-        @endif
 
         {{-- Sticky Topbar --}}
         <header class="app-topbar">

@@ -98,6 +98,17 @@ class AuthController extends Controller
             $request->session()->regenerate();
             $authUser = Auth::guard('web')->user();
 
+            \App\Models\AuditLog::record(
+                actorId: $authUser->id,
+                action: 'USER_LOGIN_SUCCESS',
+                targetTenantId: $authUser->tenant_id,
+                metadata: [
+                    'email'      => $authUser->email,
+                    'role'       => $authUser->role,
+                    'user_agent' => $request->userAgent(),
+                ]
+            );
+
             if (! $authUser->isActive()) {
                 \App\Models\SecurityIncident::log(
                     'SUSPICIOUS_ACCESS',

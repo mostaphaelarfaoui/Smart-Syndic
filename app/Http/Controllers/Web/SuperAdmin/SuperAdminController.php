@@ -65,6 +65,34 @@ class SuperAdminController extends Controller
         // Fraud heuristic alerts
         $fraudAlerts = $fraudDetector->scan();
 
+        // ─── Monthly Growth & Financial Trends (Last 6 Months) ───────────
+        $arabicMonths = [
+            1 => 'يناير', 2 => 'فبراير', 3 => 'مارس', 4 => 'أبريل',
+            5 => 'مايو', 6 => 'يونيو', 7 => 'يوليو', 8 => 'أغسطس',
+            9 => 'سبتمبر', 10 => 'أكتوبر', 11 => 'نوفمبر', 12 => 'ديسمبر'
+        ];
+
+        $chartLabels   = [];
+        $chartTenants  = [];
+        $chartUsers    = [];
+        $chartPayments = [];
+        $chartExpenses = [];
+
+        for ($i = 5; $i >= 0; $i--) {
+            $monthDate = now()->subMonths($i);
+            $startOfMonth = $monthDate->copy()->startOfMonth();
+            $endOfMonth   = $monthDate->copy()->endOfMonth();
+
+            $chartLabels[] = $arabicMonths[$monthDate->month] . ' ' . $monthDate->year;
+            $chartTenants[] = Tenant::whereBetween('created_at', [$startOfMonth, $endOfMonth])->count();
+            $chartUsers[]   = User::whereBetween('created_at', [$startOfMonth, $endOfMonth])->count();
+            $chartPayments[] = (float) Payment::where('status', '!=', 'DRAFT')
+                ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+                ->sum('amount_paid');
+            $chartExpenses[] = (float) Expense::whereBetween('created_at', [$startOfMonth, $endOfMonth])
+                ->sum('amount');
+        }
+
         return view('superadmin.dashboard', compact(
             'totalTenants',
             'activeTenants',
@@ -84,8 +112,59 @@ class SuperAdminController extends Controller
             'blockedUsers',
             'blockedUsersCount',
             'recentIncidents',
-            'fraudAlerts'
+            'fraudAlerts',
+            'chartLabels',
+            'chartTenants',
+            'chartUsers',
+            'chartPayments',
+            'chartExpenses'
         ));
+    }
+
+    public function globalSearch(Request $request)
+    {
+        $q = trim($request->get('q', ''));
+
+        if (strlen($q) < 2) {
+            return response()->json(['tenants' => [], 'users' => []]);
+        }
+
+        $tenants = Tenant::where('name', 'like', "%{$q}%")
+            ->orWhere('city', 'like', "%{$q}%")
+            ->orWhere('invitation_code', 'like', "%{$q}%")
+            ->orWhere('id', 'like', "%{$q}%")
+            ->limit(5)
+            ->get(['id', 'name', 'city', 'status', 'plan_type']);
+
+        $users = User::with('tenant:id,name')
+            ->where(function ($query) use ($q) {
+                $query->where('first_name', 'like', "%{$q}%")
+                      ->orWhere('last_name', 'like', "%{$q}%")
+                      ->orWhere('email', 'like', "%{$q}%")
+                      ->orWhere('phone', 'like', "%{$q}%");
+            })
+            ->limit(6)
+            ->get(['id', 'first_name', 'last_name', 'email', 'role', 'status', 'tenant_id']);
+
+        return response()->json([
+            'tenants' => $tenants->map(fn ($t) => [
+                'id'        => $t->id,
+                'name'      => $t->name,
+                'city'      => $t->city,
+                'status'    => $t->status,
+                'plan'      => $t->plan_type,
+                'url'       => route('superadmin.tenants.show', $t->id),
+            ]),
+            'users'   => $users->map(fn ($u) => [
+                'id'          => $u->id,
+                'name'        => $u->full_name,
+                'email'       => $u->email,
+                'role'        => $u->role,
+                'status'      => $u->status,
+                'tenant_name' => $u->tenant?->name ?? 'بدون إقامة',
+                'url'         => route('superadmin.users.index', ['search' => $u->email]),
+            ]),
+        ]);
     }
 
     public function tenants(Request $request)
@@ -104,6 +183,68 @@ class SuperAdminController extends Controller
 
         return view('superadmin.tenants.index', compact('tenants'));
     }
+
+    public function showTenant($id)
+    {
+        $tenant = Tenant::with([
+            'buildings.apartments.residents',
+            'users' => function ($q) {
+                $q->latest();
+            }
+        ])->findOrFail($id);
+
+        $syndics = $tenant->users->whereIn('role', ['ADMIN_SYNDIC', 'SYNDIC']);
+        $residents = $tenant->users->where('role', 'RESIDENT');
+
+        $totalApartments = 0;
+        $occupiedApartments = 0;
+        $allApartments = [];
+
+        foreach ($tenant->buildings as $b) {
+            foreach ($b->apartments as $apt) {
+                $totalApartments++;
+                if ($apt->residents->isNotEmpty()) {
+                    $occupiedApartments++;
+                }
+                $allApartments[] = $apt;
+            }
+        }
+        $vacantApartments = $totalApartments - $occupiedApartments;
+
+        $totalPayments = Payment::where('tenant_id', $tenant->id)
+            ->where('status', '!=', 'DRAFT')
+            ->sum('amount_paid');
+
+        $totalExpenses = Expense::where('tenant_id', $tenant->id)
+            ->sum('amount');
+
+        $recentPayments = Payment::where('tenant_id', $tenant->id)
+            ->with(['apartment', 'resident'])
+            ->latest('created_at')
+            ->limit(10)
+            ->get();
+
+        $recentAuditLogs = AuditLog::where('target_tenant_id', $tenant->id)
+            ->with('actor')
+            ->latest('created_at')
+            ->limit(15)
+            ->get();
+
+        return view('superadmin.tenants.show', compact(
+            'tenant',
+            'syndics',
+            'residents',
+            'totalApartments',
+            'occupiedApartments',
+            'vacantApartments',
+            'allApartments',
+            'totalPayments',
+            'totalExpenses',
+            'recentPayments',
+            'recentAuditLogs'
+        ));
+    }
+
 
     public function users(Request $request)
     {
@@ -147,6 +288,55 @@ class SuperAdminController extends Controller
             'totalResidentsCount',
             'activeUsersCount'
         ));
+    }
+
+    public function storeSuperAdmin(Request $request)
+    {
+        $request->validate([
+            'first_name'             => 'required|string|max:100',
+            'last_name'              => 'required|string|max:100',
+            'email'                  => 'required|email|unique:users,email',
+            'phone'                  => 'nullable|string|max:30',
+            'password'               => 'required|string|min:8|confirmed',
+            'current_admin_password' => 'required|string',
+        ], [
+            'first_name.required'             => 'الاسم الشخصي مطلوب.',
+            'last_name.required'              => 'الاسم العائلي مطلوب.',
+            'email.required'                  => 'البريد الإلكتروني مطلوب.',
+            'email.unique'                    => 'هذا البريد الإلكتروني مسجل مسبقاً لمستخدم آخر.',
+            'password.required'               => 'كلمة المرور مطلوبة.',
+            'password.min'                    => 'يجب أن لا تقل كلمة المرور عن 8 أحرف.',
+            'password.confirmed'              => 'تأكيد كلمة المرور غير متطابق.',
+            'current_admin_password.required' => 'يرجى إدخال كلمة مرورك الحالية لتأكيد الإجراء الأمني.',
+        ]);
+
+        if (! Hash::check($request->current_admin_password, auth()->user()->password)) {
+            return back()->with('error', 'كلمة مرور المشرف الحالي غير صحيحة. تم إلغاء العملية لأسباب أمنية.');
+        }
+
+        $newAdmin = User::create([
+            'first_name'            => $request->first_name,
+            'last_name'             => $request->last_name,
+            'email'                 => $request->email,
+            'phone'                 => $request->phone,
+            'password'              => Hash::make($request->password),
+            'role'                  => 'SUPER_ADMIN',
+            'status'                => 'ACTIVE',
+            'tenant_id'             => null,
+            'failed_login_attempts' => 0,
+        ]);
+
+        AuditLog::record(
+            actorId: auth()->id(),
+            action: 'SUPERADMIN_CREATED',
+            metadata: [
+                'new_admin_id'    => $newAdmin->id,
+                'new_admin_name'  => $newAdmin->full_name,
+                'new_admin_email' => $newAdmin->email,
+            ]
+        );
+
+        return back()->with('success', "تم إنشاء وتفعيل حساب المشرف العام \"{$newAdmin->full_name}\" بنجاح.");
     }
 
     public function toggleUserStatus($id)
@@ -529,7 +719,26 @@ class SuperAdminController extends Controller
     {
         $health = $healthService->getSystemHealth();
 
-        return view('superadmin.server.index', compact('health'));
+        $backupDir = storage_path('app/backups');
+        if (! file_exists($backupDir)) {
+            @mkdir($backupDir, 0755, true);
+        }
+
+        $backupFiles = [];
+        $files = glob($backupDir . '/*.sqlite');
+        if ($files) {
+            foreach ($files as $f) {
+                $backupFiles[] = [
+                    'filename'   => basename($f),
+                    'size_mb'    => round(filesize($f) / (1024 * 1024), 2),
+                    'size_kb'    => round(filesize($f) / 1024, 1),
+                    'created_at' => \Carbon\Carbon::createFromTimestamp(filemtime($f)),
+                ];
+            }
+            usort($backupFiles, fn ($a, $b) => $b['created_at']->timestamp <=> $a['created_at']->timestamp);
+        }
+
+        return view('superadmin.server.index', compact('health', 'backupFiles'));
     }
 
     public function vacuumDb(ServerHealthService $healthService)
@@ -566,6 +775,120 @@ class SuperAdminController extends Controller
         ]);
     }
 
+    public function createBackupSnapshot()
+    {
+        $dbPath = database_path('database.sqlite');
+        if (! file_exists($dbPath)) {
+            return back()->with('error', 'ملف قاعدة البيانات غير موجود.');
+        }
+
+        $backupDir = storage_path('app/backups');
+        if (! file_exists($backupDir)) {
+            @mkdir($backupDir, 0755, true);
+        }
+
+        $filename = 'backup-' . now()->format('Y-m-d_H-i-s') . '.sqlite';
+        $destPath = $backupDir . '/' . $filename;
+
+        if (! copy($dbPath, $destPath)) {
+            return back()->with('error', 'تعذر حفظ النسخة الاحتياطية على السيرفر.');
+        }
+
+        AuditLog::record(
+            actorId: auth()->id(),
+            action: 'SUPERADMIN_BACKUP_SNAPSHOT_CREATED',
+            metadata: ['filename' => $filename, 'size_bytes' => filesize($destPath)]
+        );
+
+        return back()->with('success', "تم إنشاء وحفظ النسخة الاحتياطية \"{$filename}\" على السيرفر بنجاح.");
+    }
+
+    public function downloadBackupSnapshot($filename)
+    {
+        if (! preg_match('/^[a-zA-Z0-9_\-\.]+\.sqlite$/', $filename)) {
+            abort(403, 'اسم ملف غير صالح.');
+        }
+
+        $filePath = storage_path('app/backups/' . $filename);
+        if (! file_exists($filePath)) {
+            return back()->with('error', 'ملف النسخة الاحتياطية غير موجود.');
+        }
+
+        AuditLog::record(
+            actorId: auth()->id(),
+            action: 'SUPERADMIN_BACKUP_SNAPSHOT_DOWNLOADED',
+            metadata: ['filename' => $filename]
+        );
+
+        return response()->download($filePath, $filename);
+    }
+
+    public function deleteBackupSnapshot($filename)
+    {
+        if (! preg_match('/^[a-zA-Z0-9_\-\.]+\.sqlite$/', $filename)) {
+            abort(403, 'اسم ملف غير صالح.');
+        }
+
+        $filePath = storage_path('app/backups/' . $filename);
+        if (file_exists($filePath)) {
+            @unlink($filePath);
+        }
+
+        AuditLog::record(
+            actorId: auth()->id(),
+            action: 'SUPERADMIN_BACKUP_SNAPSHOT_DELETED',
+            metadata: ['filename' => $filename]
+        );
+
+        return back()->with('success', "تم حذف النسخة الاحتياطية \"{$filename}\" بنجاح.");
+    }
+
+    public function apiStats(Request $request)
+    {
+        $tokensQuery = PersonalAccessToken::with('tokenable.tenant');
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $tokensQuery->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhereHasMorph('tokenable', [User::class], function ($uq) use ($search) {
+                      $uq->where('first_name', 'like', "%{$search}%")
+                         ->orWhere('last_name', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $tokens = $tokensQuery->latest('created_at')->paginate(20)->withQueryString();
+
+        $totalTokensCount = PersonalAccessToken::count();
+        $active24hCount   = PersonalAccessToken::where('last_used_at', '>=', now()->subHours(24))->count();
+        $fcmDevicesCount  = User::whereNotNull('fcm_device_token')->count();
+
+        return view('superadmin.server.api_stats', compact(
+            'tokens',
+            'totalTokensCount',
+            'active24hCount',
+            'fcmDevicesCount'
+        ));
+    }
+
+    public function revokeApiToken($id)
+    {
+        $token = PersonalAccessToken::findOrFail($id);
+        $tokenName = $token->name;
+        $userName = $token->tokenable?->full_name ?? 'مستخدم';
+        $token->delete();
+
+        AuditLog::record(
+            actorId: auth()->id(),
+            action: 'SUPERADMIN_API_TOKEN_REVOKED',
+            metadata: ['token_id' => $id, 'token_name' => $tokenName, 'user_name' => $userName]
+        );
+
+        return back()->with('success', "تم إلغاء وإنهاء جلسة التطبيق المحمول ({$tokenName}) للمستخدم {$userName} بنجاح.");
+    }
+
     public function security(Request $request, FraudDetectorService $fraudDetector)
     {
         $fraudAlerts = $fraudDetector->scan();
@@ -600,6 +923,108 @@ class SuperAdminController extends Controller
 
         return view('superadmin.security.index', compact('fraudAlerts', 'incidents', 'blockedIps', 'blockedUsers', 'counts'));
     }
+
+    public function loginHistory(Request $request)
+    {
+        $status   = $request->get('status', 'ALL');
+        $search   = trim($request->get('search', ''));
+        $dateFrom = $request->get('date_from');
+        $dateTo   = $request->get('date_to');
+
+        $successQuery = AuditLog::with(['actor', 'targetTenant'])
+            ->where('action', 'USER_LOGIN_SUCCESS');
+
+        $incidentQuery = SecurityIncident::with('tenant')
+            ->whereIn('incident_type', ['FAILED_LOGIN', 'LOCKED_LOGIN_ATTEMPT', 'BLOCKED_LOGIN_ATTEMPT', 'BLOCKED_ATTEMPT']);
+
+        if ($search) {
+            $successQuery->where(function ($q) use ($search) {
+                $q->where('ip_address', 'like', "%{$search}%")
+                  ->orWhereHas('actor', function ($uq) use ($search) {
+                      $uq->where('email', 'like', "%{$search}%")
+                         ->orWhere('first_name', 'like', "%{$search}%")
+                         ->orWhere('last_name', 'like', "%{$search}%");
+                  });
+            });
+
+            $incidentQuery->where(function ($q) use ($search) {
+                $q->where('ip_address', 'like', "%{$search}%")
+                  ->orWhere('target_email', 'like', "%{$search}%")
+                  ->orWhere('details', 'like', "%{$search}%");
+            });
+        }
+
+        if ($dateFrom) {
+            $successQuery->whereDate('created_at', '>=', $dateFrom);
+            $incidentQuery->whereDate('created_at', '>=', $dateFrom);
+        }
+
+        if ($dateTo) {
+            $successQuery->whereDate('created_at', '<=', $dateTo);
+            $incidentQuery->whereDate('created_at', '<=', $dateTo);
+        }
+
+        $todaySuccessCount = AuditLog::where('action', 'USER_LOGIN_SUCCESS')->whereDate('created_at', today())->count();
+        $todayFailedCount  = SecurityIncident::where('incident_type', 'FAILED_LOGIN')->whereDate('created_at', today())->count();
+        $blockedUsersCount = User::where('status', 'BLOCKED')->count();
+
+        $records = collect();
+
+        if ($status === 'ALL' || $status === 'SUCCESS') {
+            $successLogs = $successQuery->latest('created_at')->limit(50)->get()->map(function ($log) {
+                return (object) [
+                    'id'           => 'audit_' . $log->id,
+                    'type'         => 'SUCCESS',
+                    'title'        => 'تسجيل دخول ناجح',
+                    'email'        => $log->actor?->email ?? ($log->metadata['email'] ?? '—'),
+                    'user_name'    => $log->actor?->full_name ?? 'مستخدم',
+                    'role'         => $log->actor?->role ?? ($log->metadata['role'] ?? '—'),
+                    'tenant_name'  => $log->targetTenant?->name ?? 'منصة عامة',
+                    'ip_address'   => $log->ip_address,
+                    'user_agent'   => $log->user_agent,
+                    'created_at'   => $log->created_at,
+                    'status_badge' => 'badge-success',
+                ];
+            });
+            $records = $records->merge($successLogs);
+        }
+
+        if ($status === 'ALL' || $status === 'FAILED' || $status === 'BLOCKED') {
+            if ($status === 'BLOCKED') {
+                $incidentQuery->whereIn('incident_type', ['LOCKED_LOGIN_ATTEMPT', 'BLOCKED_LOGIN_ATTEMPT', 'BLOCKED_ATTEMPT']);
+            } elseif ($status === 'FAILED') {
+                $incidentQuery->where('incident_type', 'FAILED_LOGIN');
+            }
+
+            $incidents = $incidentQuery->latest('created_at')->limit(50)->get()->map(function ($inc) {
+                $isBlocked = in_array($inc->incident_type, ['LOCKED_LOGIN_ATTEMPT', 'BLOCKED_LOGIN_ATTEMPT', 'BLOCKED_ATTEMPT']);
+                return (object) [
+                    'id'           => 'inc_' . $inc->id,
+                    'type'         => $isBlocked ? 'BLOCKED' : 'FAILED',
+                    'title'        => $isBlocked ? 'محاولة دخول لحساب مقفل / محظور' : 'كلمة مرور خاطئة (فشل الدخول)',
+                    'email'        => $inc->target_email ?? '—',
+                    'user_name'    => 'غير مسجل أو غير متاح',
+                    'role'         => 'مجهول',
+                    'tenant_name'  => $inc->tenant?->name ?? '—',
+                    'ip_address'   => $inc->ip_address,
+                    'user_agent'   => $inc->user_agent,
+                    'created_at'   => $inc->created_at,
+                    'status_badge' => $isBlocked ? 'badge-danger' : 'badge-warning',
+                ];
+            });
+            $records = $records->merge($incidents);
+        }
+
+        $records = $records->sortByDesc('created_at')->values();
+
+        return view('superadmin.security.login_history', compact(
+            'records',
+            'todaySuccessCount',
+            'todayFailedCount',
+            'blockedUsersCount'
+        ));
+    }
+
 
     public function resolveIncident($id)
     {
@@ -697,10 +1122,38 @@ class SuperAdminController extends Controller
 
     public function reports(Request $request)
     {
+        $dateFrom = $request->get('date_from');
+        $dateTo   = $request->get('date_to');
+        $period   = $request->get('period', 'ALL');
+
+        if ($period === 'THIS_MONTH') {
+            $dateFrom = now()->startOfMonth()->toDateString();
+            $dateTo   = now()->endOfMonth()->toDateString();
+        } elseif ($period === 'LAST_MONTH') {
+            $dateFrom = now()->subMonth()->startOfMonth()->toDateString();
+            $dateTo   = now()->subMonth()->endOfMonth()->toDateString();
+        } elseif ($period === 'THIS_YEAR') {
+            $dateFrom = now()->startOfYear()->toDateString();
+            $dateTo   = now()->endOfYear()->toDateString();
+        }
+
         $tenants = Tenant::withCount(['apartments', 'users'])
-            ->with(['payments' => function ($q) {
+            ->with(['payments' => function ($q) use ($dateFrom, $dateTo) {
                 $q->where('status', '!=', 'DRAFT');
-            }, 'expenses'])
+                if ($dateFrom) {
+                    $q->whereDate('created_at', '>=', $dateFrom);
+                }
+                if ($dateTo) {
+                    $q->whereDate('created_at', '<=', $dateTo);
+                }
+            }, 'expenses' => function ($q) use ($dateFrom, $dateTo) {
+                if ($dateFrom) {
+                    $q->whereDate('created_at', '>=', $dateFrom);
+                }
+                if ($dateTo) {
+                    $q->whereDate('created_at', '<=', $dateTo);
+                }
+            }])
             ->get()
             ->map(function ($tenant) {
                 $totalCollected = $tenant->payments->sum('amount_paid');
@@ -733,17 +1186,36 @@ class SuperAdminController extends Controller
             'total_collected'  => $tenants->sum('total_collected'),
             'total_expenses'   => $tenants->sum('total_expenses'),
             'platform_net'     => $tenants->sum('net_treasury'),
+            'date_from'        => $dateFrom,
+            'date_to'          => $dateTo,
+            'period'           => $period,
         ];
 
         return view('superadmin.reports.index', compact('tenants', 'topCollectedTenants', 'dormantTenants', 'summary'));
     }
 
-    public function exportReportCsv()
+    public function exportReportCsv(Request $request)
     {
+        $dateFrom = $request->get('date_from');
+        $dateTo   = $request->get('date_to');
+
         $tenants = Tenant::withCount(['apartments', 'users'])
-            ->with(['payments' => function ($q) {
+            ->with(['payments' => function ($q) use ($dateFrom, $dateTo) {
                 $q->where('status', '!=', 'DRAFT');
-            }, 'expenses'])
+                if ($dateFrom) {
+                    $q->whereDate('created_at', '>=', $dateFrom);
+                }
+                if ($dateTo) {
+                    $q->whereDate('created_at', '<=', $dateTo);
+                }
+            }, 'expenses' => function ($q) use ($dateFrom, $dateTo) {
+                if ($dateFrom) {
+                    $q->whereDate('created_at', '>=', $dateFrom);
+                }
+                if ($dateTo) {
+                    $q->whereDate('created_at', '<=', $dateTo);
+                }
+            }])
             ->get();
 
         $headers = [
@@ -769,8 +1241,8 @@ class SuperAdminController extends Controller
 
             foreach ($tenants as $t) {
                 $collected = $t->payments->sum('amount_paid');
-                $expenses = $t->expenses->sum('amount');
-                $lastDate = $t->payments->max('created_at');
+                $expenses  = $t->expenses->sum('amount');
+                $lastDate  = $t->payments->max('created_at');
 
                 fputcsv($handle, [
                     $t->name,
@@ -793,16 +1265,107 @@ class SuperAdminController extends Controller
 
     public function auditLogs(Request $request)
     {
-        $query = AuditLog::with('actor');
+        $query = AuditLog::with(['actor', 'targetTenant']);
 
         if ($request->filled('action')) {
             $query->where('action', $request->action);
         }
 
+        if ($request->filled('tenant_id')) {
+            $query->where('target_tenant_id', $request->tenant_id);
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('ip_address', 'like', "%{$search}%")
+                  ->orWhere('action', 'like', "%{$search}%")
+                  ->orWhereHas('actor', function ($uq) use ($search) {
+                      $uq->where('first_name', 'like', "%{$search}%")
+                         ->orWhere('last_name', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($request->has('export') && $request->export === 'csv') {
+            return $this->exportAuditCsv($query->latest('created_at')->limit(3000)->get());
+        }
+
         $logs = $query->latest('created_at')->paginate(30)->withQueryString();
 
-        return view('superadmin.audit.index', compact('logs'));
+        $actions = AuditLog::select('action')->distinct()->orderBy('action')->pluck('action');
+        $tenants = Tenant::orderBy('name')->get(['id', 'name']);
+
+        $totalLogsCount   = AuditLog::count();
+        $impersonateCount = AuditLog::where('action', 'like', '%IMPERSONATE%')->count();
+        $todayLogsCount   = AuditLog::whereDate('created_at', today())->count();
+
+        return view('superadmin.audit.index', compact(
+            'logs',
+            'actions',
+            'tenants',
+            'totalLogsCount',
+            'impersonateCount',
+            'todayLogsCount'
+        ));
     }
+
+    protected function exportAuditCsv($logs)
+    {
+        $filename = 'audit_logs_' . date('Y-m-d_His') . '.csv';
+        $headers = [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Pragma'              => 'no-cache',
+            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires'             => '0',
+        ];
+
+        $callback = function () use ($logs) {
+            $handle = fopen('php://output', 'w');
+            fputs($handle, "\xEF\xBB\xBF");
+
+            fputcsv($handle, [
+                'المعرف',
+                'المستخدم',
+                'البريد الإلكتروني',
+                'نوع العملية',
+                'الإقامة',
+                'عنوان IP',
+                'المتصفح/النظام',
+                'البيانات التفصيلية',
+                'التاريخ والوقت'
+            ]);
+
+            foreach ($logs as $log) {
+                fputcsv($handle, [
+                    $log->id,
+                    $log->actor?->full_name ?? 'النظام الآلي',
+                    $log->actor?->email ?? '—',
+                    $log->action,
+                    $log->targetTenant?->name ?? ($log->target_tenant_id ?: 'منصة عامة'),
+                    $log->ip_address ?? '—',
+                    $log->user_agent ?? '—',
+                    is_array($log->metadata) ? json_encode($log->metadata, JSON_UNESCAPED_UNICODE) : '',
+                    $log->created_at ? $log->created_at->format('Y-m-d H:i:s') : '—',
+                ]);
+            }
+
+            fclose($handle);
+        };
+
+        return Response::stream($callback, 200, $headers);
+    }
+
 
     // ─── Feature 3: Announcements & Broadcasts ───────────────────────────────
     public function announcements(Request $request)
