@@ -1131,21 +1131,27 @@ class SuperAdminController extends Controller
         return response()->download($logPath, 'laravel-' . now()->format('Y-m-d') . '.log');
     }
 
-    public function reports(Request $request)
+    private function getReportData(Request $request): array
     {
         $dateFrom = $request->get('date_from');
         $dateTo   = $request->get('date_to');
         $period   = $request->get('period', 'ALL');
 
+        $periodTitle = 'كامل المدة (منذ انطلاق المنصة)';
         if ($period === 'THIS_MONTH') {
             $dateFrom = now()->startOfMonth()->toDateString();
             $dateTo   = now()->endOfMonth()->toDateString();
+            $periodTitle = 'الشهر الحالي (' . now()->locale('ar')->translatedFormat('F Y') . ')';
         } elseif ($period === 'LAST_MONTH') {
             $dateFrom = now()->subMonth()->startOfMonth()->toDateString();
             $dateTo   = now()->subMonth()->endOfMonth()->toDateString();
+            $periodTitle = 'الشهر الماضي (' . now()->subMonth()->locale('ar')->translatedFormat('F Y') . ')';
         } elseif ($period === 'THIS_YEAR') {
             $dateFrom = now()->startOfYear()->toDateString();
             $dateTo   = now()->endOfYear()->toDateString();
+            $periodTitle = 'السنة الحالية (' . now()->year . ')';
+        } elseif ($dateFrom || $dateTo) {
+            $periodTitle = 'نطاق مخصص من ' . ($dateFrom ?: 'البداية') . ' إلى ' . ($dateTo ?: 'اليوم');
         }
 
         $tenants = Tenant::withCount(['apartments', 'users'])
@@ -1200,34 +1206,74 @@ class SuperAdminController extends Controller
             'date_from'        => $dateFrom,
             'date_to'          => $dateTo,
             'period'           => $period,
+            'period_title'     => $periodTitle,
+            'ref_number'       => 'SSR-' . now()->format('Ymd') . '-' . strtoupper(substr(md5($tenants->count() . now()->toDateString()), 0, 5)),
         ];
 
-        return view('superadmin.reports.index', compact('tenants', 'topCollectedTenants', 'dormantTenants', 'summary'));
+        return [
+            'tenants'             => $tenants,
+            'topCollectedTenants' => $topCollectedTenants,
+            'dormantTenants'      => $dormantTenants,
+            'summary'             => $summary,
+            'periodTitle'         => $periodTitle,
+        ];
+    }
+
+    public function reports(Request $request)
+    {
+        $data = $this->getReportData($request);
+        return view('superadmin.reports.index', $data);
+    }
+
+    public function printReport(Request $request)
+    {
+        $data = $this->getReportData($request);
+        return view('superadmin.reports.printable', $data);
+    }
+
+    public function downloadReportPdf(Request $request)
+    {
+        $data = $this->getReportData($request);
+        $html = view('superadmin.reports.pdf', $data)->render();
+
+        try {
+            if (class_exists(\Mpdf\Mpdf::class)) {
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode'              => 'utf-8',
+                    'format'            => 'A4-L',
+                    'margin_left'       => 10,
+                    'margin_right'      => 10,
+                    'margin_top'        => 12,
+                    'margin_bottom'     => 14,
+                    'autoArabic'        => true,
+                    'autoLangToFont'    => true,
+                    'useSubstitutions'  => true,
+                ]);
+
+                $mpdf->SetDirectionality('rtl');
+                $mpdf->SetDisplayMode('fullpage');
+                $mpdf->WriteHTML($html);
+
+                return response($mpdf->Output('', 'S'), 200, [
+                    'Content-Type'        => 'application/pdf',
+                    'Content-Disposition' => 'attachment; filename="smart-syndic-executive-report-' . now()->format('Y-m-d') . '.pdf"',
+                ]);
+            }
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html);
+            $pdf->setPaper('a4', 'landscape');
+            return $pdf->download('smart-syndic-executive-report-' . now()->format('Y-m-d') . '.pdf');
+
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Platform PDF generation fallback to print view: ' . $e->getMessage());
+            return view('superadmin.reports.printable', array_merge($data, ['autoPrint' => true]));
+        }
     }
 
     public function exportReportCsv(Request $request)
     {
-        $dateFrom = $request->get('date_from');
-        $dateTo   = $request->get('date_to');
-
-        $tenants = Tenant::withCount(['apartments', 'users'])
-            ->with(['payments' => function ($q) use ($dateFrom, $dateTo) {
-                $q->where('status', '!=', 'DRAFT');
-                if ($dateFrom) {
-                    $q->whereDate('created_at', '>=', $dateFrom);
-                }
-                if ($dateTo) {
-                    $q->whereDate('created_at', '<=', $dateTo);
-                }
-            }, 'expenses' => function ($q) use ($dateFrom, $dateTo) {
-                if ($dateFrom) {
-                    $q->whereDate('created_at', '>=', $dateFrom);
-                }
-                if ($dateTo) {
-                    $q->whereDate('created_at', '<=', $dateTo);
-                }
-            }])
-            ->get();
+        $data = $this->getReportData($request);
+        $tenants = $data['tenants'];
 
         $headers = [
             'Content-Type'        => 'text/csv; charset=UTF-8',
@@ -1251,20 +1297,16 @@ class SuperAdminController extends Controller
             ]);
 
             foreach ($tenants as $t) {
-                $collected = $t->payments->sum('amount_paid');
-                $expenses  = $t->expenses->sum('amount');
-                $lastDate  = $t->payments->max('created_at');
-
                 fputcsv($handle, [
                     $t->name,
                     $t->city ?? '-',
                     $t->status,
                     $t->apartments_count,
                     $t->users_count,
-                    number_format($collected, 2, '.', ''),
-                    number_format($expenses, 2, '.', ''),
-                    number_format($collected - $expenses, 2, '.', ''),
-                    $lastDate ? $lastDate->format('Y-m-d H:i') : 'لا توجد حركات',
+                    number_format($t->total_collected, 2, '.', ''),
+                    number_format($t->total_expenses, 2, '.', ''),
+                    number_format($t->net_treasury, 2, '.', ''),
+                    $t->last_payment_date ? \Carbon\Carbon::parse($t->last_payment_date)->format('Y-m-d H:i') : 'لا توجد حركات',
                 ]);
             }
 

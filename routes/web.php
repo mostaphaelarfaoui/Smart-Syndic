@@ -215,6 +215,8 @@ Route::middleware(['auth:web', 'role:SUPER_ADMIN'])->prefix('platform')->name('s
 
     // Platform Intelligence & Executive Reports
     Route::get('/reports', [SuperAdminController::class, 'reports'])->name('reports.index');
+    Route::get('/reports/print', [SuperAdminController::class, 'printReport'])->name('reports.print');
+    Route::get('/reports/pdf', [SuperAdminController::class, 'downloadReportPdf'])->name('reports.pdf');
     Route::get('/reports/export-csv', [SuperAdminController::class, 'exportReportCsv'])->name('reports.export-csv');
 
     // Audit Trail
