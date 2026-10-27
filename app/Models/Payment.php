@@ -60,6 +60,14 @@ class Payment extends Model
         return $this->belongsTo(User::class, 'recorded_by');
     }
 
+    /**
+     * Get the resident associated with this payment via the apartment.
+     */
+    public function getResidentAttribute(): ?User
+    {
+        return $this->apartment?->residents?->first();
+    }
+
     // ─── Signed URL Access ────────────────────────────────────────────
 
     /**

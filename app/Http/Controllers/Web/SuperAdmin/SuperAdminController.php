@@ -219,7 +219,7 @@ class SuperAdminController extends Controller
             ->sum('amount');
 
         $recentPayments = Payment::where('tenant_id', $tenant->id)
-            ->with(['apartment', 'resident'])
+            ->with(['apartment.residents', 'recorder'])
             ->latest('created_at')
             ->limit(10)
             ->get();

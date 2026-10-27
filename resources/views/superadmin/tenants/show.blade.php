@@ -234,7 +234,9 @@
                             <tr>
                                 <td>
                                     <strong>{{ $payment->apartment?->unit_number ? 'شقة ' . $payment->apartment->unit_number : '—' }}</strong>
-                                    <div style="font-size:0.75rem; color:var(--text-muted);">{{ $payment->resident?->full_name }}</div>
+                                    <div style="font-size:0.75rem; color:var(--text-muted);">
+                                        {{ $payment->apartment?->residents?->first()?->full_name ?? ($payment->recorder?->full_name ?? '—') }}
+                                    </div>
                                 </td>
                                 <td class="num" style="font-weight:700; color:#10b981;">
                                     {{ number_format($payment->amount_paid, 2) }} DH
