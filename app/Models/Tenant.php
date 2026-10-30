@@ -32,9 +32,12 @@ class Tenant extends Model implements HasName
         'invitation_code',
         'bank_rib',
         'default_monthly_fee',
+        'payment_due_day',
+        'receipt_footer_note',
         'is_transparency_enabled',
-        // Feature 1 — Syndic stamp image
+        // Feature 1 — Syndic stamp image & logo
         'stamp_image_path',
+        'logo_path',
         // Feature 9 — Opening treasury and bank balances
         'initial_treasury_balance',
         'initial_bank_balance',
@@ -50,6 +53,7 @@ class Tenant extends Model implements HasName
         'subscription_expires_at'  => 'datetime',
         'is_transparency_enabled'  => 'boolean',
         'default_monthly_fee'      => 'decimal:2',
+        'payment_due_day'          => 'integer',
         'initial_treasury_balance' => 'decimal:2',
         'initial_bank_balance'     => 'decimal:2',
         'initial_balance_locked'   => 'boolean',
@@ -149,6 +153,24 @@ class Tenant extends Model implements HasName
         }
 
         return url('storage/' . $this->stamp_image_path);
+    }
+
+    /**
+     * Return a public/signed URL for the residence logo.
+     */
+    public function getLogoUrlAttribute(): ?string
+    {
+        if (! $this->logo_path) {
+            return null;
+        }
+
+        $disk = config('smartsyndic.uploads.storage_disk', 'public');
+        if ($disk === 's3') {
+            $ttl = config('smartsyndic.uploads.signed_url_ttl', 15);
+            return Storage::disk('s3')->temporaryUrl($this->logo_path, now()->addMinutes($ttl));
+        }
+
+        return url('storage/' . $this->logo_path);
     }
 
     // ─── Feature 13: Atomic Receipt Sequence ─────────────────────────

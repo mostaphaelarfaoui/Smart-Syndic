@@ -25,6 +25,7 @@ class _ResidenceSettingsScreenState extends State<ResidenceSettingsScreen> {
   final _nameController = TextEditingController();
   final _cityController = TextEditingController();
   final _feeController = TextEditingController();
+  final _dueDayController = TextEditingController(text: '5');
   final _ribController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
@@ -51,6 +52,7 @@ class _ResidenceSettingsScreenState extends State<ResidenceSettingsScreen> {
     _nameController.dispose();
     _cityController.dispose();
     _feeController.dispose();
+    _dueDayController.dispose();
     _ribController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
@@ -72,6 +74,9 @@ class _ResidenceSettingsScreenState extends State<ResidenceSettingsScreen> {
           
           final fee = tenant['default_monthly_fee'];
           _feeController.text = fee != null ? fee.toString() : '200';
+
+          final dueDay = tenant['payment_due_day'];
+          _dueDayController.text = dueDay != null ? dueDay.toString() : '5';
 
           _isTransparencyEnabled = tenant['is_transparency_enabled'] == true;
           _invitationCode = tenant['invitation_code']?.toString();
@@ -113,6 +118,7 @@ class _ResidenceSettingsScreenState extends State<ResidenceSettingsScreen> {
         'name': _nameController.text.trim(),
         'city': _cityController.text.trim().isNotEmpty ? _cityController.text.trim() : null,
         'default_monthly_fee': fee,
+        'payment_due_day': int.tryParse(_dueDayController.text.trim()) ?? 5,
         'apply_to_existing_apartments': _applyToExistingApartments,
         'bank_rib': cleanRib.isNotEmpty ? cleanRib : null,
         'is_transparency_enabled': _isTransparencyEnabled,
@@ -424,6 +430,27 @@ class _ResidenceSettingsScreenState extends State<ResidenceSettingsScreen> {
               if (v == null || v.trim().isEmpty) return 'الرجاء إدخال الواجب الشهري';
               final fee = double.tryParse(v.trim());
               if (fee == null || fee <= 0) return 'الرجاء إدخال مبلغ صحيح أكبر من 0';
+              return null;
+            },
+          ),
+          const SizedBox(height: 14),
+          TextFormField(
+            controller: _dueDayController,
+            keyboardType: TextInputType.number,
+            style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+            decoration: InputDecoration(
+              labelText: 'يوم الاستحقاق الشهري للأداء',
+              hintText: 'يوم بين 1 و 28 (الافتراضي: 5)',
+              helperText: 'تُعتبر الدفعة متأخرة وتُطلق تنبيهات الأداء بعد حلول هذا اليوم من كل شهر',
+              helperMaxLines: 2,
+              prefixIcon: const Icon(Icons.event_available_outlined, color: AppColors.primary),
+              suffixText: 'من كل شهر',
+              suffixStyle: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: AppColors.textSecondary),
+            ),
+            validator: (v) {
+              if (v == null || v.trim().isEmpty) return 'الرجاء إدخال يوم الاستحقاق';
+              final day = int.tryParse(v.trim());
+              if (day == null || day < 1 || day > 28) return 'يجب أن يكون اليوم بين 1 و 28';
               return null;
             },
           ),

@@ -51,6 +51,9 @@ Route::middleware(['auth:sanctum', 'tenant.scope', 'tenant.active'])->group(func
     Route::put('/auth/profile', [App\Http\Controllers\Api\V1\Auth\ProfileController::class, 'update'])
         ->name('auth.profile-update');
 
+    Route::post('/auth/logout-other-devices', [App\Http\Controllers\Api\V1\Auth\ProfileController::class, 'logoutOtherDevices'])
+        ->name('auth.logout-other-devices');
+
     Route::post('/auth/verify-password', \App\Http\Controllers\Api\V1\Auth\VerifyPasswordController::class)
         ->name('auth.verify-password');
 
@@ -62,6 +65,16 @@ Route::middleware(['auth:sanctum', 'tenant.scope', 'tenant.active'])->group(func
         Route::delete('/{id}', [\App\Http\Controllers\Api\V1\NotificationApiController::class, 'destroy'])->name('api.notifications.destroy');
         Route::delete('/clear-all', [\App\Http\Controllers\Api\V1\NotificationApiController::class, 'clearAll'])->name('api.notifications.clear-all');
     });
+
+    // ─── Platform Announcements API ────────────────────────────────
+    Route::get('/announcements', function (\Illuminate\Http\Request $request) {
+        $user = $request->user();
+        $announcements = \App\Models\PlatformAnnouncement::currentlyActive($user->role, $user->tenant_id)->get();
+        return response()->json([
+            'data'  => $announcements,
+            'count' => $announcements->count(),
+        ]);
+    })->name('api.announcements.index');
 
     // ─── Syndic / Admin Operations ────────────────────────────────
     Route::prefix('syndic')

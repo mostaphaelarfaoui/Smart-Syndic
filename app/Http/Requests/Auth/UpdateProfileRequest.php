@@ -23,9 +23,11 @@ class UpdateProfileRequest extends FormRequest
             'first_name'       => ['sometimes', 'string', 'max:255'],
             'last_name'        => ['sometimes', 'string', 'max:255'],
             'phone'            => ['sometimes', 'string', 'max:20'],
-            'current_password' => ['required_with:password', 'string'],
-            'password'         => ['sometimes', 'string', 'min:8', 'confirmed'],
-            'locale'           => ['sometimes', 'string', 'in:ar,fr,en'],
+            'current_password' => ['required_with:password', 'nullable', 'string'],
+            'password'         => ['required_with:current_password', 'nullable', 'string', 'min:8', 'confirmed'],
+            'locale'                     => ['sometimes', 'string', 'in:ar,fr,en'],
+            'theme_preference'           => ['sometimes', 'string', 'in:light,dark,system'],
+            'notification_preferences'   => ['sometimes', 'array'],
         ];
     }
 
@@ -36,6 +38,7 @@ class UpdateProfileRequest extends FormRequest
     {
         return [
             'current_password.required_with' => 'يرجى إدخال كلمة المرور الحالية لتغيير كلمة المرور.',
+            'password.required_with'         => 'يرجى إدخال كلمة المرور الجديدة وتأكيدها.',
             'password.min'                   => 'يجب أن لا تقل كلمة المرور الجديدة عن 8 أحرف.',
             'password.confirmed'             => 'تأكيد كلمة المرور الجديدة غير متطابق.',
         ];

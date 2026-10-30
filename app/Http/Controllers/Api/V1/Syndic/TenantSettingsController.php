@@ -30,6 +30,7 @@ class TenantSettingsController extends Controller
                 'property_type'             => $tenant->property_type,
                 'bank_rib'                  => $tenant->bank_rib,
                 'default_monthly_fee'       => (float) ($tenant->default_monthly_fee ?? 200.0),
+                'payment_due_day'           => (int) ($tenant->payment_due_day ?? 5),
                 'is_transparency_enabled'   => (bool) $tenant->is_transparency_enabled,
                 'stamp_url'                 => $tenant->stamp_url, // Feature 1
                 'has_stamp'                 => ! empty($tenant->stamp_image_path),
@@ -103,6 +104,7 @@ class TenantSettingsController extends Controller
             'city'                         => ['sometimes', 'nullable', 'string', 'max:100'],
             'bank_rib'                     => ['sometimes', 'nullable', 'string', 'max:34'],
             'default_monthly_fee'          => ['sometimes', 'numeric', 'min:0'],
+            'payment_due_day'              => ['sometimes', 'integer', 'min:1', 'max:28'],
             'apply_to_existing_apartments' => ['sometimes', 'boolean'],
             'is_transparency_enabled'      => ['sometimes', 'boolean'],
             'contact_phone'                => ['sometimes', 'nullable', 'string'],
@@ -117,7 +119,7 @@ class TenantSettingsController extends Controller
 
         $request->validate($rules);
 
-        $updateData = $request->only(['name', 'city', 'bank_rib', 'default_monthly_fee', 'is_transparency_enabled']);
+        $updateData = $request->only(['name', 'city', 'bank_rib', 'default_monthly_fee', 'payment_due_day', 'is_transparency_enabled']);
 
         if ($request->has('contact_phone') || $request->has('contact_email')) {
             $currentContact = is_array($tenant->contact_info) ? $tenant->contact_info : [];
@@ -161,6 +163,7 @@ class TenantSettingsController extends Controller
                 'name'                      => $fresh->name,
                 'bank_rib'                  => $fresh->bank_rib,
                 'default_monthly_fee'       => (float) ($fresh->default_monthly_fee ?? 200.0),
+                'payment_due_day'           => (int) ($fresh->payment_due_day ?? 5),
                 'is_transparency_enabled'   => (bool) $fresh->is_transparency_enabled,
                 'initial_treasury_balance'  => (float) $fresh->initial_treasury_balance,
                 'initial_bank_balance'      => (float) $fresh->initial_bank_balance,

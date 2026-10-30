@@ -59,6 +59,8 @@ class PlatformAnnouncement extends Model
                     $q->orWhere('target_audience', 'SYNDICS_ONLY');
                 } elseif ($userRole === 'RESIDENT') {
                     $q->orWhere('target_audience', 'RESIDENTS_ONLY');
+                } elseif ($userRole === 'SUPER_ADMIN') {
+                    $q->orWhereIn('target_audience', ['SYNDICS_ONLY', 'RESIDENTS_ONLY', 'SPECIFIC_TENANT']);
                 }
 
                 if ($tenantId) {

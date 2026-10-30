@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
-import '../../providers/auth_provider.dart';
 import '../../providers/resident_provider.dart';
 import '../../core/services/api_service.dart';
-import '../settings/server_settings_dialog.dart';
+import '../settings/settings_screen.dart';
 import 'resident_profile_screen.dart';
 import 'tabs/resident_home_tab.dart';
 import 'tabs/resident_payments_tab.dart';
@@ -74,31 +72,6 @@ class _ResidentMainScreenState extends State<ResidentMainScreen> {
     }
   }
 
-  Future<void> _handleLogout() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('تسجيل الخروج', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
-        content: Text('هل أنت متأكد من رغبتك في تسجيل الخروج من حساب الساكن؟', style: GoogleFonts.cairo()),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text('إلغاء', style: GoogleFonts.cairo()),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text('تسجيل الخروج', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && mounted) {
-      Provider.of<ResidentProvider>(context, listen: false).clear();
-      await Provider.of<AuthProvider>(context, listen: false).logout();
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -171,18 +144,20 @@ class _ResidentMainScreenState extends State<ResidentMainScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.person_outline, color: AppColors.primary),
-            tooltip: 'ملفي الشخصي',
+            tooltip: 'ملفي السكني',
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const ResidentProfileScreen()),
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.dns_outlined, color: AppColors.textSecondary),
-            tooltip: 'إعدادات الخادم',
-            onPressed: () => showDialog(
-              context: context,
-              builder: (_) => const ServerSettingsDialog(),
+            icon: const Icon(Icons.settings_outlined, color: AppColors.primary),
+            tooltip: 'الإعدادات',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const SettingsScreen(isSyndic: false),
+              ),
             ),
           ),
           ValueListenableBuilder<bool>(
@@ -190,11 +165,11 @@ class _ResidentMainScreenState extends State<ResidentMainScreen> {
             builder: (context, isActive, child) {
               if (isActive) {
                 return const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  padding: EdgeInsets.symmetric(horizontal: 8.0),
                   child: Center(
                     child: SizedBox(
-                      width: 20,
-                      height: 20,
+                      width: 18,
+                      height: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         color: AppColors.primary,
@@ -205,11 +180,6 @@ class _ResidentMainScreenState extends State<ResidentMainScreen> {
               }
               return const SizedBox.shrink();
             },
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout, color: AppColors.danger),
-            tooltip: 'تسجيل الخروج',
-            onPressed: _handleLogout,
           ),
         ],
       ),

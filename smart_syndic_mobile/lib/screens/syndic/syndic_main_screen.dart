@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
-import '../../providers/auth_provider.dart';
 import '../../providers/syndic_provider.dart';
 import '../../core/services/api_service.dart';
-import '../settings/server_settings_dialog.dart';
-import '../settings/profile_settings_screen.dart';
-import '../settings/stamp_settings_screen.dart'; // Feature 1
-import '../settings/residence_settings_screen.dart';
+import '../settings/settings_screen.dart';
 import 'tabs/syndic_dashboard_tab.dart';
 import 'tabs/syndic_apartments_tab.dart';
 import 'tabs/syndic_payments_tab.dart';
@@ -82,31 +77,6 @@ class _SyndicMainScreenState extends State<SyndicMainScreen> {
     }
   }
 
-  Future<void> _handleLogout() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('تسجيل الخروج', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
-        content: Text('هل أنت متأكد من رغبتك في تسجيل الخروج من حساب السانديك؟', style: GoogleFonts.cairo()),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text('إلغاء', style: GoogleFonts.cairo()),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text('تسجيل الخروج', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && mounted) {
-      Provider.of<SyndicProvider>(context, listen: false).clear();
-      await Provider.of<AuthProvider>(context, listen: false).logout();
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -181,49 +151,17 @@ class _SyndicMainScreenState extends State<SyndicMainScreen> {
               );
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.settings_outlined, color: AppColors.primary),
-            tooltip: 'إعدادات الإقامة والسانديك',
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ResidenceSettingsScreen()),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.person_outline, color: AppColors.primary),
-            tooltip: 'حسابي',
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ProfileSettingsScreen()),
-            ),
-          ),
-          // Feature 1 — Stamp settings
-          IconButton(
-            icon: const Icon(Icons.verified_outlined, color: AppColors.primary),
-            tooltip: 'طابع الإقامة',
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const StampSettingsScreen()),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.dns_outlined, color: AppColors.textSecondary),
-            tooltip: 'إعدادات الخادم',
-            onPressed: () => showDialog(
-              context: context,
-              builder: (_) => const ServerSettingsDialog(),
-            ),
-          ),
+          // Network activity indicator
           ValueListenableBuilder<bool>(
             valueListenable: ApiService().isNetworkActive,
             builder: (context, isActive, child) {
               if (isActive) {
                 return const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  padding: EdgeInsets.symmetric(horizontal: 8.0),
                   child: Center(
                     child: SizedBox(
-                      width: 20,
-                      height: 20,
+                      width: 18,
+                      height: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         color: AppColors.primary,
@@ -235,10 +173,16 @@ class _SyndicMainScreenState extends State<SyndicMainScreen> {
               return const SizedBox.shrink();
             },
           ),
+          // Single unified Settings button
           IconButton(
-            icon: const Icon(Icons.logout, color: AppColors.danger),
-            tooltip: 'تسجيل الخروج',
-            onPressed: _handleLogout,
+            icon: const Icon(Icons.settings_outlined, color: AppColors.primary),
+            tooltip: 'الإعدادات',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const SettingsScreen(isSyndic: true),
+              ),
+            ),
           ),
         ],
       ),

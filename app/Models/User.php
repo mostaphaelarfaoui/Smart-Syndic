@@ -32,6 +32,7 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasDefau
         'password',
         'locale',
         'theme_preference',
+        'notification_preferences',
         'status',
         'fcm_device_token',
         'failed_login_attempts',
@@ -49,11 +50,24 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasDefau
     protected function casts(): array
     {
         return [
-            'password'              => 'hashed',
-            'locked_until'          => 'datetime',
-            'blocked_at'            => 'datetime',
-            'failed_login_attempts' => 'integer',
+            'password'                 => 'hashed',
+            'locked_until'             => 'datetime',
+            'blocked_at'               => 'datetime',
+            'failed_login_attempts'    => 'integer',
+            'notification_preferences' => 'array',
         ];
+    }
+
+    public function wantsNotification(string $key): bool
+    {
+        $prefs = $this->notification_preferences ?? [
+            'payments'      => true,
+            'residents'     => true,
+            'polls'         => true,
+            'announcements' => true,
+        ];
+
+        return (bool) ($prefs[$key] ?? true);
     }
 
     public static function boot(): void

@@ -87,6 +87,9 @@
         <button type="button" @click="activeTab = 'maintenance_msg'" :class="{ 'btn-primary': activeTab === 'maintenance_msg', 'btn-secondary': activeTab !== 'maintenance_msg' }" class="btn" style="padding:0.6rem 1.25rem;">
             🛠️ تخصيص رسالة الصيانة
         </button>
+        <button type="button" @click="activeTab = 'password'" :class="{ 'btn-primary': activeTab === 'password', 'btn-secondary': activeTab !== 'password' }" class="btn" style="padding:0.6rem 1.25rem;">
+            🔐 كلمة مرور حسابي
+        </button>
     </div>
 
     {{-- Global Settings Form --}}
@@ -205,5 +208,53 @@
             </button>
         </div>
     </form>
+
+    {{-- Tab 4: Super Admin Password Change Form --}}
+    <div x-show="activeTab === 'password'" style="display:none;" class="card" style="padding:1.75rem; max-width:650px; margin-top:0.5rem;">
+        <h3 style="font-size:1.15rem; font-weight:800; margin-bottom:0.4rem; display:flex; align-items:center; gap:0.5rem;">
+            <span>🔐</span>
+            <span>تغيير كلمة مرور المشرف العام (Super Admin)</span>
+        </h3>
+        <p style="font-size:0.875rem; color:var(--text-muted); margin-bottom:1.5rem; line-height:1.5;">
+            لأسباب أمنية مشددة، يجب إدخال <strong>كلمة المرور الحالية</strong> لتأكيد هويتك قبل تعيين كلمة مرور جديدة لحسابك.
+        </p>
+
+        @if ($errors->has('current_password'))
+            <div style="background:rgba(239, 68, 68, 0.12); border:1px solid #ef4444; color:#ef4444; padding:0.75rem 1rem; border-radius:8px; margin-bottom:1.25rem; font-size:0.875rem; font-weight:700; display:flex; align-items:center; gap:0.5rem;">
+                <span>⚠️</span>
+                <span>{{ $errors->first('current_password') }}</span>
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('superadmin.settings.password.update') }}">
+            @csrf
+            <div style="margin-bottom:1.25rem;">
+                <label class="form-label" style="font-weight:700; margin-bottom:0.4rem; display:block;">كلمة المرور الحالية <span style="color:#ef4444;">*</span></label>
+                <input type="password" name="current_password" required class="form-input" placeholder="••••••••" style="width:100%;">
+            </div>
+
+            <div style="margin-bottom:1.25rem;">
+                <label class="form-label" style="font-weight:700; margin-bottom:0.4rem; display:block;">كلمة المرور الجديدة (8 أحرف على الأقل) <span style="color:#ef4444;">*</span></label>
+                <input type="password" name="password" required minlength="8" class="form-input" placeholder="••••••••" style="width:100%;">
+                @error('password')
+                    <span style="color:#ef4444; font-size:0.8rem; margin-top:0.35rem; display:block; font-weight:600;">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <div style="margin-bottom:1.75rem;">
+                <label class="form-label" style="font-weight:700; margin-bottom:0.4rem; display:block;">تأكيد كلمة المرور الجديدة <span style="color:#ef4444;">*</span></label>
+                <input type="password" name="password_confirmation" required minlength="8" class="form-input" placeholder="••••••••" style="width:100%;">
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                <span style="font-size:0.8rem; color:var(--text-muted);">
+                    🔒 سيتم إنهاء أي جلسات نشطة أخرى فوراً عند الحفظ.
+                </span>
+                <button type="submit" class="btn btn-primary" style="padding:0.7rem 1.75rem; font-weight:700;">
+                    حفظ وتحديث كلمة المرور 🔐
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 @endsection

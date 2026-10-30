@@ -14,6 +14,7 @@ class ApiConstants {
   static const String registerSyndic = '/auth/register-syndic';
   static const String verifyInviteCode = '/auth/verify-invite-code';
   static const String updateProfile = '/auth/profile';
+  static const String logoutOtherDevices = '/auth/logout-other-devices';
 
   // Syndic endpoints
   static const String syndicKpis = '/syndic/dashboard/kpis';

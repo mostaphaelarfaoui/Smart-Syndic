@@ -167,8 +167,14 @@ Route::middleware(['auth:web', 'role:ADMIN_SYNDIC,SUPER_ADMIN'])->prefix('portal
     // Settings
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.profile.update');
+    Route::post('/settings/password', [SettingsController::class, 'updatePassword'])->name('settings.password.update');
     Route::post('/settings/stamp', [SettingsController::class, 'uploadStamp'])->name('settings.stamp.upload');
     Route::delete('/settings/stamp', [SettingsController::class, 'deleteStamp'])->name('settings.stamp.delete');
+    Route::post('/settings/logo', [SettingsController::class, 'uploadLogo'])->name('settings.logo.upload');
+    Route::delete('/settings/logo', [SettingsController::class, 'deleteLogo'])->name('settings.logo.delete');
+    Route::post('/settings/logout-other-devices', [SettingsController::class, 'logoutOtherDevices'])->name('settings.logout-other-devices');
+    Route::get('/settings/export', [SettingsController::class, 'exportData'])->name('settings.export');
 });
 
 // ─── Super Admin Central Portal ──────────────────────────────────────────
@@ -236,6 +242,7 @@ Route::middleware(['auth:web', 'role:SUPER_ADMIN'])->prefix('platform')->name('s
     // System Settings & Feature Flags (Feature 5)
     Route::get('/settings', [SuperAdminController::class, 'settings'])->name('settings.index');
     Route::post('/settings', [SuperAdminController::class, 'updateSettings'])->name('settings.update');
+    Route::post('/settings/password', [SuperAdminController::class, 'updatePassword'])->name('settings.password.update');
     Route::post('/settings/maintenance/toggle', [SuperAdminController::class, 'toggleMaintenance'])->name('settings.maintenance.toggle');
 
     // Impersonation Support Actions

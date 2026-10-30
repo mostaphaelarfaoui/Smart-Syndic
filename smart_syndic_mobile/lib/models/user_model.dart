@@ -6,6 +6,8 @@ class UserModel {
   final String phone;
   final String role; // 'ADMIN_SYNDIC', 'RESIDENT', 'SUPER_ADMIN'
   final String locale;
+  final String themePreference;
+  final Map<String, dynamic> notificationPreferences;
   final String status;
 
   UserModel({
@@ -16,6 +18,13 @@ class UserModel {
     required this.phone,
     required this.role,
     required this.locale,
+    this.themePreference = 'light',
+    this.notificationPreferences = const {
+      'payments': true,
+      'residents': true,
+      'polls': true,
+      'announcements': true,
+    },
     required this.status,
   });
 
@@ -32,6 +41,15 @@ class UserModel {
       phone: json['phone'] ?? '',
       role: json['role'] ?? 'RESIDENT',
       locale: json['locale'] ?? 'ar',
+      themePreference: json['theme_preference'] ?? 'light',
+      notificationPreferences: json['notification_preferences'] is Map
+          ? Map<String, dynamic>.from(json['notification_preferences'])
+          : const {
+              'payments': true,
+              'residents': true,
+              'polls': true,
+              'announcements': true,
+            },
       status: json['status'] ?? 'ACTIVE',
     );
   }
@@ -45,6 +63,8 @@ class UserModel {
       'phone': phone,
       'role': role,
       'locale': locale,
+      'theme_preference': themePreference,
+      'notification_preferences': notificationPreferences,
       'status': status,
     };
   }

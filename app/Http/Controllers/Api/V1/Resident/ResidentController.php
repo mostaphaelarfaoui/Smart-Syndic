@@ -92,6 +92,14 @@ class ResidentController extends Controller
                 'advance_paid_months' => $balance['advance_paid_months'] ?? [], // Feature 7
                 'is_current_paid'     => $balance['is_current_paid'] ?? true, // Feature 7
             ],
+            'active_announcements' => \App\Models\PlatformAnnouncement::currentlyActive('RESIDENT', $tenant->id)->get()->map(fn ($ann) => [
+                'id'             => $ann->id,
+                'title'          => $ann->title,
+                'message'        => $ann->message,
+                'type'           => $ann->type,
+                'is_dismissible' => (bool) $ann->is_dismissible,
+                'created_at'     => $ann->created_at?->toIso8601String(),
+            ])->values(),
         ]);
     }
 

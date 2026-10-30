@@ -37,6 +37,7 @@ class PdfReceiptService
             'amount_words'   => $this->amountToWords($payment->amount_paid),
             'qr_data'        => $this->generateQrData($payment),
             'stamp_base64'   => $this->getStampBase64($payment->tenant), // Feature 1
+            'logo_base64'    => $this->getLogoBase64($payment->tenant),  // Custom logo
         ];
 
         // Render HTML from Blade template
@@ -141,6 +142,30 @@ class PdfReceiptService
             }
 
             $mime = \Illuminate\Support\Facades\Storage::disk($disk)->mimeType($tenant->stamp_image_path);
+            return 'data:' . $mime . ';base64,' . base64_encode($contents);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /**
+     * Get tenant logo image as base64 for embedding in mPDF.
+     */
+    private function getLogoBase64(\App\Models\Tenant $tenant): ?string
+    {
+        if (empty($tenant->logo_path)) {
+            return null;
+        }
+
+        $disk = config('smartsyndic.uploads.storage_disk', 'public');
+
+        try {
+            $contents = \Illuminate\Support\Facades\Storage::disk($disk)->get($tenant->logo_path);
+            if (! $contents) {
+                return null;
+            }
+
+            $mime = \Illuminate\Support\Facades\Storage::disk($disk)->mimeType($tenant->logo_path);
             return 'data:' . $mime . ';base64,' . base64_encode($contents);
         } catch (\Throwable) {
             return null;

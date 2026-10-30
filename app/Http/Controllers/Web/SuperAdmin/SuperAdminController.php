@@ -20,6 +20,7 @@ use App\Services\Server\ServerHealthService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Response;
 use App\Models\PlatformAnnouncement;
 use App\Models\SystemSetting;
@@ -1478,7 +1479,25 @@ class SuperAdminController extends Controller
             ]
         );
 
-        return back()->with('success', 'تم نشر الإعلان / الإشعار الجماعي بنجاح.');
+        // Instantly synchronize in-app notifications for targeted active users
+        try {
+            $notificationService = app(\App\Services\NotificationService::class);
+            $targetQuery = User::where('status', 'ACTIVE');
+            if ($announcement->target_audience === 'SYNDICS_ONLY') {
+                $targetQuery->whereIn('role', ['ADMIN_SYNDIC', 'SYNDIC']);
+            } elseif ($announcement->target_audience === 'RESIDENTS_ONLY') {
+                $targetQuery->where('role', 'RESIDENT');
+            } elseif ($announcement->target_audience === 'SPECIFIC_TENANT') {
+                $targetQuery->where('tenant_id', $announcement->tenant_id);
+            }
+            foreach ($targetQuery->get() as $targetUser) {
+                $notificationService->syncAnnouncements($targetUser);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Announcement instant sync error: ' . $e->getMessage());
+        }
+
+        return back()->with('success', 'تم نشر الإعلان / الإشعار الجماعي بنجاح وتوجيهه للمستهدفين.');
     }
 
     public function toggleAnnouncement($id)
@@ -1704,6 +1723,44 @@ class SuperAdminController extends Controller
 
         $stateMsg = $newState ? 'تم تفعيل وضع الصيانة العام على المنصة.' : 'تم إلغاء وضع الصيانة وعودة المنصة للعمل الطبيعي.';
         return back()->with('success', $stateMsg);
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => ['required', 'string'],
+            'password'         => ['required', 'string', 'min:8', 'confirmed'],
+        ], [
+            'current_password.required' => 'يرجى إدخال كلمة المرور الحالية.',
+            'password.required'         => 'يرجى إدخال كلمة المرور الجديدة.',
+            'password.min'              => 'يجب أن لا تقل كلمة المرور الجديدة عن 8 أحرف.',
+            'password.confirmed'        => 'تأكيد كلمة المرور الجديدة غير متطابق.',
+        ]);
+
+        $admin = auth()->user();
+
+        if (! Hash::check($request->current_password, $admin->password)) {
+            return back()->withErrors(['current_password' => 'كلمة المرور الحالية غير صحيحة.'])->withInput();
+        }
+
+        $admin->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        PersonalAccessToken::where('tokenable_id', $admin->id)->delete();
+
+        AuditLog::record(
+            actorId: $admin->id,
+            action: 'SUPERADMIN_SELF_PASSWORD_CHANGED',
+            metadata: [
+                'admin_id'    => $admin->id,
+                'admin_email' => $admin->email,
+                'source'      => 'SUPERADMIN_SETTINGS',
+                'ip'          => $request->ip(),
+            ]
+        );
+
+        return back()->with('success', 'تم تغيير كلمة مرور حسابك بنجاح.');
     }
 }
 

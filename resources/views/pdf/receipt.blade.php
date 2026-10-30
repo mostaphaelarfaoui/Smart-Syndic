@@ -170,8 +170,19 @@
         <table class="header-table">
             <tr>
                 <td style="text-align: right; vertical-align: top;">
-                    <div class="header-title">{{ $tenant->name }}</div>
-                    <div class="header-sub">وصل أداء واجب السانديك / Reçu de Cotisation Syndic</div>
+                    <table style="border-collapse:collapse; margin:0; padding:0;">
+                        <tr>
+                            @if(!empty($logo_base64))
+                                <td style="padding-left:10px; vertical-align:middle;">
+                                    <img src="{{ $logo_base64 }}" style="max-height:48px; max-width:80px; object-fit:contain;" alt="شعار" />
+                                </td>
+                            @endif
+                            <td style="vertical-align:middle;">
+                                <div class="header-title">{{ $tenant->name }}</div>
+                                <div class="header-sub">وصل أداء واجب السانديك / Reçu de Cotisation Syndic</div>
+                            </td>
+                        </tr>
+                    </table>
                 </td>
                 <td style="text-align: center; vertical-align: middle; width: 90px;">
                     {{-- Feature 1 — Stamp image (if configured by syndic) --}}
@@ -293,6 +304,11 @@
                 <td class="footer-notice">
                     <strong>وصل رسمي إلكتروني مؤمن صادرة عن منصة Smart Syndic</strong><br>
                     تم التحصيل والتسجيل في سجلات الإقامة بتاريخ {{ $payment->payment_date->format('d/m/Y') }}
+                    @if(!empty($tenant->receipt_footer_note))
+                        <div style="margin-top: 4px; font-size: 8.5px; color: #334155; font-style: italic; border-top: 1px dotted #cbd5e1; padding-top: 2px;">
+                            {{ $tenant->receipt_footer_note }}
+                        </div>
+                    @endif
                 </td>
                 <td class="signature-box">
                     @if(!empty($stamp_base64))

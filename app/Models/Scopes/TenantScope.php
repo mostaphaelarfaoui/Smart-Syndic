@@ -32,6 +32,9 @@ class TenantScope implements Scope
 
         if ($user->tenant_id) {
             $builder->where($model->getTable() . '.tenant_id', $user->tenant_id);
+        } else {
+            // Defensive BOLA: Non-super-admin with no tenant_id must never access tenant resources
+            $builder->whereRaw('1 = 0');
         }
     }
 }

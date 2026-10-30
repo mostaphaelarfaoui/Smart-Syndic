@@ -22,6 +22,11 @@ class NotificationService
         ?string $icon = null,
         array $extra = []
     ): void {
+        $category = $extra['category'] ?? null;
+        if ($category && ! $user->wantsNotification($category)) {
+            return;
+        }
+
         $user->notify(new AppSystemNotification(
             title: $title,
             message: $message,
@@ -122,16 +127,7 @@ class NotificationService
      */
     public function syncAnnouncements(User $user): void
     {
-        $announcements = PlatformAnnouncement::where('is_active', true)
-            ->where(function ($q) use ($user) {
-                $q->where('target_audience', 'ALL');
-                if ($user->isSuperAdmin()) {
-                    $q->orWhere('target_audience', 'SUPERADMIN');
-                } else {
-                    $q->orWhere('target_audience', 'SYNDIC');
-                }
-            })
-            ->get();
+        $announcements = PlatformAnnouncement::currentlyActive($user->role, $user->tenant_id)->get();
 
         foreach ($announcements as $ann) {
             // Check if already notified for this announcement
