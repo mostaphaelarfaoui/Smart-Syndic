@@ -127,6 +127,7 @@ Route::middleware(['auth:web', 'role:ADMIN_SYNDIC,SUPER_ADMIN'])->prefix('portal
     Route::get('/apartments/{id}/history', [ApartmentController::class, 'history'])->name('apartments.history');
     Route::post('/apartments', [ApartmentController::class, 'store'])->name('apartments.store');
     Route::post('/apartments/bulk-generate', [ApartmentController::class, 'bulkGenerate'])->name('apartments.bulk-generate');
+    Route::match(['put', 'post'], '/apartments/{id}', [ApartmentController::class, 'update'])->name('apartments.update');
     Route::post('/apartments/{id}/vacate', [ApartmentController::class, 'vacate'])->name('apartments.vacate');
     Route::post('/apartments/{id}/toggle-billable', [ApartmentController::class, 'toggleBillable'])->name('apartments.toggle-billable');
     Route::delete('/apartments/{id}', [ApartmentController::class, 'destroy'])->name('apartments.destroy');

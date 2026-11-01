@@ -214,6 +214,19 @@ class ApartmentDetailsDialog extends StatelessWidget {
                     ),
                   ),
                   IconButton(
+                    onPressed: () async {
+                      final updated = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => EditApartmentDialog(apartment: apartment),
+                      );
+                      if (updated == true && context.mounted) {
+                        Navigator.pop(context, true);
+                      }
+                    },
+                    icon: const Icon(Icons.edit_outlined, color: Colors.white),
+                    tooltip: 'تعديل الواجب الشهري وبيانات الشقة',
+                  ),
+                  IconButton(
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.close, color: Colors.white),
                   ),

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/api_constants.dart';
+import 'server_discovery_service.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -27,6 +28,7 @@ class ApiService {
 
   String? _token;
   String _baseUrl = ApiConstants.defaultBaseUrl;
+  bool _isDiscovering = false;
 
   String get baseUrl => _baseUrl;
   String? get token => _token;
@@ -35,6 +37,29 @@ class ApiService {
     final prefs = await SharedPreferences.getInstance();
     _token = prefs.getString('auth_token');
     _baseUrl = prefs.getString('custom_base_url') ?? ApiConstants.defaultBaseUrl;
+
+    // In background, verify if server is responsive. If not, auto-discover.
+    if (!kIsWeb) {
+      _verifyOrAutoDiscover();
+    }
+  }
+
+  Future<void> _verifyOrAutoDiscover() async {
+    final isAlive = await ServerDiscoveryService().verifyServer(_baseUrl, timeout: const Duration(seconds: 1));
+    if (!isAlive) {
+      final discovered = await ServerDiscoveryService().discoverServer();
+      if (discovered != null && discovered != _baseUrl) {
+        await setBaseUrl(discovered);
+      }
+    }
+  }
+
+  Future<String?> autoDiscoverAndConnect({Function(String)? onProgress}) async {
+    final discovered = await ServerDiscoveryService().discoverServer(onProgress: onProgress);
+    if (discovered != null) {
+      await setBaseUrl(discovered);
+    }
+    return discovered;
   }
 
   Future<void> setBaseUrl(String newUrl) async {
@@ -87,14 +112,36 @@ class ApiService {
         if (_token != null) 'Authorization': 'Bearer $_token',
       };
 
+  Future<http.Response> _executeWithRetry(Future<http.Response> Function(String currentBase) requestFn) async {
+    try {
+      return await requestFn(_baseUrl);
+    } catch (e) {
+      if (!kIsWeb && !_isDiscovering) {
+        _isDiscovering = true;
+        try {
+          final discovered = await ServerDiscoveryService().discoverServer();
+          if (discovered != null && discovered != _baseUrl) {
+            await setBaseUrl(discovered);
+            return await requestFn(_baseUrl);
+          }
+        } catch (_) {
+        } finally {
+          _isDiscovering = false;
+        }
+      }
+      rethrow;
+    }
+  }
+
   Future<dynamic> get(String endpoint) async {
-    final url = Uri.parse('$_baseUrl$endpoint');
     _startRequest();
     http.Response response;
     try {
-      response = await http.get(url, headers: _headers).timeout(const Duration(seconds: 15));
+      response = await _executeWithRetry(
+        (base) => http.get(Uri.parse('$base$endpoint'), headers: _headers).timeout(const Duration(seconds: 15)),
+      );
     } catch (e) {
-      throw Exception('تعذر الاتصال بالخادم ($_baseUrl): يرجى التأكد من تشغيل السيرفر وعنوان الـ IP.');
+      throw Exception('تعذر الاتصال بالخادم ($_baseUrl): يرجى التأكد من تشغيل السيرفر بنفس شبكة الـ Wi-Fi.');
     } finally {
       _endRequest();
     }
@@ -102,17 +149,18 @@ class ApiService {
   }
 
   Future<dynamic> post(String endpoint, Map<String, dynamic> data) async {
-    final url = Uri.parse('$_baseUrl$endpoint');
     _startRequest();
     http.Response response;
     try {
-      response = await http.post(
-        url,
-        headers: _headers,
-        body: jsonEncode(data),
-      ).timeout(const Duration(seconds: 15));
+      response = await _executeWithRetry(
+        (base) => http.post(
+          Uri.parse('$base$endpoint'),
+          headers: _headers,
+          body: jsonEncode(data),
+        ).timeout(const Duration(seconds: 15)),
+      );
     } catch (e) {
-      throw Exception('تعذر الاتصال بالخادم ($_baseUrl): يرجى التأكد من تشغيل السيرفر وعنوان الـ IP.');
+      throw Exception('تعذر الاتصال بالخادم ($_baseUrl): يرجى التأكد من تشغيل السيرفر بنفس شبكة الـ Wi-Fi.');
     } finally {
       _endRequest();
     }
@@ -120,17 +168,18 @@ class ApiService {
   }
 
   Future<dynamic> put(String endpoint, Map<String, dynamic> data) async {
-    final url = Uri.parse('$_baseUrl$endpoint');
     _startRequest();
     http.Response response;
     try {
-      response = await http.put(
-        url,
-        headers: _headers,
-        body: jsonEncode(data),
-      ).timeout(const Duration(seconds: 15));
+      response = await _executeWithRetry(
+        (base) => http.put(
+          Uri.parse('$base$endpoint'),
+          headers: _headers,
+          body: jsonEncode(data),
+        ).timeout(const Duration(seconds: 15)),
+      );
     } catch (e) {
-      throw Exception('تعذر الاتصال بالخادم ($_baseUrl): يرجى التأكد من تشغيل السيرفر وعنوان الـ IP.');
+      throw Exception('تعذر الاتصال بالخادم ($_baseUrl): يرجى التأكد من تشغيل السيرفر بنفس شبكة الـ Wi-Fi.');
     } finally {
       _endRequest();
     }
@@ -138,16 +187,17 @@ class ApiService {
   }
 
   Future<dynamic> delete(String endpoint) async {
-    final url = Uri.parse('$_baseUrl$endpoint');
     _startRequest();
     http.Response response;
     try {
-      response = await http.delete(
-        url,
-        headers: _headers,
-      ).timeout(const Duration(seconds: 15));
+      response = await _executeWithRetry(
+        (base) => http.delete(
+          Uri.parse('$base$endpoint'),
+          headers: _headers,
+        ).timeout(const Duration(seconds: 15)),
+      );
     } catch (e) {
-      throw Exception('تعذر الاتصال بالخادم ($_baseUrl): يرجى التأكد من تشغيل السيرفر وعنوان الـ IP.');
+      throw Exception('تعذر الاتصال بالخادم ($_baseUrl): يرجى التأكد من تشغيل السيرفر بنفس شبكة الـ Wi-Fi.');
     } finally {
       _endRequest();
     }

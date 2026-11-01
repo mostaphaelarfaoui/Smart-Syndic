@@ -2,11 +2,11 @@ import 'package:flutter/foundation.dart';
 
 class ApiConstants {
   // Default baseUrl. For local testing:
-  // - Android Emulator: 'http://10.0.2.2:8000/api/v1'
-  // - Physical Phone: 'http://192.168.11.203:8000/api/v1'
+  // - Machine Hostname (mDNS, zero config on same Wi-Fi): 'http://sosta-04.local:8000/api/v1'
   // - Windows / Web: 'http://127.0.0.1:8000/api/v1'
+  // - Android Emulator: 'http://10.0.2.2:8000/api/v1'
   static String get defaultBaseUrl =>
-      kIsWeb ? 'http://127.0.0.1:8000/api/v1' : 'http://192.168.11.203:8000/api/v1';
+      kIsWeb ? 'http://127.0.0.1:8000/api/v1' : 'http://sosta-04.local:8000/api/v1';
 
   // Auth endpoints
   static const String login = '/auth/login';

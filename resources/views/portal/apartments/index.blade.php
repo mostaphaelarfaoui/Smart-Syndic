@@ -302,6 +302,20 @@
 
                             <button type="button" 
                                     class="btn btn-sm btn-secondary" 
+                                    style="font-weight:700; font-size:0.82rem; padding:0.4rem 0.65rem; border-radius:8px; display:inline-flex; align-items:center; gap:0.25rem;"
+                                    @click="openEditApartment({
+                                        id: '{{ $apartment->id }}',
+                                        unit_number: '{{ addslashes($apartment->unit_number) }}',
+                                        monthly_fee: {{ (float) $apartment->monthly_fee }},
+                                        is_billable: {{ $apartment->is_billable ? 'true' : 'false' }}
+                                    })"
+                                    title="تعديل الواجب الشهري وبيانات الشقة">
+                                <span>✏️</span>
+                                <span>تعديل</span>
+                            </button>
+
+                            <button type="button" 
+                                    class="btn btn-sm btn-secondary" 
                                     style="font-weight:700; font-size:0.82rem; padding:0.4rem 0.75rem; border-radius:8px; display:inline-flex; align-items:center; gap:0.35rem;"
                                     @click="openApartmentDetails('{{ $apartment->id }}')">
                                 <span>📋 السجل</span>
@@ -430,6 +444,19 @@
                                                 @click="openApartmentDetails('{{ $apartment->id }}')"
                                                 title="عرض سجل الوصولات السنوية">
                                             <span>📋 السجل</span>
+                                        </button>
+
+                                        <button type="button" 
+                                                class="btn btn-sm btn-secondary" 
+                                                style="display:inline-flex; align-items:center; gap:0.25rem; font-weight:700; font-size:0.78rem; padding:0.3rem 0.6rem; border-radius:6px;"
+                                                @click="openEditApartment({
+                                                    id: '{{ $apartment->id }}',
+                                                    unit_number: '{{ addslashes($apartment->unit_number) }}',
+                                                    monthly_fee: {{ (float) $apartment->monthly_fee }},
+                                                    is_billable: {{ $apartment->is_billable ? 'true' : 'false' }}
+                                                })"
+                                                title="تعديل الواجب الشهري للشقة">
+                                            <span>✏️ تعديل</span>
                                         </button>
 
                                         @if($apartment->residents->isNotEmpty())
@@ -874,7 +901,7 @@
 
                     <div class="form-group">
                         <label class="form-label" style="font-weight:700;">الواجب الشهري (درهم)</label>
-                        <input type="number" step="0.01" name="monthly_fee" class="form-control" value="200" required>
+                        <input type="number" step="0.01" name="monthly_fee" class="form-control" value="{{ $defaultMonthlyFee > 0 ? $defaultMonthlyFee : 200 }}" required>
                     </div>
 
                     <div class="form-group">
@@ -924,7 +951,7 @@
 
                     <div class="form-group">
                         <label class="form-label" style="font-weight:700;">الواجب الشهري الموحد (درهم)</label>
-                        <input type="number" step="0.01" name="monthly_fee" class="form-control" value="200" required>
+                        <input type="number" step="0.01" name="monthly_fee" class="form-control" value="{{ $defaultMonthlyFee > 0 ? $defaultMonthlyFee : 200 }}" required>
                     </div>
 
                     <div style="background:var(--bg-secondary); padding:0.85rem 1.1rem; border-radius:10px; border:1px solid var(--border-color); font-size:0.84rem; color:var(--text-secondary);">
@@ -976,8 +1003,19 @@
                             </div>
                             <div>
                                 <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">الواجب الشهري</div>
-                                <div class="num" style="font-weight:900; color:var(--brand-primary); margin-top:4px; font-size:1.05rem;">
-                                    <span x-text="detailsData.apartment.monthly_fee.toFixed(2) + ' د.م'"></span>
+                                <div style="display:flex; align-items:center; gap:0.5rem; margin-top:4px;">
+                                    <span class="num" style="font-weight:900; color:var(--brand-primary); font-size:1.05rem;" x-text="detailsData.apartment.monthly_fee.toFixed(2) + ' د.م'"></span>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-secondary" 
+                                            style="padding:0.15rem 0.5rem; font-size:0.72rem; font-weight:700; border-radius:6px;"
+                                            @click="openEditApartment({
+                                                id: detailsData.apartment.id,
+                                                unit_number: detailsData.apartment.unit_number,
+                                                monthly_fee: detailsData.apartment.monthly_fee,
+                                                is_billable: detailsData.apartment.is_billable
+                                            })">
+                                        ✏️ تعديل
+                                    </button>
                                 </div>
                             </div>
                             <div>
@@ -1098,6 +1136,59 @@
             </div>
         </div>
     </div>
+
+    {{-- Modal 6: Edit Apartment Subscription Fee & Unit Number --}}
+    <div class="modal-overlay" x-show="editModal" x-cloak style="z-index:99995;">
+        <div class="modal-dialog" style="max-width:480px;" @click.away="editModal = false">
+            <div class="modal-header">
+                <div>
+                    <h3 class="modal-title" style="margin:0;">✏️ تعديل واجب واشتراك الشقة</h3>
+                    <p style="margin:0; font-size:0.82rem; color:var(--text-secondary); margin-top:3px;">
+                        تخصيص مبلغ الاشتراك الخاص بهذه الشقة بشكل منفرد
+                    </p>
+                </div>
+                <button type="button" class="icon-btn" @click="editModal = false">✕</button>
+            </div>
+            <form method="POST" :action="editFormAction">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight:700;">رقم أو اسم الشقة</label>
+                        <input type="text" name="unit_number" class="form-control" x-model="editData.unitNumber" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight:700;">
+                            <span>مبلغ الواجب الشهري (درهم)</span>
+                            <span style="font-size:0.75rem; color:var(--text-muted); font-weight:normal; margin-right:6px;">
+                                (الواجب الافتراضي للإقامة: {{ number_format($defaultMonthlyFee, 0) }} د.م)
+                            </span>
+                        </label>
+                        <div class="input-group" style="display:flex; align-items:center;">
+                            <input type="number" step="0.01" min="0" name="monthly_fee" class="form-control num" style="font-weight:800; font-size:1.05rem;" x-model="editData.monthlyFee" required>
+                            <span class="input-group-text" style="background:var(--bg-secondary); border:1px solid var(--border-color); border-right:none; padding:0.55rem 0.85rem; font-weight:700; border-radius:8px 0 0 8px;">د.م / شهرياً</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                            <input type="checkbox" name="is_billable" value="1" x-model="editData.isBillable" style="accent-color:var(--brand-primary);">
+                            <span style="font-weight:700;">الشقة خاضعة لواجبات السانديك (تفعيل الفوترة)</span>
+                        </label>
+                    </div>
+
+                    <div style="background:var(--bg-secondary); padding:0.85rem 1rem; border-radius:10px; border:1px solid var(--border-color); font-size:0.82rem; color:var(--text-secondary); line-height:1.5;">
+                        💡 <strong>ملاحظة هامة:</strong> هذا التعديل يخص هذه الشقة فقط ولا يؤثر على باقي شقق الإقامة. سيتم احتساب الواجبات والمتأخرات القادمة بناءً على هذا المبلغ المحدد.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @click="editModal = false">إلغاء</button>
+                    <button type="submit" class="btn btn-primary" style="font-weight:700;">حفظ التعديل ✓</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 @endsection
@@ -1113,6 +1204,15 @@ function apartmentsPage() {
         detailsModal: false,
         detailsLoading: false,
         detailsData: {},
+
+        editModal: false,
+        editFormAction: '',
+        editData: {
+            id: '',
+            unitNumber: '',
+            monthlyFee: 0,
+            isBillable: true,
+        },
 
         previewModal: false,
         previewModalUrl: '',
@@ -1226,6 +1326,15 @@ function apartmentsPage() {
             this.previewModalUrl = url;
             this.previewDownloadUrl = url + (url.includes('?') ? '&' : '?') + 'download=1';
             this.previewModal = true;
+        },
+
+        openEditApartment(apt) {
+            this.editData.id = apt.id;
+            this.editData.unitNumber = apt.unit_number;
+            this.editData.monthlyFee = parseFloat(apt.monthly_fee) || 0;
+            this.editData.isBillable = apt.is_billable === true || apt.is_billable === 1 || apt.is_billable === '1';
+            this.editFormAction = '{{ url('/portal/apartments') }}/' + apt.id;
+            this.editModal = true;
         },
 
         printPreview() {

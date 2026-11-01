@@ -25,6 +25,16 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
+// ─── Health & Local LAN Discovery Check ───────────────────────────────
+Route::match(['get', 'head'], '/ping', function () {
+    return response()->json([
+        'status' => 'ok',
+        'app' => 'smart_syndic',
+        'server' => gethostname(),
+        'timestamp' => now()->timestamp,
+    ]);
+});
+
 // ─── Public / Authentication (Rate Limited) ───────────────────────────
 Route::prefix('auth')->group(function () {
 

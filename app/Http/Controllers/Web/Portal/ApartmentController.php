@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web\Portal;
 
 use App\Http\Controllers\Controller;
 use App\Models\Apartment;
+use App\Models\AuditLog;
 use App\Models\Building;
 use App\Models\Payment;
 use Illuminate\Http\Request;
@@ -51,6 +52,7 @@ class ApartmentController extends Controller
         $exemptedCount = max(0, $totalCount - $billableCount);
         $collectionRate = $billableCount > 0 ? round(($paidUnitsCount / $billableCount) * 100, 1) : 0;
         $totalArrears = max(0, $expectedMonthly - $thisMonthCollected);
+        $defaultMonthlyFee = (float) ($tenant->default_monthly_fee ?? 0);
 
         // Apartments Tab Query
         $apartmentsQuery = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))
@@ -131,20 +133,26 @@ class ApartmentController extends Controller
             'vacantCount',
             'exemptedCount',
             'collectionRate',
-            'totalArrears'
+            'totalArrears',
+            'defaultMonthlyFee'
         ));
     }
 
     public function store(Request $request)
     {
+        $tenant = auth()->user()->tenant;
         $tenantId = auth()->user()->tenant_id;
 
         $validated = $request->validate([
             'building_id'   => ['required', 'exists:buildings,id'],
             'unit_number'   => ['required', 'string', 'max:50'],
-            'monthly_fee'   => ['required', 'numeric', 'min:0'],
+            'monthly_fee'   => ['nullable', 'numeric', 'min:0'],
             'is_billable'   => ['boolean'],
         ]);
+
+        $fee = $request->filled('monthly_fee')
+            ? (float) $validated['monthly_fee']
+            : (float) ($tenant->default_monthly_fee ?? 0);
 
         // Ensure building belongs to tenant
         $building = Building::where('tenant_id', $tenantId)->findOrFail($validated['building_id']);
@@ -152,11 +160,67 @@ class ApartmentController extends Controller
         $building->apartments()->create([
             'unit_number'  => $validated['unit_number'],
             'floor_number' => 0,
-            'monthly_fee'  => $validated['monthly_fee'],
+            'monthly_fee'  => $fee,
             'is_billable'  => $request->boolean('is_billable', true),
         ]);
 
         return back()->with('success', 'تم إضافة الشقة بنجاح.');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $tenantId = auth()->user()->tenant_id;
+
+        $apartment = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))
+            ->findOrFail($id);
+
+        $validated = $request->validate([
+            'unit_number' => ['required', 'string', 'max:50'],
+            'monthly_fee' => ['required', 'numeric', 'min:0'],
+            'is_billable' => ['nullable', 'boolean'],
+        ], [
+            'unit_number.required' => 'يرجى إدخال رقم الشقة.',
+            'monthly_fee.required' => 'يرجى إدخال مبلغ الواجب الشهري.',
+            'monthly_fee.numeric'  => 'يجب أن يكون مبلغ الواجب الشهري رقماً صحيحاً.',
+            'monthly_fee.min'      => 'لا يمكن أن يكون مبلغ الواجب الشهري سالباً.',
+        ]);
+
+        $oldFee = (float) $apartment->monthly_fee;
+        $newFee = (float) $validated['monthly_fee'];
+
+        $updateData = [
+            'unit_number' => $validated['unit_number'],
+            'monthly_fee' => $newFee,
+        ];
+
+        if ($request->has('is_billable')) {
+            $updateData['is_billable'] = $request->boolean('is_billable');
+        }
+
+        $apartment->update($updateData);
+
+        AuditLog::record(
+            actorId: auth()->id(),
+            action: 'APARTMENT_FEE_UPDATED',
+            targetTenantId: $tenantId,
+            metadata: [
+                'apartment_id' => $apartment->id,
+                'unit_number'  => $apartment->unit_number,
+                'old_fee'      => $oldFee,
+                'new_fee'      => $newFee,
+                'source'       => 'PORTAL_WEB',
+            ]
+        );
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success'   => true,
+                'message'   => "تم تحديث الواجب الشهري للشقة {$apartment->unit_number} بنجاح إلى {$newFee} د.م.",
+                'apartment' => $apartment,
+            ]);
+        }
+
+        return back()->with('success', "تم تحديث الواجب الشهري للشقة {$apartment->unit_number} بنجاح إلى " . number_format($newFee, 0) . " د.م.");
     }
 
     public function bulkGenerate(Request $request)

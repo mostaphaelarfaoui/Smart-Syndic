@@ -125,9 +125,18 @@ class _EditApartmentDialogState extends State<EditApartmentDialog> {
 
                 TextFormField(
                   controller: _monthlyFeeController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'الواجب الشهري (درهم)', prefixIcon: Icon(Icons.payments_outlined)),
-                  validator: (v) => (double.tryParse(v ?? '') ?? 0) < 0 ? 'الواجب غير صحيح' : null,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: InputDecoration(
+                    labelText: 'الواجب الشهري المخصص للشقة (درهم)',
+                    prefixIcon: const Icon(Icons.payments_outlined),
+                    helperText: 'يمكن تحديد واجب شهري خاص بهذه الشقة يختلف عن باقي الإقامة',
+                    helperStyle: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary),
+                  ),
+                  validator: (v) {
+                    final val = double.tryParse(v ?? '');
+                    if (val == null || val < 0) return 'يرجى إدخال مبلغ صحيح (0 أو أكثر)';
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
 

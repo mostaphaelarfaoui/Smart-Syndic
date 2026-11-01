@@ -9,6 +9,7 @@ import '../../../providers/syndic_provider.dart';
 import '../../../widgets/empty_state.dart';
 import '../dialogs/add_apartment_dialog.dart';
 import '../dialogs/apartment_details_dialog.dart';
+import '../dialogs/edit_apartment_dialog.dart';
 
 // Feature 4 helper — toggle billable from apartment list
 extension _BillableToggle on _SyndicApartmentsTabState {
@@ -108,6 +109,18 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
     final uri = Uri.parse('https://wa.me/$cleanPhone?text=$message');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  Future<void> _openEditApartment(BuildContext context, ApartmentModel apt) async {
+    final syndic = Provider.of<SyndicProvider>(context, listen: false);
+    final updated = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => EditApartmentDialog(apartment: apt),
+    );
+    if (updated == true && mounted) {
+      await syndic.fetchApartments();
+      await syndic.fetchDashboardKpis();
     }
   }
 
@@ -389,11 +402,16 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        onTap: () {
-          showDialog(
+        onTap: () async {
+          final syndic = Provider.of<SyndicProvider>(context, listen: false);
+          final res = await showDialog<bool>(
             context: context,
             builder: (_) => ApartmentDetailsDialog(apartment: apt),
           );
+          if (res == true && mounted) {
+            await syndic.fetchApartments();
+            await syndic.fetchDashboardKpis();
+          }
         },
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -561,6 +579,16 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
                   size: 18,
                 ),
                 tooltip: apt.isBillable ? 'إعفاء الشقة من واجبات السانديك' : 'إلغاء الإعفاء وإعادة الفوترة',
+              ),
+
+              // Dedicated Edit Button
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.all(4),
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                onPressed: () => _openEditApartment(context, apt),
+                icon: const Icon(Icons.edit_outlined, color: AppColors.primary, size: 18),
+                tooltip: 'تعديل الواجب الشهري وبيانات الشقة',
               ),
 
               const Icon(Icons.chevron_left, color: AppColors.textLight, size: 18),

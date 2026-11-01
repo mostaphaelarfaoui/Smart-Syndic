@@ -283,8 +283,8 @@ class ApartmentController extends Controller
     {
         $request->validate([
             'unit_number' => ['required', 'string', 'max:50'],
-            'floor'       => ['required', 'integer', 'min:0'],
-            'monthly_fee' => ['required', 'numeric', 'min:0.01', 'max:999999.99'],
+            'floor'       => ['nullable', 'integer', 'min:0'],
+            'monthly_fee' => ['required', 'numeric', 'min:0', 'max:999999.99'],
             'is_billable' => ['nullable', 'boolean'],
         ]);
 
@@ -292,17 +292,36 @@ class ApartmentController extends Controller
         $apartment = Apartment::whereHas('building', fn ($q) => $q->where('tenant_id', $tenantId))
             ->findOrFail($id);
 
+        $oldFee = (float) $apartment->monthly_fee;
+        $newFee = (float) $request->monthly_fee;
+
         $updateData = [
             'unit_number' => $request->unit_number,
-            'floor'       => $request->floor,
-            'monthly_fee' => $request->monthly_fee,
+            'monthly_fee' => $newFee,
         ];
+
+        if ($request->has('floor')) {
+            $updateData['floor'] = (int) $request->floor;
+        }
 
         if ($request->has('is_billable')) {
             $updateData['is_billable'] = $request->boolean('is_billable');
         }
 
         $apartment->update($updateData);
+
+        $this->auditService->log(
+            $request->user()->id,
+            'APARTMENT_FEE_UPDATED',
+            $tenantId,
+            [
+                'apartment_id' => $apartment->id,
+                'unit_number'  => $apartment->unit_number,
+                'old_fee'      => $oldFee,
+                'new_fee'      => $newFee,
+                'source'       => 'MOBILE_API',
+            ]
+        );
 
         return response()->json([
             'message'   => 'تم تحديث بيانات الشقة بنجاح',

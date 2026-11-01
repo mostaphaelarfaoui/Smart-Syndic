@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/services/api_service.dart';
+import '../../core/services/server_discovery_service.dart';
 
 class ServerSettingsDialog extends StatefulWidget {
   const ServerSettingsDialog({super.key});
@@ -13,6 +14,8 @@ class ServerSettingsDialog extends StatefulWidget {
 class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
   late TextEditingController _controller;
   final ApiService _api = ApiService();
+  bool _isSearching = false;
+  String? _searchStatus;
 
   @override
   void initState() {
@@ -24,6 +27,43 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _startAutoDiscovery() async {
+    setState(() {
+      _isSearching = true;
+      _searchStatus = 'بدء البحث في الشبكة...';
+    });
+
+    final discovered = await ServerDiscoveryService().discoverServer(
+      onProgress: (status) {
+        if (mounted) setState(() => _searchStatus = status);
+      },
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _isSearching = false;
+      _searchStatus = null;
+    });
+
+    if (discovered != null) {
+      setState(() => _controller.text = discovered);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('تم العثور على السيرفر بنجاح: $discovered', style: GoogleFonts.cairo()),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('لم يتم العثور على سيرفر نشط في هذه الشبكة. تأكد من تشغيل أمر: php artisan serve --host=0.0.0.0', style: GoogleFonts.cairo()),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+    }
   }
 
   @override
@@ -53,10 +93,35 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
               controller: _controller,
               textDirection: TextDirection.ltr,
               decoration: const InputDecoration(
-                hintText: 'http://10.0.2.2:8000/api/v1',
+                hintText: 'http://sosta-04.local:8000/api/v1',
                 prefixIcon: Icon(Icons.link),
               ),
             ),
+            const SizedBox(height: 14),
+
+            // Auto-Discovery Button
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _isSearching ? null : _startAutoDiscovery,
+                icon: _isSearching
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.radar, color: AppColors.primary),
+                label: Text(
+                  _isSearching ? (_searchStatus ?? 'جاري البحث...') : '🔍 كشف السيرفر تلقائياً في الشبكة',
+                  style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppColors.primary),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                ),
+              ),
+            ),
+
             const SizedBox(height: 16),
             Text(
               'خيارات سريعة:',
@@ -67,9 +132,9 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                _buildQuickChip('حاسوب محلي (127.0.0.1)', 'http://127.0.0.1:8000/api/v1'),
-                _buildQuickChip('شبكة Wi-Fi الحالية (192.168.11.203)', 'http://192.168.11.203:8000/api/v1'),
+                _buildQuickChip('اسم الجهاز (sosta-04.local)', 'http://sosta-04.local:8000/api/v1'),
                 _buildQuickChip('محاكي أندرويد (10.0.2.2)', 'http://10.0.2.2:8000/api/v1'),
+                _buildQuickChip('حاسوب محلي (127.0.0.1)', 'http://127.0.0.1:8000/api/v1'),
               ],
             ),
           ],
@@ -87,13 +152,11 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
               if (!url.startsWith('http://') && !url.startsWith('https://')) {
                 url = 'http://$url';
               }
-              // If port is not specified and no path given, add default dev port :8000
               if (!url.contains(':') || (url.startsWith('http://') && url.indexOf(':', 7) == -1)) {
                 if (!url.contains('/')) {
                   url = '$url:8000';
                 }
               }
-              // Ensure path ends with /api/v1
               if (!url.endsWith('/api/v1')) {
                 url = url.endsWith('/') ? '${url}api/v1' : '$url/api/v1';
               }
