@@ -108,10 +108,17 @@ class MessageController extends Controller
      */
     public function store(Request $request)
     {
+        // Sanitize target_ids to remove empty or null values
+        $rawTargetIds = $request->input('target_ids', []);
+        $targetIds = is_array($rawTargetIds)
+            ? array_values(array_filter($rawTargetIds, fn($id) => !empty($id) && is_string($id)))
+            : [];
+        $request->merge(['target_ids' => $targetIds]);
+
         $validated = $request->validate([
             'target_type'  => ['required', 'in:ALL_RESIDENTS,INDIVIDUAL,GROUP'],
             'target_ids'   => ['nullable', 'array'],
-            'target_ids.*' => ['string'],
+            'target_ids.*' => ['nullable', 'string'],
             'subject'      => ['required', 'string', 'max:255'],
             'body'         => ['required', 'string', 'max:10000'],
             'category'     => ['required', 'in:GENERAL,ANNOUNCEMENT,INQUIRY,COMPLAINT,MAINTENANCE,FINANCIAL'],
@@ -122,14 +129,18 @@ class MessageController extends Controller
             'body.required'        => 'يرجى كتابة نص الرسالة.',
         ]);
 
-        if (in_array($validated['target_type'], ['INDIVIDUAL', 'GROUP'], true) && empty($validated['target_ids'])) {
-            return back()->with('error', 'يرجى اختيار الساكن أو الشقق المستهدفة بالرسالة.');
+        if ($validated['target_type'] === 'ALL_RESIDENTS') {
+            $targetIds = [];
+        } elseif (in_array($validated['target_type'], ['INDIVIDUAL', 'GROUP'], true) && empty($targetIds)) {
+            return back()->with('error', $validated['target_type'] === 'INDIVIDUAL' 
+                ? 'يرجى اختيار الساكن المستهدف بالرسالة.' 
+                : 'يرجى اختيار شقة واحدة على الأقل من قائمة الشقق.');
         }
 
         $message = $this->messageService->sendSyndicToResidents(
             syndic: auth()->user(),
             targetType: $validated['target_type'],
-            targetIds: $validated['target_ids'] ?? [],
+            targetIds: $targetIds,
             subject: $validated['subject'],
             body: $validated['body'],
             category: $validated['category'],

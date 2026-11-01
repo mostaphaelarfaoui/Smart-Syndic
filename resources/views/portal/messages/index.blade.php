@@ -381,7 +381,7 @@
                     {{-- Conditional: Single Resident Selector --}}
                     <div class="form-group" x-show="composeData.targetType === 'INDIVIDUAL'" x-cloak>
                         <label class="form-label" style="font-weight:700;">اختر الساكن المستهدف</label>
-                        <select name="target_ids[]" class="form-select">
+                        <select name="target_ids[]" class="form-select" :disabled="composeData.targetType !== 'INDIVIDUAL'">
                             <option value="">-- اختر الساكن --</option>
                             @foreach($residents as $res)
                                 @php
@@ -405,7 +405,7 @@
                                 <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:0.4rem; margin-bottom:0.75rem;">
                                     @foreach($b->apartments as $apt)
                                         <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.78rem; cursor:pointer; background:var(--bg-surface); padding:0.35rem 0.5rem; border-radius:6px; border:1px solid var(--border-color);">
-                                            <input type="checkbox" name="target_ids[]" value="{{ $apt->id }}" style="accent-color:var(--brand-primary);">
+                                            <input type="checkbox" name="target_ids[]" value="{{ $apt->id }}" style="accent-color:var(--brand-primary);" :disabled="composeData.targetType !== 'GROUP'">
                                             <span>شقة {{ $apt->unit_number }}</span>
                                         </label>
                                     @endforeach

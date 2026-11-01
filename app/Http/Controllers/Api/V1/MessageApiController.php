@@ -116,20 +116,37 @@ class MessageApiController extends Controller
         }
 
         // Syndic sending to Residents
+        $rawTargetIds = $request->input('target_ids', []);
+        $targetIds = is_array($rawTargetIds)
+            ? array_values(array_filter($rawTargetIds, fn($id) => !empty($id) && is_string($id)))
+            : [];
+        $request->merge(['target_ids' => $targetIds]);
+
         $request->validate([
             'target_type'  => ['required', 'in:ALL_RESIDENTS,INDIVIDUAL,GROUP'],
             'target_ids'   => ['nullable', 'array'],
-            'target_ids.*' => ['string'],
+            'target_ids.*' => ['nullable', 'string'],
             'subject'      => ['required', 'string', 'max:255'],
             'body'         => ['required', 'string', 'max:10000'],
             'category'     => ['nullable', 'in:GENERAL,ANNOUNCEMENT,INQUIRY,COMPLAINT,MAINTENANCE,FINANCIAL'],
             'priority'     => ['nullable', 'in:NORMAL,HIGH,URGENT'],
         ]);
 
+        if ($request->target_type === 'ALL_RESIDENTS') {
+            $targetIds = [];
+        } elseif (in_array($request->target_type, ['INDIVIDUAL', 'GROUP'], true) && empty($targetIds)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => $request->target_type === 'INDIVIDUAL' 
+                    ? 'يرجى اختيار الساكن المستهدف.' 
+                    : 'يرجى اختيار شقة واحدة على الأقل.',
+            ], 422);
+        }
+
         $message = $this->messageService->sendSyndicToResidents(
             syndic: $user,
             targetType: $request->target_type,
-            targetIds: $request->target_ids ?? [],
+            targetIds: $targetIds,
             subject: $request->subject,
             body: $request->body,
             category: $request->category ?? 'GENERAL',
