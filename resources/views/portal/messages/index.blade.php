@@ -159,7 +159,7 @@
                                         @if($isInbox)
                                             {{ $isAdmin ? 'الإدارة العامة للمنصة' : $msg->sender?->full_name }}
                                         @else
-                                            إلى: {{ $msg->target_type === 'ALL_RESIDENTS' ? 'كافة سكان الإقامة' : ($msg->target_type === 'GROUP' ? 'مجموعة سكان' : 'ساكن محدد') }}
+                                            إلى: {{ $msg->target_type === 'ALL_RESIDENTS' ? 'كافة سكان الإقامة' : ($msg->target_metadata['recipient_name'] ?? ($msg->target_type === 'GROUP' ? 'مجموعة سكان' : 'ساكن محدد')) }}
                                         @endif
                                     </strong>
                                     @if($isResident && isset($msg->target_metadata['unit_number']))
@@ -217,14 +217,21 @@
                                     {{ $selectedMessage->subject }}
                                 </h3>
                                 <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-top:0.35rem; font-size:0.8rem; color:var(--text-secondary);">
-                                    <span>
-                                        <strong>من:</strong> 
-                                        {{ $selectedMessage->isFromSuperAdmin() ? 'الإدارة العامة للمنصة' : $selectedMessage->sender?->full_name }}
-                                    </span>
+                                    @if($selectedMessage->sender_id === auth()->id())
+                                        <span>
+                                            <strong>إلى:</strong> 
+                                            {{ $selectedMessage->target_type === 'ALL_RESIDENTS' ? 'كافة سكان الإقامة' : ($selectedMessage->target_metadata['recipient_name'] ?? 'ساكن محدد') }}
+                                        </span>
+                                    @else
+                                        <span>
+                                            <strong>من:</strong> 
+                                            {{ $selectedMessage->isFromSuperAdmin() ? 'الإدارة العامة للمنصة' : $selectedMessage->sender?->full_name }}
+                                        </span>
+                                    @endif
                                     @if(isset($selectedMessage->target_metadata['unit_number']))
                                         <span>• شقة <strong>{{ $selectedMessage->target_metadata['unit_number'] }}</strong></span>
                                     @endif
-                                    @if($selectedMessage->sender?->phone)
+                                    @if($selectedMessage->sender_id !== auth()->id() && $selectedMessage->sender?->phone)
                                         <span>• هاتف: <strong class="num">{{ $selectedMessage->sender->phone }}</strong></span>
                                     @endif
                                     <span>• 🕒 {{ $selectedMessage->created_at->format('Y/m/d H:i') }}</span>
@@ -253,8 +260,14 @@
                     @if($selectedMessage->sender_id === auth()->id())
                         <div style="background:var(--bg-secondary); padding:0.85rem 1.1rem; border-radius:10px; border:1px solid var(--border-color); font-size:0.82rem; color:var(--text-secondary); margin-bottom:1.5rem;">
                             📢 <strong>المستهدفون بالرسالة:</strong> 
-                            {{ $selectedMessage->target_type === 'ALL_RESIDENTS' ? 'كافة سكان الإقامة' : ($selectedMessage->target_type === 'GROUP' ? 'مجموعة من الشقق المحددة' : 'ساكن بعينه') }}
-                            (استلمها {{ $selectedMessage->recipients()->count() }} مستخدم).
+                            @if($selectedMessage->target_type === 'ALL_RESIDENTS')
+                                كافة سكان الإقامة
+                            @elseif($selectedMessage->target_type === 'INDIVIDUAL')
+                                {{ $selectedMessage->target_metadata['recipient_name'] ?? 'ساكن محدد' }}
+                            @else
+                                مجموعة شقق ({{ isset($selectedMessage->target_metadata['targeted_units']) ? implode(', ', $selectedMessage->target_metadata['targeted_units']) : 'محددة' }})
+                            @endif
+                            (تم تسليمها لـ {{ $selectedMessage->recipients()->count() }} مستخدم).
                         </div>
                     @endif
 
