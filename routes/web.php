@@ -9,6 +9,7 @@ use App\Http\Controllers\Web\Portal\CommunityController;
 use App\Http\Controllers\Web\Portal\DashboardController;
 use App\Http\Controllers\Web\Portal\ExpenseController;
 use App\Http\Controllers\Web\Portal\FinancialReportController;
+use App\Http\Controllers\Web\Portal\MessageController;
 use App\Http\Controllers\Web\Portal\PaymentController;
 use App\Http\Controllers\Web\Portal\ResidentController;
 use App\Http\Controllers\Web\Portal\SettingsController;
@@ -164,6 +165,15 @@ Route::middleware(['auth:web', 'role:ADMIN_SYNDIC,SUPER_ADMIN'])->prefix('portal
     Route::post('/community/suggestions/{id}/convert-to-poll', [CommunityController::class, 'convertToPoll'])->name('community.suggestions.convert');
     Route::post('/community/polls', [CommunityController::class, 'storePoll'])->name('community.polls.store');
     Route::post('/community/polls/{id}/toggle', [CommunityController::class, 'togglePoll'])->name('community.polls.toggle');
+
+    // Messages & Communication Center (Super Admin Broadcasts, Resident-Syndic Messaging)
+    Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
+    Route::post('/messages', [MessageController::class, 'store'])->name('messages.store');
+    Route::post('/messages/{id}/reply', [MessageController::class, 'reply'])->name('messages.reply');
+    Route::post('/messages/{id}/read', [MessageController::class, 'markAsRead'])->name('messages.read');
+    Route::post('/messages/mark-all-read', [MessageController::class, 'markAllAsRead'])->name('messages.mark-all-read');
+    Route::get('/messages/quick-list', [MessageController::class, 'quickList'])->name('messages.quick-list');
+    Route::get('/messages/unread-count', [MessageController::class, 'unreadCount'])->name('messages.unread-count');
 
     // Settings
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');

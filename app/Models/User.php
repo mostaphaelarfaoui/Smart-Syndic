@@ -166,6 +166,28 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasDefau
         return $this->hasMany(PollVote::class);
     }
 
+    public function sentMessages(): HasMany
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    public function messageRecipients(): HasMany
+    {
+        return $this->hasMany(MessageRecipient::class, 'user_id');
+    }
+
+    public function receivedMessages(): BelongsToMany
+    {
+        return $this->belongsToMany(Message::class, 'message_recipients')
+            ->withPivot('is_read', 'read_at', 'is_archived')
+            ->withTimestamps();
+    }
+
+    public function unreadMessagesCount(): int
+    {
+        return $this->messageRecipients()->where('is_read', false)->where('is_archived', false)->count();
+    }
+
     // ─── Role Helpers ─────────────────────────────────────────────────
 
     public function isSuperAdmin(): bool

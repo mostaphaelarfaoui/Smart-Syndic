@@ -8,6 +8,7 @@ import 'providers/auth_provider.dart';
 import 'providers/syndic_provider.dart';
 import 'providers/resident_provider.dart';
 import 'providers/notification_provider.dart';
+import 'providers/message_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/syndic/syndic_main_screen.dart';
 import 'screens/resident/resident_main_screen.dart';
@@ -28,6 +29,7 @@ class SmartSyndicApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SyndicProvider()),
         ChangeNotifierProvider(create: (_) => ResidentProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) => MessageProvider()),
       ],
       child: MaterialApp(
         title: 'Smart Syndic - سمارت سانديك',

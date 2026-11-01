@@ -1479,22 +1479,11 @@ class SuperAdminController extends Controller
             ]
         );
 
-        // Instantly synchronize in-app notifications for targeted active users
+        // Instantly deliver as official platform messages to targeted users
         try {
-            $notificationService = app(\App\Services\NotificationService::class);
-            $targetQuery = User::where('status', 'ACTIVE');
-            if ($announcement->target_audience === 'SYNDICS_ONLY') {
-                $targetQuery->whereIn('role', ['ADMIN_SYNDIC', 'SYNDIC']);
-            } elseif ($announcement->target_audience === 'RESIDENTS_ONLY') {
-                $targetQuery->where('role', 'RESIDENT');
-            } elseif ($announcement->target_audience === 'SPECIFIC_TENANT') {
-                $targetQuery->where('tenant_id', $announcement->tenant_id);
-            }
-            foreach ($targetQuery->get() as $targetUser) {
-                $notificationService->syncAnnouncements($targetUser);
-            }
+            app(\App\Services\MessageService::class)->sendSuperAdminAnnouncement($announcement);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('Announcement instant sync error: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::warning('Announcement message delivery error: ' . $e->getMessage());
         }
 
         return back()->with('success', 'تم نشر الإعلان / الإشعار الجماعي بنجاح وتوجيهه للمستهدفين.');

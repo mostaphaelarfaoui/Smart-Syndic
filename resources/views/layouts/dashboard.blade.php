@@ -107,6 +107,19 @@
                 <span>التقارير والإحصائيات</span>
             </a>
 
+            <a href="{{ route('portal.messages.index') }}" class="nav-link {{ request()->routeIs('portal.messages.*') ? 'active' : '' }}">
+                <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span>الرسائل والمحادثات</span>
+                @php
+                    $unreadMsgNavCount = auth()->user()?->unreadMessagesCount() ?? 0;
+                @endphp
+                @if($unreadMsgNavCount > 0)
+                    <span class="badge badge-primary num" style="margin-right:auto; font-size:0.7rem; padding:0.12rem 0.45rem; border-radius:999px;">{{ $unreadMsgNavCount }}</span>
+                @endif
+            </a>
+
             <a href="{{ route('portal.settings.index') }}" class="nav-link {{ request()->routeIs('portal.settings.*') ? 'active' : '' }}">
                 <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -179,6 +192,9 @@
                     🗓️ {{ now()->locale('ar')->translatedFormat('l، j F Y') }}
                 </span>
 
+                {{-- In-App Messages Center Icon --}}
+                <x-messages-bell />
+
                 {{-- In-App Notification Bell --}}
                 <x-notification-bell />
 
@@ -200,8 +216,6 @@
 
         {{-- Main Page Content --}}
         <div class="app-content">
-            {{-- Prominent Platform Announcements Banner --}}
-            <x-platform-announcements />
 
             {{-- Flash Messages --}}
             @if(session('success'))

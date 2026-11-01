@@ -76,6 +76,16 @@ Route::middleware(['auth:sanctum', 'tenant.scope', 'tenant.active'])->group(func
         Route::delete('/clear-all', [\App\Http\Controllers\Api\V1\NotificationApiController::class, 'clearAll'])->name('api.notifications.clear-all');
     });
 
+    // ─── Messaging & Communication Center API ──────────────────────
+    Route::prefix('messages')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\V1\MessageApiController::class, 'index'])->name('api.messages.index');
+        Route::post('/', [\App\Http\Controllers\Api\V1\MessageApiController::class, 'store'])->name('api.messages.store');
+        Route::get('/{id}', [\App\Http\Controllers\Api\V1\MessageApiController::class, 'show'])->name('api.messages.show');
+        Route::post('/{id}/reply', [\App\Http\Controllers\Api\V1\MessageApiController::class, 'reply'])->name('api.messages.reply');
+        Route::post('/{id}/read', [\App\Http\Controllers\Api\V1\MessageApiController::class, 'markAsRead'])->name('api.messages.read');
+        Route::post('/mark-all-read', [\App\Http\Controllers\Api\V1\MessageApiController::class, 'markAllAsRead'])->name('api.messages.mark-all-read');
+    });
+
     // ─── Platform Announcements API ────────────────────────────────
     Route::get('/announcements', function (\Illuminate\Http\Request $request) {
         $user = $request->user();

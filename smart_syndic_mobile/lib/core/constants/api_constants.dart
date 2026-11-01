@@ -55,6 +55,13 @@ class ApiConstants {
   static String notificationDelete(String id) => '/notifications/$id';
   static const String notificationClearAll = '/notifications/clear-all';
 
+  // Messages endpoints
+  static const String messages = '/messages';
+  static String messageDetails(String id) => '/messages/$id';
+  static String messageReply(String id) => '/messages/$id/reply';
+  static String messageRead(String id) => '/messages/$id/read';
+  static const String messageMarkAllRead = '/messages/mark-all-read';
+
   // Security & Password verification for sensitive actions
   static const String verifyPassword = '/auth/verify-password';
 }

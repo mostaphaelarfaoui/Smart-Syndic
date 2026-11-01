@@ -12,6 +12,8 @@ import 'tabs/syndic_community_tab.dart';
 import '../../models/notification_model.dart';
 import '../../providers/notification_provider.dart';
 import '../notifications/notifications_screen.dart';
+import '../../providers/message_provider.dart';
+import '../messages/messages_screen.dart';
 
 class SyndicMainScreen extends StatefulWidget {
   const SyndicMainScreen({super.key});
@@ -45,6 +47,10 @@ class _SyndicMainScreenState extends State<SyndicMainScreen> {
     final notif = Provider.of<NotificationProvider>(context, listen: false);
     notif.fetchNotifications(silent: true);
     notif.startSilentPolling();
+
+    final msg = Provider.of<MessageProvider>(context, listen: false);
+    msg.fetchMessages(silent: true);
+    msg.startSilentPolling();
   }
 
   void _navigateTab(int index, [int? subIndex]) {
@@ -138,6 +144,49 @@ class _SyndicMainScreenState extends State<SyndicMainScreen> {
                         constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
                         child: Text(
                           notifProv.unreadCount > 99 ? '99+' : '${notifProv.unreadCount}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+          // Messages Mail Icon with live unread badge
+          Consumer<MessageProvider>(
+            builder: (context, msgProv, _) {
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.mail_outline_rounded, color: AppColors.primary),
+                    tooltip: 'الرسائل والمحادثات',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const MessagesScreen()),
+                      );
+                    },
+                  ),
+                  if (msgProv.unreadCount > 0)
+                    Positioned(
+                      top: 6,
+                      right: 6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.secondary,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Theme.of(context).cardColor, width: 1.5),
+                        ),
+                        constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                        child: Text(
+                          msgProv.unreadCount > 99 ? '99+' : '${msgProv.unreadCount}',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 9,

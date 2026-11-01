@@ -31,6 +31,8 @@ class AuthProvider extends ChangeNotifier {
   Map<String, dynamic>? get pendingResidentData => _pendingResidentData;
   Map<String, dynamic>? get suspendedAccountData => _suspendedAccountData;
   bool get isAuthenticated => _user != null && _api.token != null;
+  bool get isSyndic => _user?.isSyndic ?? false;
+  bool get isResident => _user?.isResident ?? false;
 
   void clearLoginErrors() {
     _loginErrorType = null;
