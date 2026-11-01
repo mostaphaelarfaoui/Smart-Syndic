@@ -326,24 +326,13 @@ class _MessagesScreenState extends State<MessagesScreen> with SingleTickerProvid
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 5),
+                          const SizedBox(height: 6),
 
-                          // Party indicator ( من / إلى ) & category badge
+                          // Clean Category Badge & Replies Count
                           Row(
                             children: [
-                              Text(
-                                isInbox
-                                    ? '🎯 إلى: ${msg.recipientLabel}'
-                                    : '👤 من: أنت (${msg.senderRoleLabel})',
-                                style: GoogleFonts.cairo(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                              const Spacer(),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1.5),
                                 decoration: BoxDecoration(
                                   color: AppColors.primary.withAlpha(15),
                                   borderRadius: BorderRadius.circular(4),
@@ -351,12 +340,37 @@ class _MessagesScreenState extends State<MessagesScreen> with SingleTickerProvid
                                 child: Text(
                                   msg.categoryLabel,
                                   style: GoogleFonts.cairo(
-                                    fontSize: 9,
+                                    fontSize: 9.5,
                                     fontWeight: FontWeight.bold,
                                     color: AppColors.primary,
                                   ),
                                 ),
                               ),
+                              if (msg.replies.isNotEmpty) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xff10b981).withAlpha(15),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.chat_bubble_outline_rounded, size: 10, color: Color(0xff10b981)),
+                                      const SizedBox(width: 3),
+                                      Text(
+                                        '${msg.replies.length} ردود',
+                                        style: GoogleFonts.cairo(
+                                          fontSize: 9.5,
+                                          fontWeight: FontWeight.bold,
+                                          color: const Color(0xff10b981),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ],

@@ -180,12 +180,14 @@
                                 {{ \Illuminate\Support\Str::limit($msg->body, 60) }}
                             </div>
 
-                            {{-- Sub-recipient/sender indicator --}}
-                            <div style="font-size:0.71rem; color:var(--text-muted); margin-top:3px; display:flex; align-items:center; gap:0.3rem;">
-                                @if($isInbox)
-                                    <span>🎯 إلى: إدارة السانديك</span>
-                                @else
-                                    <span>👤 من: {{ $msg->sender_display_name }}</span>
+                            <div style="font-size:0.72rem; color:var(--text-muted); margin-top:5px; display:flex; align-items:center; justify-content:space-between; gap:0.4rem;">
+                                <span class="badge" style="font-size:0.68rem; padding:0.1rem 0.4rem; background:rgba(99, 102, 241, 0.08); color:var(--brand-primary); font-weight:600;">
+                                    {{ $msg->category_label }}
+                                </span>
+                                @if(($msg->replies_count ?? $msg->replies->count()) > 0)
+                                    <span style="font-size:0.7rem; color:var(--brand-primary); font-weight:700; display:flex; align-items:center; gap:0.2rem;">
+                                        💬 {{ $msg->replies_count ?? $msg->replies->count() }} ردود
+                                    </span>
                                 @endif
                             </div>
                         </div>
@@ -213,33 +215,38 @@
         {{-- Column 2: Message Details & Conversation View --}}
         <div>
             @if($selectedMessage)
+                @php
+                    $isSentByMe = $selectedMessage->sender_id === auth()->id();
+                    $hasReplies = $selectedMessage->replies->isNotEmpty();
+                    $canReply = !$selectedMessage->isFromSuperAdmin() && (!$isSentByMe || $hasReplies);
+                @endphp
                 <div class="card" style="padding:1.5rem;">
-                    {{-- Header of selected message --}}
+                    {{-- Header of selected message: Only recipient if sent, only sender if received --}}
                     <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; flex-wrap:wrap; padding-bottom:1.25rem; border-bottom:1px solid var(--border-color); margin-bottom:1.25rem;">
                         <div style="display:flex; align-items:center; gap:0.9rem;">
-                            <div style="width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; background:{{ $selectedMessage->isFromSuperAdmin() ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(79, 70, 229, 0.3))' : 'rgba(16, 185, 129, 0.15)' }};">
-                                {{ $selectedMessage->isFromSuperAdmin() ? '🛡️' : '👤' }}
+                            <div style="width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; background:{{ $selectedMessage->isFromSuperAdmin() ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(79, 70, 229, 0.3))' : ($isSentByMe ? 'rgba(99, 102, 241, 0.15)' : 'rgba(16, 185, 129, 0.15)') }};">
+                                {{ $selectedMessage->isFromSuperAdmin() ? '🛡️' : ($isSentByMe ? '📤' : '👤') }}
                             </div>
                             <div>
                                 <h3 style="margin:0; font-size:1.15rem; font-weight:800; color:var(--text-primary);">
                                     {{ $selectedMessage->subject }}
                                 </h3>
                                 
-                                {{-- Dual info box: Sender & Recipient --}}
-                                <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; margin-top:0.45rem; font-size:0.81rem; color:var(--text-secondary);">
-                                    <span style="background:rgba(16, 185, 129, 0.1); color:#10b981; padding:0.18rem 0.55rem; border-radius:6px; font-weight:700;">
-                                        👤 <strong>المرسل (من):</strong> {{ $selectedMessage->sender_display_name }}
-                                        @if($selectedMessage->sender_unit_label)
-                                            ({{ $selectedMessage->sender_unit_label }})
+                                <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap; margin-top:0.45rem; font-size:0.82rem; color:var(--text-secondary);">
+                                    @if($isSentByMe)
+                                        <span style="background:rgba(99, 102, 241, 0.1); color:#6366f1; padding:0.2rem 0.6rem; border-radius:6px; font-weight:700;">
+                                            🎯 <strong>إلى:</strong> {{ $selectedMessage->recipient_label }}
+                                        </span>
+                                    @else
+                                        <span style="background:rgba(16, 185, 129, 0.1); color:#10b981; padding:0.2rem 0.6rem; border-radius:6px; font-weight:700;">
+                                            👤 <strong>من:</strong> {{ $selectedMessage->sender_display_name }}
+                                            @if($selectedMessage->sender_unit_label)
+                                                ({{ $selectedMessage->sender_unit_label }})
+                                            @endif
+                                        </span>
+                                        @if($selectedMessage->sender?->phone || isset($selectedMessage->target_metadata['resident_phone']))
+                                            <span>• 📞 هاتف: <strong class="num">{{ $selectedMessage->target_metadata['resident_phone'] ?? $selectedMessage->sender->phone }}</strong></span>
                                         @endif
-                                    </span>
-
-                                    <span style="background:rgba(99, 102, 241, 0.1); color:#6366f1; padding:0.18rem 0.55rem; border-radius:6px; font-weight:700;">
-                                        🎯 <strong>المرسل إليه (إلى):</strong> {{ $selectedMessage->recipient_label }}
-                                    </span>
-
-                                    @if($selectedMessage->sender_id !== auth()->id() && ($selectedMessage->sender?->phone || isset($selectedMessage->target_metadata['resident_phone'])))
-                                        <span>• 📞 هاتف: <strong class="num">{{ $selectedMessage->target_metadata['resident_phone'] ?? $selectedMessage->sender->phone }}</strong></span>
                                     @endif
                                     <span>• 🕒 {{ $selectedMessage->created_at->format('Y/m/d H:i') }}</span>
                                 </div>
@@ -258,65 +265,112 @@
                         </div>
                     </div>
 
-                    {{-- Message Body --}}
-                    <div style="font-size:0.95rem; line-height:1.75; color:var(--text-primary); white-space:pre-wrap; padding:0.5rem 0 1.5rem; border-bottom:1px solid var(--border-color); margin-bottom:1.5rem;">
-                        {{ $selectedMessage->body }}
-                    </div>
+                    {{-- If conversation has replies: Present full chat stream (دردشة) --}}
+                    @if($hasReplies)
+                        <div style="margin-bottom:1.25rem;">
+                            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem;">
+                                <h4 style="margin:0; font-size:0.92rem; font-weight:800; color:var(--text-primary); display:flex; align-items:center; gap:0.35rem;">
+                                    <span>💬 المحادثة المتبادلة ({{ $selectedMessage->replies->count() + 1 }} رسائل)</span>
+                                </h4>
+                                <span style="font-size:0.72rem; color:var(--text-muted);">نمط الدردشة المباشرة</span>
+                            </div>
 
-                    {{-- Target Metadata if Broadcast --}}
-                    @if($selectedMessage->sender_id === auth()->id())
-                        <div style="background:var(--bg-secondary); padding:0.85rem 1.1rem; border-radius:10px; border:1px solid var(--border-color); font-size:0.82rem; color:var(--text-secondary); margin-bottom:1.5rem;">
-                            📢 <strong>المستهدفون بالرسالة (إلى):</strong> {{ $selectedMessage->recipient_label }}
-                            (تم تسليمها لـ {{ $selectedMessage->recipients()->count() }} مستخدم).
-                        </div>
-                    @endif
+                            <div style="background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:14px; padding:1.2rem; display:flex; flex-direction:column; gap:1rem; max-height:550px; overflow-y:auto;">
+                                {{-- First/Original Message Bubble --}}
+                                @php
+                                    $origIsMe = $selectedMessage->sender_id === auth()->id();
+                                @endphp
+                                <div style="display:flex; flex-direction:column; align-items:{{ $origIsMe ? 'flex-end' : 'flex-start' }}; max-width:85%; {{ $origIsMe ? 'margin-inline-start:auto;' : 'margin-inline-end:auto;' }}">
+                                    <div style="display:flex; align-items:center; gap:0.4rem; margin-bottom:0.25rem; font-size:0.72rem;">
+                                        <strong style="color:{{ $origIsMe ? 'var(--brand-primary)' : 'var(--text-primary)' }};">
+                                            {{ $origIsMe ? 'أنت (السانديك)' : $selectedMessage->sender_display_name }}
+                                        </strong>
+                                        @if(!$origIsMe && $selectedMessage->sender_unit_label)
+                                            <span class="badge badge-neutral num" style="font-size:0.65rem; padding:0.05rem 0.35rem;">
+                                                {{ $selectedMessage->sender_unit_label }}
+                                            </span>
+                                        @endif
+                                        <span class="num" style="color:var(--text-muted); font-size:0.68rem;">
+                                            {{ $selectedMessage->created_at->format('H:i - Y/m/d') }}
+                                        </span>
+                                    </div>
+                                    <div style="padding:0.85rem 1.1rem; border-radius:14px; border-{{ $origIsMe ? 'bottom-left' : 'bottom-right' }}-radius:3px; background:{{ $origIsMe ? 'rgba(99, 102, 241, 0.12)' : 'var(--bg-primary)' }}; border:1px solid {{ $origIsMe ? 'rgba(99, 102, 241, 0.25)' : 'var(--border-color)' }}; color:var(--text-primary); font-size:0.9rem; line-height:1.7; white-space:pre-wrap; word-break:break-word;">
+                                        {{ $selectedMessage->body }}
+                                    </div>
+                                </div>
 
-                    {{-- Conversation Replies (Threads) --}}
-                    @if($selectedMessage->replies->isNotEmpty())
-                        <div style="margin-bottom:1.5rem;">
-                            <h4 style="font-size:0.95rem; font-weight:800; color:var(--text-primary); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.4rem;">
-                                <span>💬 الردود والمتابعة ({{ $selectedMessage->replies->count() }})</span>
-                            </h4>
-
-                            <div style="display:flex; flex-direction:column; gap:0.85rem;">
+                                {{-- Replies Bubbles --}}
                                 @foreach($selectedMessage->replies as $reply)
-                                    <div style="padding:1rem; border-radius:12px; background:{{ $reply->sender_id === auth()->id() ? 'rgba(99, 102, 241, 0.07)' : 'var(--bg-secondary)' }}; border:1px solid var(--border-color);">
-                                        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.35rem;">
-                                            <strong style="font-size:0.84rem; color:var(--text-primary);">
-                                                {{ $reply->sender_id === auth()->id() ? 'أنت (السانديك)' : $reply->sender?->full_name }}
+                                    @php
+                                        $replyIsMe = $reply->sender_id === auth()->id();
+                                    @endphp
+                                    <div style="display:flex; flex-direction:column; align-items:{{ $replyIsMe ? 'flex-end' : 'flex-start' }}; max-width:85%; {{ $replyIsMe ? 'margin-inline-start:auto;' : 'margin-inline-end:auto;' }}">
+                                        <div style="display:flex; align-items:center; gap:0.4rem; margin-bottom:0.25rem; font-size:0.72rem;">
+                                            <strong style="color:{{ $replyIsMe ? 'var(--brand-primary)' : 'var(--text-primary)' }};">
+                                                {{ $replyIsMe ? 'أنت (السانديك)' : ($reply->sender?->full_name ?? 'مستخدم') }}
                                             </strong>
-                                            <span class="num" style="font-size:0.72rem; color:var(--text-muted);">
-                                                {{ $reply->created_at->format('Y/m/d H:i') }}
+                                            <span class="num" style="color:var(--text-muted); font-size:0.68rem;">
+                                                {{ $reply->created_at->format('H:i - Y/m/d') }}
                                             </span>
                                         </div>
-                                        <div style="font-size:0.88rem; line-height:1.6; color:var(--text-primary); white-space:pre-wrap;">
+                                        <div style="padding:0.85rem 1.1rem; border-radius:14px; border-{{ $replyIsMe ? 'bottom-left' : 'bottom-right' }}-radius:3px; background:{{ $replyIsMe ? 'rgba(99, 102, 241, 0.12)' : 'var(--bg-primary)' }}; border:1px solid {{ $replyIsMe ? 'rgba(99, 102, 241, 0.25)' : 'var(--border-color)' }}; color:var(--text-primary); font-size:0.9rem; line-height:1.7; white-space:pre-wrap; word-break:break-word;">
                                             {{ $reply->body }}
                                         </div>
                                     </div>
                                 @endforeach
                             </div>
                         </div>
+                    @else
+                        {{-- Single Message Body (No Replies Yet) --}}
+                        <div style="font-size:0.95rem; line-height:1.75; color:var(--text-primary); white-space:pre-wrap; padding:0.5rem 0 1.25rem; border-bottom:1px solid var(--border-color); margin-bottom:1.25rem;">
+                            {{ $selectedMessage->body }}
+                        </div>
                     @endif
 
-                    {{-- Quick Reply Form --}}
-                    @if(!$selectedMessage->isFromSuperAdmin())
-                        <div style="background:var(--bg-secondary); padding:1.25rem; border-radius:12px; border:1px solid var(--border-color);">
-                            <h4 style="margin:0 0 0.75rem; font-size:0.92rem; font-weight:800; color:var(--text-primary); display:flex; align-items:center; gap:0.35rem;">
-                                <span>✍️ إرسال رد مباشر</span>
+                    {{-- Target Metadata if Broadcast --}}
+                    @if($isSentByMe && $selectedMessage->target_type !== 'INDIVIDUAL')
+                        <div style="background:var(--bg-secondary); padding:0.75rem 1rem; border-radius:10px; border:1px solid var(--border-color); font-size:0.8rem; color:var(--text-secondary); margin-bottom:1.25rem;">
+                            📢 <strong>المستهدفون:</strong> {{ $selectedMessage->recipient_label }}
+                            (تم تسليمها لـ {{ $selectedMessage->recipients()->count() }} مستخدم).
+                        </div>
+                    @endif
+
+                    {{-- Bottom Action Area: Chat Reply or Delivery Status --}}
+                    @if($canReply)
+                        {{-- Reply Form --}}
+                        <div style="background:var(--bg-secondary); padding:1.15rem; border-radius:12px; border:1px solid var(--border-color);">
+                            <h4 style="margin:0 0 0.6rem; font-size:0.88rem; font-weight:800; color:var(--text-primary); display:flex; align-items:center; gap:0.35rem;">
+                                <span>✍️ {{ $hasReplies ? 'متابعة الدردشة والرد' : 'إرسال رد على الرسالة' }}</span>
                             </h4>
                             <form method="POST" action="{{ route('portal.messages.reply', $selectedMessage->id) }}">
                                 @csrf
-                                <div class="form-group" style="margin-bottom:0.75rem;">
-                                    <textarea name="body" class="form-control" rows="3" placeholder="اكتب ردك هنا..." required style="resize:vertical;"></textarea>
-                                </div>
-                                <div style="display:flex; justify-content:flex-end;">
-                                    <button type="submit" class="btn btn-primary" style="font-weight:700; padding:0.45rem 1.1rem; font-size:0.85rem;">
-                                        إرسال الرد ✉️
+                                <div style="display:flex; gap:0.6rem; align-items:flex-end;">
+                                    <div style="flex:1;">
+                                        <textarea name="body" class="form-control" rows="2" placeholder="اكتب ردك هنا لمتابعة المحادثة..." required style="resize:vertical; min-height:48px; border-radius:10px;"></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary" style="font-weight:700; padding:0.55rem 1.25rem; font-size:0.86rem; border-radius:10px; display:flex; align-items:center; gap:0.35rem; flex-shrink:0;">
+                                        <span>إرسال</span>
+                                        <span>✉️</span>
                                     </button>
                                 </div>
                             </form>
                         </div>
-                    @else
+                    @elseif($isSentByMe && !$hasReplies)
+                        {{-- Sent message without replies: Clean delivery status banner, NO reply box! --}}
+                        <div style="background:rgba(99, 102, 241, 0.05); border:1px dashed rgba(99, 102, 241, 0.25); padding:0.9rem 1.15rem; border-radius:12px; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+                            <div style="display:flex; align-items:center; gap:0.6rem; color:var(--text-secondary); font-size:0.84rem;">
+                                <span style="color:#6366f1; font-weight:800; font-size:1.1rem;">✓</span>
+                                <div>
+                                    <strong style="color:var(--text-primary);">تم إرسال هذه الرسالة بنجاح إلى:</strong>
+                                    <span>{{ $selectedMessage->recipient_label }}</span>
+                                </div>
+                            </div>
+                            <span class="badge badge-neutral" style="font-size:0.72rem; padding:0.2rem 0.5rem;">
+                                بانتظار ردود المستلمين إن وجدت
+                            </span>
+                        </div>
+                    @elseif($selectedMessage->isFromSuperAdmin())
+                        {{-- Official Super Admin announcement banner --}}
                         <div style="background:rgba(99, 102, 241, 0.08); border:1px solid rgba(99, 102, 241, 0.25); padding:1rem; border-radius:12px; color:var(--text-secondary); font-size:0.84rem; display:flex; align-items:center; gap:0.6rem;">
                             <span>ℹ️</span>
                             <span>هذه رسالة إعلان رسمي مرسلة من الإدارة العامة للمنصة لكافة المسيرين. تم تأكيد استلامك وقراءتك لها بنجاح.</span>

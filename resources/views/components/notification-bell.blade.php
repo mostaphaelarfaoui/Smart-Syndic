@@ -137,22 +137,22 @@
                             </div>
                             <p class="notif-message" x-text="item.message"></p>
                             
-                            {{-- Owner & Recipient Meta Tags --}}
-                            <div class="notif-meta-tags" x-show="item.actor_label || item.recipient_label || item.unit_label" style="display:flex; align-items:center; flex-wrap:wrap; gap:0.4rem; margin-top:0.45rem;">
+                            {{-- Concise Meta Tag (At most 1 clear pill) --}}
+                            <div class="notif-meta-tags" x-show="item.actor_label || item.recipient_label || item.unit_label" style="display:flex; align-items:center; gap:0.4rem; margin-top:0.35rem;">
                                 <template x-if="item.actor_label">
-                                    <span class="notif-meta-pill" style="display:inline-flex; align-items:center; gap:0.25rem; font-size:0.71rem; font-weight:700; color:var(--brand-primary, #0d9488); background:rgba(13, 148, 136, 0.12); padding:0.15rem 0.5rem; border-radius:6px;">
+                                    <span class="notif-meta-pill" style="display:inline-flex; align-items:center; gap:0.25rem; font-size:0.71rem; font-weight:700; color:var(--brand-primary, #0d9488); background:rgba(13, 148, 136, 0.1); padding:0.12rem 0.45rem; border-radius:5px;">
                                         <span>👤</span>
-                                        <span x-text="'من طرف: ' + item.actor_label"></span>
+                                        <span x-text="item.actor_label"></span>
                                     </span>
                                 </template>
-                                <template x-if="item.recipient_label">
-                                    <span class="notif-meta-pill" style="display:inline-flex; align-items:center; gap:0.25rem; font-size:0.71rem; font-weight:700; color:#6366f1; background:rgba(99, 102, 241, 0.12); padding:0.15rem 0.5rem; border-radius:6px;">
+                                <template x-if="!item.actor_label && item.recipient_label">
+                                    <span class="notif-meta-pill" style="display:inline-flex; align-items:center; gap:0.25rem; font-size:0.71rem; font-weight:700; color:#6366f1; background:rgba(99, 102, 241, 0.1); padding:0.12rem 0.45rem; border-radius:5px;">
                                         <span>🎯</span>
-                                        <span x-text="'المعني: ' + item.recipient_label"></span>
+                                        <span x-text="item.recipient_label"></span>
                                     </span>
                                 </template>
-                                <template x-if="item.unit_label && (!item.actor_label || !item.actor_label.includes(item.unit_label)) && (!item.recipient_label || !item.recipient_label.includes(item.unit_label))">
-                                    <span class="notif-meta-pill" style="display:inline-flex; align-items:center; gap:0.25rem; font-size:0.71rem; font-weight:700; color:var(--text-secondary, #94a3b8); background:rgba(255, 255, 255, 0.08); padding:0.15rem 0.5rem; border-radius:6px;">
+                                <template x-if="!item.actor_label && !item.recipient_label && item.unit_label">
+                                    <span class="notif-meta-pill" style="display:inline-flex; align-items:center; gap:0.25rem; font-size:0.71rem; font-weight:700; color:var(--text-secondary, #94a3b8); background:rgba(255, 255, 255, 0.06); padding:0.12rem 0.45rem; border-radius:5px;">
                                         <span>🏠</span>
                                         <span x-text="item.unit_label"></span>
                                     </span>
