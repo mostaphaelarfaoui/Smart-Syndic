@@ -905,9 +905,10 @@
                     </div>
 
                     <div class="form-group">
+                        <input type="hidden" name="is_billable" value="0">
                         <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
-                            <input type="checkbox" name="is_billable" value="1" checked style="accent-color:var(--brand-primary);">
-                            <span style="font-weight:700;">الشقة خاضعة لواجبات السانديك (Billable)</span>
+                            <input type="checkbox" name="is_billable" value="1" checked style="accent-color:var(--brand-primary); width:18px; height:18px; cursor:pointer;">
+                            <span style="font-weight:700;">الشقة خاضعة لواجبات السانديك (تفعيل الفوترة)</span>
                         </label>
                     </div>
                 </div>
@@ -1020,8 +1021,18 @@
                             </div>
                             <div>
                                 <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">حالة الخضوع</div>
-                                <div style="margin-top:4px;">
-                                    <span class="badge" :class="detailsData.apartment.is_billable ? 'badge-success' : 'badge-neutral'" x-text="detailsData.apartment.is_billable ? 'خاضعة للأداء' : 'معفاة'"></span>
+                                <div style="display:flex; align-items:center; gap:0.5rem; margin-top:4px;">
+                                    <span class="badge" :class="detailsData.apartment.is_billable ? 'badge-success' : 'badge-warning'" style="font-weight:800;" x-text="detailsData.apartment.is_billable ? '✓ خاضعة للأداء' : '🛡️ معفاة'"></span>
+                                    <form method="POST" :action="'{{ url('/portal/apartments') }}/' + detailsData.apartment.id + '/toggle-billable'" style="margin:0; display:inline;">
+                                        @csrf
+                                        <button type="submit" 
+                                                class="btn btn-sm" 
+                                                :class="detailsData.apartment.is_billable ? 'btn-secondary' : 'btn-success'"
+                                                style="padding:0.18rem 0.55rem; font-size:0.72rem; font-weight:700; border-radius:6px; display:inline-flex; align-items:center; gap:0.25rem;"
+                                                :title="detailsData.apartment.is_billable ? 'إعفاء الشقة من واجبات السانديك' : 'إلغاء الإعفاء وإعادة الفوترة'">
+                                            <span x-text="detailsData.apartment.is_billable ? '🛡️ إعفاء الشقة' : '🔄 إعادة الفوترة'"></span>
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -1171,15 +1182,25 @@
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
-                            <input type="checkbox" name="is_billable" value="1" x-model="editData.isBillable" style="accent-color:var(--brand-primary);">
-                            <span style="font-weight:700;">الشقة خاضعة لواجبات السانديك (تفعيل الفوترة)</span>
+                    <div class="form-group" style="background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:12px; padding:1rem; margin-top:0.75rem;">
+                        <input type="hidden" name="is_billable" value="0">
+                        <label style="display:flex; align-items:flex-start; gap:0.75rem; cursor:pointer; margin:0;">
+                            <input type="checkbox" name="is_billable" value="1" x-model="editData.isBillable" style="accent-color:var(--brand-primary); width:20px; height:20px; margin-top:2px; cursor:pointer;">
+                            <div style="flex:1;">
+                                <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                                    <span style="font-weight:800; font-size:0.92rem; color:var(--text-primary);">حالة خضوع الشقة لواجبات السانديك</span>
+                                    <span class="badge" :class="editData.isBillable ? 'badge-success' : 'badge-warning'" style="font-size:0.75rem; font-weight:800;" x-text="editData.isBillable ? '✓ خاضعة للأداء (مفوترة)' : '🛡️ معفاة من واجبات السانديك'"></span>
+                                </div>
+                                <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:4px; line-height:1.4;">
+                                    <span x-show="editData.isBillable">الشقة مشمولة بالاشتراك الشهري وسيتم احتساب واجباتها وتوليد المتأخرات تلقائياً.</span>
+                                    <span x-show="!editData.isBillable" style="color:var(--color-warning); font-weight:700;">الشقة معفاة تماماً: لن تُحسب عليها أي متأخرات ولن تُدرج في المداخيل المتوقعة للإقامة.</span>
+                                </div>
+                            </div>
                         </label>
                     </div>
 
                     <div style="background:var(--bg-secondary); padding:0.85rem 1rem; border-radius:10px; border:1px solid var(--border-color); font-size:0.82rem; color:var(--text-secondary); line-height:1.5;">
-                        💡 <strong>ملاحظة هامة:</strong> هذا التعديل يخص هذه الشقة فقط ولا يؤثر على باقي شقق الإقامة. سيتم احتساب الواجبات والمتأخرات القادمة بناءً على هذا المبلغ المحدد.
+                        💡 <strong>ملاحظة هامة:</strong> هذا التعديل يخص هذه الشقة فقط ولا يؤثر على باقي شقق الإقامة. سيتم احتساب الواجبات وحالة الإعفاء بناءً على هذه الخيارات المحددة.
                     </div>
                 </div>
                 <div class="modal-footer">

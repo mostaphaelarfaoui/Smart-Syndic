@@ -177,7 +177,7 @@ class ApartmentController extends Controller
         $validated = $request->validate([
             'unit_number' => ['required', 'string', 'max:50'],
             'monthly_fee' => ['required', 'numeric', 'min:0'],
-            'is_billable' => ['nullable', 'boolean'],
+            'is_billable' => ['nullable'],
         ], [
             'unit_number.required' => 'يرجى إدخال رقم الشقة.',
             'monthly_fee.required' => 'يرجى إدخال مبلغ الواجب الشهري.',
@@ -187,17 +187,14 @@ class ApartmentController extends Controller
 
         $oldFee = (float) $apartment->monthly_fee;
         $newFee = (float) $validated['monthly_fee'];
+        $oldBillable = (bool) $apartment->is_billable;
+        $newBillable = $request->boolean('is_billable');
 
-        $updateData = [
+        $apartment->update([
             'unit_number' => $validated['unit_number'],
             'monthly_fee' => $newFee,
-        ];
-
-        if ($request->has('is_billable')) {
-            $updateData['is_billable'] = $request->boolean('is_billable');
-        }
-
-        $apartment->update($updateData);
+            'is_billable' => $newBillable,
+        ]);
 
         AuditLog::record(
             actorId: auth()->id(),
@@ -208,19 +205,23 @@ class ApartmentController extends Controller
                 'unit_number'  => $apartment->unit_number,
                 'old_fee'      => $oldFee,
                 'new_fee'      => $newFee,
+                'old_billable' => $oldBillable,
+                'new_billable' => $newBillable,
                 'source'       => 'PORTAL_WEB',
             ]
         );
 
+        $statusText = $newBillable ? 'خاضعة للأداء' : 'معفاة من واجبات السانديك 🛡️';
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success'   => true,
-                'message'   => "تم تحديث الواجب الشهري للشقة {$apartment->unit_number} بنجاح إلى {$newFee} د.م.",
+                'message'   => "تم تحديث بيانات الشقة {$apartment->unit_number} بنجاح (المبلغ: {$newFee} د.م - الحالة: {$statusText}).",
                 'apartment' => $apartment,
             ]);
         }
 
-        return back()->with('success', "تم تحديث الواجب الشهري للشقة {$apartment->unit_number} بنجاح إلى " . number_format($newFee, 0) . " د.م.");
+        return back()->with('success', "تم تحديث بيانات الشقة {$apartment->unit_number} بنجاح (المبلغ: " . number_format($newFee, 0) . " د.م - الحالة: {$statusText}).");
     }
 
     public function bulkGenerate(Request $request)
