@@ -96,7 +96,7 @@
                                 <strong>{{ $sug->user?->full_name ?? 'الساكن' }}</strong>
                                 <div style="font-size:0.75rem; color:var(--text-muted);">
                                     @if($sug->apartment)
-                                        شقة {{ $sug->apartment->unit_number }}
+                                        {{ $sug->apartment->formatted_unit }}
                                     @endif
                                 </div>
                             </td>

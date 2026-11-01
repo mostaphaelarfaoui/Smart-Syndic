@@ -13,7 +13,7 @@ class NotifySyndicOfNewResident implements ShouldQueue
     {
         $resident = $event->resident;
         $apartment = $resident->apartments()->first();
-        $aptNumber = $apartment ? " (شقة {$apartment->number})" : '';
+        $aptNumber = $apartment ? ' (' . $apartment->formatted_unit . ')' : '';
 
         app(\App\Services\NotificationService::class)->sendToTenantSyndics(
             tenantId: $resident->tenant_id,

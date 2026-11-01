@@ -126,10 +126,67 @@ class Apartment extends Model
     }
 
     /**
+     * Clean unit number by stripping any redundant "شقة", "شقه", "الشقة", "Appartement" prefixes.
+     */
+    public static function cleanUnit(?string $unit): string
+    {
+        if ($unit === null) {
+            return '';
+        }
+        $trimmed = trim($unit);
+        $cleaned = preg_replace('/^(?:ال)?(?:شقة|شقه|Appartement|Apt\.?)\s*/iu', '', $trimmed);
+        while ($cleaned !== $trimmed && $cleaned !== '') {
+            $trimmed = trim($cleaned);
+            $cleaned = preg_replace('/^(?:ال)?(?:شقة|شقه|Appartement|Apt\.?)\s*/iu', '', $trimmed);
+        }
+        return trim($cleaned);
+    }
+
+    /**
+     * Format unit nicely with a single "شقة " prefix.
+     */
+    public static function formatUnit(?string $unit): string
+    {
+        $clean = self::cleanUnit($unit);
+        if ($clean === '') {
+            return 'شقة';
+        }
+        return 'شقة ' . $clean;
+    }
+
+    /**
+     * Format definite unit nicely with "الشقة " prefix.
+     */
+    public static function formatDefiniteUnit(?string $unit): string
+    {
+        $clean = self::cleanUnit($unit);
+        if ($clean === '') {
+            return 'الشقة';
+        }
+        return 'الشقة ' . $clean;
+    }
+
+    public function getCleanUnitNumberAttribute(): string
+    {
+        return self::cleanUnit($this->unit_number);
+    }
+
+    public function getFormattedUnitAttribute(): string
+    {
+        return self::formatUnit($this->unit_number);
+    }
+
+    public function getDefiniteUnitAttribute(): string
+    {
+        return self::formatDefiniteUnit($this->unit_number);
+    }
+
+    /**
      * Calculate total arrears (unpaid months) for this apartment.
      */
     public function getDisplayLabelAttribute(): string
     {
-        return "{$this->building->name} - {$this->unit_number}";
+        $buildingName = $this->building?->name ?? 'العمارة';
+        return "{$buildingName} - {$this->formatted_unit}";
     }
 }

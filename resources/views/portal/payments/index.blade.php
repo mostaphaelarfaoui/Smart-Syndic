@@ -55,7 +55,7 @@
                                 <optgroup label="🏢 {{ $groupName }}">
                                     @foreach($apts as $apt)
                                         @php
-                                            $cleanUnit = str_starts_with(trim($apt->unit_number), 'شقة') ? $apt->unit_number : 'شقة ' . $apt->unit_number;
+                                            $cleanUnit = $apt->formatted_unit;
                                             $residentName = $apt->residents->first()?->full_name;
                                         @endphp
                                         <option value="{{ $apt->id }}" data-fee="{{ (float) $apt->monthly_fee }}">
@@ -198,7 +198,7 @@
                     <optgroup label="🏢 {{ $groupName }}">
                         @foreach($apts as $a)
                             @php
-                                $cleanUnit = str_starts_with(trim($a->unit_number), 'شقة') ? $a->unit_number : 'شقة ' . $a->unit_number;
+                                $cleanUnit = $a->formatted_unit;
                             @endphp
                             <option value="{{ $a->id }}" {{ request('apartment_id') == $a->id ? 'selected' : '' }}>
                                 {{ $cleanUnit }}
@@ -254,7 +254,7 @@
                             </td>
                             <td>
                                 <strong style="color:var(--text-primary);" class="num">
-                                    {{ str_starts_with(trim($payment->apartment?->unit_number ?? ''), 'شقة') ? $payment->apartment?->unit_number : 'شقة ' . ($payment->apartment?->unit_number ?? '—') }}
+                                    {{ $payment->apartment ? $payment->apartment->formatted_unit : '—' }}
                                 </strong>
                                 @if($payment->apartment?->building)
                                     <div style="font-size:0.74rem; color:var(--text-muted);">

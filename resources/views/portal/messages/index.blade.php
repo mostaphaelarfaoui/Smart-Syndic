@@ -164,7 +164,7 @@
                                     </strong>
                                     @if($isResident && isset($msg->target_metadata['unit_number']))
                                         <span class="badge badge-neutral num" style="font-size:0.68rem; padding:0.1rem 0.35rem;">
-                                            شقة {{ $msg->target_metadata['unit_number'] }}
+                                            {{ format_unit_label($msg->target_metadata['unit_number']) }}
                                         </span>
                                     @endif
                                 </div>
@@ -229,7 +229,7 @@
                                         </span>
                                     @endif
                                     @if(isset($selectedMessage->target_metadata['unit_number']))
-                                        <span>• شقة <strong>{{ $selectedMessage->target_metadata['unit_number'] }}</strong></span>
+                                        <span>• <strong>{{ format_unit_label($selectedMessage->target_metadata['unit_number']) }}</strong></span>
                                     @endif
                                     @if($selectedMessage->sender_id !== auth()->id() && $selectedMessage->sender?->phone)
                                         <span>• هاتف: <strong class="num">{{ $selectedMessage->sender->phone }}</strong></span>
@@ -385,10 +385,10 @@
                             <option value="">-- اختر الساكن --</option>
                             @foreach($residents as $res)
                                 @php
-                                    $aptUnits = $res->apartments->pluck('unit_number')->join(', ');
+                                    $aptUnits = $res->apartments->map(fn($a) => $a->formatted_unit)->join('، ');
                                 @endphp
                                 <option value="{{ $res->id }}">
-                                    {{ $res->full_name }} {{ $aptUnits ? '(شقة ' . $aptUnits . ')' : '' }}
+                                    {{ $res->full_name }} {{ $aptUnits ? '(' . $aptUnits . ')' : '' }}
                                 </option>
                             @endforeach
                         </select>
@@ -406,7 +406,7 @@
                                     @foreach($b->apartments as $apt)
                                         <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.78rem; cursor:pointer; background:var(--bg-surface); padding:0.35rem 0.5rem; border-radius:6px; border:1px solid var(--border-color);">
                                             <input type="checkbox" name="target_ids[]" value="{{ $apt->id }}" style="accent-color:var(--brand-primary);" :disabled="composeData.targetType !== 'GROUP'">
-                                            <span>شقة {{ $apt->unit_number }}</span>
+                                            <span>{{ $apt->formatted_unit }}</span>
                                         </label>
                                     @endforeach
                                 </div>

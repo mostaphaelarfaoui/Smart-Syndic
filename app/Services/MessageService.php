@@ -101,7 +101,7 @@ class MessageService
                 'priority'        => $priority,
                 'target_metadata' => [
                     'apartment_id'   => $apartment?->id,
-                    'unit_number'    => $apartment?->unit_number ?? 'غير محدد',
+                    'unit_number'    => $apartment ? $apartment->clean_unit_number : 'غير محدد',
                     'resident_name'  => $resident->full_name,
                     'resident_phone' => $resident->phone,
                 ],
@@ -119,17 +119,6 @@ class MessageService
                     'user_id'    => $syndic->id,
                     'is_read'    => false,
                 ]);
-
-                // Notify syndic
-                $this->notificationService->send(
-                    user: $syndic,
-                    title: "✉️ رسالة جديدة من الساكن {$resident->full_name} (شقة {$apartment?->unit_number})",
-                    message: "الموضوع: {$subject}",
-                    type: $priority === 'URGENT' ? 'warning' : 'info',
-                    url: route('portal.messages.index'),
-                    icon: '✉️',
-                    extra: ['message_id' => $message->id, 'category' => 'residents']
-                );
             }
 
             return $message;
@@ -182,7 +171,7 @@ class MessageService
                 $unitNumbers = [];
 
                 foreach ($apartments as $apt) {
-                    $unitNumbers[] = $apt->unit_number;
+                    $unitNumbers[] = $apt->clean_unit_number;
                     foreach ($apt->residents as $res) {
                         $users->push($res);
                     }
@@ -213,16 +202,6 @@ class MessageService
                     'user_id'    => $user->id,
                     'is_read'    => false,
                 ]);
-
-                // In-app notification
-                $this->notificationService->send(
-                    user: $user,
-                    title: "✉️ رسالة جديدة من السانديك: {$subject}",
-                    message: \Illuminate\Support\Str::limit($body, 90),
-                    type: $priority === 'URGENT' ? 'warning' : 'info',
-                    icon: '✉️',
-                    extra: ['message_id' => $message->id]
-                );
             }
 
             return $message;
@@ -260,18 +239,6 @@ class MessageService
                     'user_id'    => $recipientId,
                     'is_read'    => false,
                 ]);
-
-                $recipientUser = User::find($recipientId);
-                if ($recipientUser) {
-                    $this->notificationService->send(
-                        user: $recipientUser,
-                        title: "💬 رد جديد على: {$parentMessage->subject}",
-                        message: \Illuminate\Support\Str::limit($body, 90),
-                        type: 'info',
-                        icon: '💬',
-                        extra: ['message_id' => $reply->id, 'parent_id' => $parentMessage->id]
-                    );
-                }
             }
 
             return $reply;

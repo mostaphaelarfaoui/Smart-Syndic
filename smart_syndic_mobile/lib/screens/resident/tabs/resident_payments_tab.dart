@@ -8,6 +8,7 @@ import '../../../core/services/api_service.dart';
 import '../../../models/payment_model.dart';
 import '../../../providers/resident_provider.dart';
 import '../../../widgets/empty_state.dart';
+import '../../../core/utils/number_utils.dart';
 import '../../common/receipt_viewer_screen.dart';
 
 class ResidentPaymentsTab extends StatelessWidget {
@@ -346,7 +347,7 @@ class ResidentPaymentsTab extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    'شقة ${payment.apartmentUnit}',
+                    formatUnitLabel(payment.apartmentUnit),
                     style: GoogleFonts.cairo(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,

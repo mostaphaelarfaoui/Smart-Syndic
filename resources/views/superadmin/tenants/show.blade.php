@@ -233,7 +233,7 @@
                         @forelse($recentPayments as $payment)
                             <tr>
                                 <td>
-                                    <strong>{{ $payment->apartment?->unit_number ? 'شقة ' . $payment->apartment->unit_number : '—' }}</strong>
+                                    <strong>{{ $payment->apartment ? $payment->apartment->formatted_unit : '—' }}</strong>
                                     <div style="font-size:0.75rem; color:var(--text-muted);">
                                         {{ $payment->apartment?->residents?->first()?->full_name ?? ($payment->recorder?->full_name ?? '—') }}
                                     </div>

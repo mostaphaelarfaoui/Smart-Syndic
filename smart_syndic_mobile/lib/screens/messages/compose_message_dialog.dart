@@ -207,7 +207,7 @@ class _ComposeMessageDialogState extends State<ComposeMessageDialog> {
                               final resVal = apt.resident != null ? (apt.resident!['id']?.toString() ?? apt.id) : apt.id;
                               return DropdownMenuItem(
                                 value: resVal,
-                                child: Text('شقة ${apt.unitNumber} ($resName)', style: GoogleFonts.cairo(fontSize: 12)),
+                                child: Text('${apt.formattedUnit} ($resName)', style: GoogleFonts.cairo(fontSize: 12)),
                               );
                             }).toList(),
                             onChanged: (val) => setState(() => _selectedResidentId = val),
@@ -233,7 +233,7 @@ class _ComposeMessageDialogState extends State<ComposeMessageDialog> {
                                 final isSelected = _selectedApartmentIds.contains(apt.id);
                                 return CheckboxListTile(
                                   dense: true,
-                                  title: Text('شقة ${apt.unitNumber} (${apt.buildingName})', style: GoogleFonts.cairo(fontSize: 12)),
+                                  title: Text('${apt.formattedUnit} (${apt.buildingName})', style: GoogleFonts.cairo(fontSize: 12)),
                                   value: isSelected,
                                   onChanged: (val) {
                                     setState(() {

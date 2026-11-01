@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../providers/syndic_provider.dart';
 import '../../../widgets/empty_state.dart';
+import '../../../core/utils/number_utils.dart';
 import '../dialogs/convert_to_poll_dialog.dart';
 import '../dialogs/create_poll_dialog.dart';
 
@@ -184,7 +185,7 @@ class SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTicke
                 final locationParts = <String>[];
                 if (blockName.isNotEmpty) locationParts.add('بلوك $blockName');
                 if (buildingName.isNotEmpty) locationParts.add('عمارة $buildingName');
-                locationParts.add('شقة $unit');
+                locationParts.add(formatUnitLabel(unit));
                 final locationLabel = locationParts.join(' • ');
 
                 final pivot = firstApt?['pivot'] as Map<String, dynamic>? ?? (item['pivot'] as Map<String, dynamic>?);
@@ -436,7 +437,7 @@ class SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTicke
                           if (suggestion.apartmentUnit != null) ...[
                             const SizedBox(width: 12),
                             Text(
-                              'شقة ${suggestion.apartmentUnit}',
+                              formatUnitLabel(suggestion.apartmentUnit),
                               style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textLight),
                             ),
                           ],
@@ -736,7 +737,7 @@ class SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTicke
                                     backgroundColor: AppColors.primary.withAlpha(25),
                                     child: const Icon(Icons.person, size: 16, color: AppColors.primary),
                                   ),
-                                  title: Text('شقة ${vote['apartment']} - عمارة ${vote['building']}', style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.w600)),
+                                  title: Text('${formatUnitLabel(vote['apartment']?.toString())} - عمارة ${vote['building']}', style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.w600)),
                                   subtitle: Text(vote['created_at']?.split('T')[0] ?? '', style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary)),
                                   dense: true,
                                 );
@@ -781,7 +782,7 @@ class SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTicke
                                         children: [
                                           Row(
                                             children: [
-                                              Text('شقة ${vote['apartment']} - عمارة ${vote['building']}', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                                              Text('${formatUnitLabel(vote['apartment']?.toString())} - عمارة ${vote['building']}', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                                               if (vote['is_anonymous'] == true || vote['is_anonymous'] == 1 || vote['is_anonymous'] == '1')
                                                 Padding(
                                                   padding: const EdgeInsets.only(right: 6),

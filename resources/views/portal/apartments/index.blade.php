@@ -216,7 +216,7 @@
             <div class="apartment-cards-grid">
                 @forelse($apartments as $apartment)
                     @php
-                        $cleanUnit = str_starts_with(trim($apartment->unit_number), 'شقة') ? $apartment->unit_number : 'شقة ' . $apartment->unit_number;
+                        $cleanUnit = $apartment->formatted_unit;
                         $isPaidThisMonth = in_array($apartment->id, $paidApartmentIdsThisMonth);
                         $hasResident = $apartment->residents->isNotEmpty();
                         $resident = $hasResident ? $apartment->residents->first() : null;
@@ -229,7 +229,7 @@
                                     <div style="font-size:1.15rem; line-height:1;">
                                         {{ !$apartment->is_billable ? '🛡️' : (!$hasResident ? '🚪' : ($isPaidThisMonth ? '🏢' : '⚠️')) }}
                                     </div>
-                                    <div class="num" style="font-size:0.8rem; margin-top:2px;">{{ $apartment->unit_number }}</div>
+                                    <div class="num" style="font-size:0.8rem; margin-top:2px;">{{ $apartment->clean_unit_number }}</div>
                                 </div>
                                 
                                 <div style="flex:1; min-width:0;">
@@ -276,7 +276,7 @@
                                     }
                                 @endphp
                                 <div style="display:flex; align-items:center; gap:0.4rem; margin-top:0.75rem;">
-                                    <a href="https://wa.me/{{ $cleanPhone }}?text={{ urlencode('السلام عليكم بخصوص الشقة ' . $apartment->unit_number) }}" 
+                                    <a href="https://wa.me/{{ $cleanPhone }}?text={{ urlencode('السلام عليكم بخصوص ' . $apartment->definite_unit) }}" 
                                        target="_blank" 
                                        class="apt-contact-btn apt-whatsapp-btn" 
                                        title="مراسلة فورية عبر الواتساب">
@@ -323,7 +323,7 @@
 
                             @if($hasResident)
                                 <form method="POST" action="{{ route('portal.apartments.vacate', $apartment->id) }}"
-                                      data-confirm="هل تؤكد تفريغ الشقة {{ $apartment->unit_number }}؟ سيتم فك ارتباط الساكن."
+                                      data-confirm="هل تؤكد تفريغ {{ $apartment->definite_unit }}؟ سيتم فك ارتباط الساكن."
                                       data-confirm-title="تفريغ الشقة"
                                       data-confirm-type="warning"
                                       data-confirm-password="true"
@@ -337,7 +337,7 @@
                             @endif
 
                             <form method="POST" action="{{ route('portal.apartments.destroy', $apartment->id) }}"
-                                  data-confirm="هل أنت متأكد من حذف الشقة رقم {{ $apartment->unit_number }} نهائياً؟"
+                                  data-confirm="هل أنت متأكد من حذف {{ $apartment->definite_unit }} نهائياً؟"
                                   data-confirm-title="تأكيد حذف الشقة"
                                   data-confirm-type="danger"
                                   data-confirm-password="true"
@@ -382,7 +382,7 @@
                     <tbody>
                         @forelse($apartments as $apartment)
                             @php
-                                $cleanUnit = str_starts_with(trim($apartment->unit_number), 'شقة') ? $apartment->unit_number : 'شقة ' . $apartment->unit_number;
+                                $cleanUnit = $apartment->formatted_unit;
                                 $isPaidThisMonth = in_array($apartment->id, $paidApartmentIdsThisMonth);
                             @endphp
                             <tr>
@@ -461,7 +461,7 @@
 
                                         @if($apartment->residents->isNotEmpty())
                                             <form method="POST" action="{{ route('portal.apartments.vacate', $apartment->id) }}"
-                                                  data-confirm="هل تؤكد تفريغ الشقة {{ $apartment->unit_number }}؟ سيتم فك ارتباط الساكن."
+                                                  data-confirm="هل تؤكد تفريغ {{ $apartment->definite_unit }}؟ سيتم فك ارتباط الساكن."
                                                   data-confirm-title="تفريغ الشقة"
                                                   data-confirm-type="warning"
                                                   data-confirm-password="true"
@@ -474,7 +474,7 @@
                                         @endif
 
                                         <form method="POST" action="{{ route('portal.apartments.destroy', $apartment->id) }}"
-                                              data-confirm="هل أنت متأكد من حذف الشقة رقم {{ $apartment->unit_number }} نهائياً؟"
+                                              data-confirm="هل أنت متأكد من حذف {{ $apartment->definite_unit }} نهائياً؟"
                                               data-confirm-title="تأكيد حذف الشقة نهائياً"
                                               data-confirm-type="danger"
                                               data-confirm-password="true"
@@ -522,7 +522,7 @@
                     <option value="">جميع الشقق</option>
                     @foreach($allApartments as $apt)
                         @php
-                            $cUnit = str_starts_with(trim($apt->unit_number), 'شقة') ? $apt->unit_number : 'شقة ' . $apt->unit_number;
+                            $cUnit = $apt->formatted_unit;
                         @endphp
                         <option value="{{ $apt->id }}" {{ request('receipt_apt_id') == $apt->id ? 'selected' : '' }}>
                             {{ $cUnit }} ({{ $apt->building?->name }})
@@ -586,7 +586,7 @@
                             <div style="margin-top:0.6rem; display:flex; align-items:center; justify-content:space-between; gap:0.5rem;">
                                 <div>
                                     <span class="badge badge-neutral num" style="font-size:0.8rem; font-weight:800;">
-                                        🏢 شقة {{ $payment->apartment?->unit_number ?? '—' }}
+                                        🏢 {{ $payment->apartment ? $payment->apartment->formatted_unit : '—' }}
                                     </span>
                                     @if($payment->apartment?->building)
                                         <span style="font-size:0.78rem; color:var(--text-secondary); margin-right:4px;">
@@ -616,7 +616,7 @@
                         {{-- Action Buttons Footer --}}
                         <div style="margin-top:0.85rem; padding-top:0.75rem; border-top:1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; gap:0.4rem;">
                             @if($cleanPhone)
-                                <a href="https://wa.me/{{ $cleanPhone }}?text={{ urlencode('السلام عليكم تم إصدار وصل أداء رقم #' . $payment->receipt_number . ' بمبلغ ' . number_format($payment->amount_paid, 0) . ' درهم لشقتكم رقم ' . ($payment->apartment?->unit_number ?? '')) }}" 
+                                <a href="https://wa.me/{{ $cleanPhone }}?text={{ urlencode('السلام عليكم تم إصدار وصل أداء رقم #' . $payment->receipt_number . ' بمبلغ ' . number_format($payment->amount_paid, 0) . ' درهم لـ ' . ($payment->apartment ? $payment->apartment->definite_unit : '')) }}" 
                                    target="_blank" 
                                    class="btn btn-sm btn-secondary" 
                                    style="color:#15803d; border-color:rgba(37,211,102,0.4); font-size:0.78rem; padding:0.35rem 0.65rem;" 
@@ -679,7 +679,7 @@
                                 </td>
                                 <td>
                                     <span class="badge badge-neutral num" style="font-weight:800;">
-                                        شقة {{ $payment->apartment?->unit_number ?? '—' }}
+                                        {{ $payment->apartment ? $payment->apartment->formatted_unit : '—' }}
                                     </span>
                                 </td>
                                 <td>
@@ -778,7 +778,7 @@
                                 <optgroup label="🏢 {{ $groupName }}">
                                     @foreach($apts as $apt)
                                         @php
-                                            $cleanUnit = str_starts_with(trim($apt->unit_number), 'شقة') ? $apt->unit_number : 'شقة ' . $apt->unit_number;
+                                            $cleanUnit = $apt->formatted_unit;
                                             $residentName = $apt->residents->first()?->full_name;
                                         @endphp
                                         <option value="{{ $apt->id }}" data-fee="{{ (float) $apt->monthly_fee }}">

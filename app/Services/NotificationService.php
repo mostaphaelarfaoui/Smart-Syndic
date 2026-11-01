@@ -123,39 +123,12 @@ class NotificationService
     }
 
     /**
-     * Synchronize active global platform announcements into the user's notifications.
+     * Synchronize active global platform announcements into notifications.
+     * Note: Announcements are now delivered exclusively through the dedicated Messaging System.
      */
     public function syncAnnouncements(User $user): void
     {
-        $announcements = PlatformAnnouncement::currentlyActive($user->role, $user->tenant_id)->get();
-
-        foreach ($announcements as $ann) {
-            // Check if already notified for this announcement
-            $existing = $user->notifications()
-                ->where('data->extra->announcement_id', $ann->id)
-                ->first();
-
-            if (! $existing) {
-                $icon = match (strtoupper($ann->type)) {
-                    'DANGER'  => '🚨',
-                    'WARNING' => '⚠️',
-                    'SUCCESS' => '✨',
-                    default   => '📢',
-                };
-
-                $type = strtolower($ann->type);
-
-                $this->send(
-                    user: $user,
-                    title: $ann->title,
-                    message: $ann->message,
-                    type: $type,
-                    url: null,
-                    icon: $icon,
-                    extra: ['announcement_id' => $ann->id]
-                );
-            }
-        }
+        // Deprecated: Announcements are now displayed exclusively in the Message Center / Message Bell
     }
 
     /**
@@ -163,8 +136,6 @@ class NotificationService
      */
     public function getFeed(User $user, int $limit = 25): array
     {
-        $this->syncAnnouncements($user);
-
         $notifications = $user->notifications()->take($limit)->get();
         $unreadCount = $user->unreadNotifications()->count();
 

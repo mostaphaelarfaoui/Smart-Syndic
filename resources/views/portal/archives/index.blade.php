@@ -146,7 +146,7 @@
                                 <tr>
                                     <td class="num" style="font-weight:700;">#{{ $rec->receipt_number }}</td>
                                     <td>
-                                        <strong class="num">شقة {{ $rec->apartment?->unit_number ?? '—' }}</strong>
+                                        <strong class="num">{{ $rec->apartment ? $rec->apartment->formatted_unit : '—' }}</strong>
                                     </td>
                                     <td>
                                         <span class="num" style="font-weight:700; color:var(--color-success);">

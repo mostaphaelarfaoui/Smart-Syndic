@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/utils/number_utils.dart';
 import '../../core/services/api_service.dart';
 import '../../core/services/saved_account_service.dart';
 import '../../providers/auth_provider.dart';
@@ -108,8 +109,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final syndicPhone = syndic?['phone'] as String?;
 
     final aptLabel = buildingName != null && buildingName.isNotEmpty
-        ? 'شقة $unitNumber ($buildingName)'
-        : 'شقة $unitNumber';
+        ? '${formatUnitLabel(unitNumber)} ($buildingName)'
+        : formatUnitLabel(unitNumber);
 
     showDialog(
       context: context,

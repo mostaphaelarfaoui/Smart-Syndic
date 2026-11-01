@@ -72,11 +72,11 @@ class RegisterSyndicController extends Controller
                     for ($f = 1; $f <= $floors; $f++) {
                         for ($u = 1; $u <= $unitsPerFloor; $u++) {
                             if ($scheme === 'floor_based') {
-                                $uName = 'شقة ' . (($f * 100) + $u);
+                                $uName = (string) (($f * 100) + $u);
                             } elseif ($scheme === 'floor_unit') {
-                                $uName = "شقة {$f}-{$u}";
+                                $uName = "{$f}-{$u}";
                             } else {
-                                $uName = "شقة $unitCounter";
+                                $uName = (string) $unitCounter;
                             }
                             Apartment::create([
                                 'building_id' => $building->id,
@@ -92,7 +92,7 @@ class RegisterSyndicController extends Controller
                         $floorNum = $floors > 0 ? (int) ceil($i / max(1, ceil($totalUnits / max(1, $floors)))) : 1;
                         Apartment::create([
                             'building_id' => $building->id,
-                            'unit_number' => "شقة $i",
+                            'unit_number' => (string) $i,
                             'floor'       => max(1, $floorNum),
                             'monthly_fee' => $fee,
                         ]);
@@ -121,11 +121,11 @@ class RegisterSyndicController extends Controller
                         for ($f = 1; $f <= $bFloors; $f++) {
                             for ($u = 1; $u <= $bUnitsPerFloor; $u++) {
                                 if ($bScheme === 'floor_based') {
-                                    $uName = 'شقة ' . (($f * 100) + $u);
+                                    $uName = (string) (($f * 100) + $u);
                                 } elseif ($bScheme === 'floor_unit') {
-                                    $uName = "شقة {$f}-{$u}";
+                                    $uName = "{$f}-{$u}";
                                 } else {
-                                    $uName = "شقة $unitCounter";
+                                    $uName = (string) $unitCounter;
                                 }
                                 Apartment::create([
                                     'building_id' => $building->id,
@@ -141,7 +141,7 @@ class RegisterSyndicController extends Controller
                             $floorNum = $bFloors > 0 ? (int) ceil($i / max(1, ceil($bTotalUnits / max(1, $bFloors)))) : 1;
                             Apartment::create([
                                 'building_id' => $building->id,
-                                'unit_number' => "شقة $i",
+                                'unit_number' => (string) $i,
                                 'floor'       => max(1, $floorNum),
                                 'monthly_fee' => $bFee,
                             ]);

@@ -206,7 +206,7 @@
                                     @if($resident->apartments->isNotEmpty())
                                         @php
                                             $apt = $resident->apartments->first();
-                                            $cleanUnit = str_starts_with(trim($apt->unit_number), 'شقة') ? $apt->unit_number : 'شقة ' . $apt->unit_number;
+                                            $cleanUnit = $apt->formatted_unit;
                                         @endphp
                                         <div>
                                             <span class="badge badge-neutral num" style="font-weight:800; font-size:0.85rem;">
@@ -314,7 +314,7 @@
                                     <strong>{{ $sug->user?->full_name ?? 'الساكن' }}</strong>
                                     <div style="font-size:0.75rem; color:var(--text-muted);">
                                         @if($sug->apartment)
-                                            شقة {{ $sug->apartment->unit_number }}
+                                            {{ $sug->apartment->formatted_unit }}
                                         @endif
                                     </div>
                                 </td>
@@ -359,7 +359,7 @@
                                         {{-- Convert to Poll Button (Like Mobile App) --}}
                                         @if($sug->status !== 'CONVERTED_TO_POLL')
                                             @php
-                                                $cleanSugUnit = preg_replace('/^(شقة\s*)+/u', '', trim($sug->apartment?->unit_number ?? ''));
+                                                $cleanSugUnit = $sug->apartment?->clean_unit_number ?? '';
                                             @endphp
                                             <button type="button" 
                                                     class="btn btn-sm btn-primary" 
@@ -475,7 +475,7 @@
 
                                                     @if($commentVote->apartment)
                                                         <span class="badge badge-neutral num" style="font-size:0.7rem;">
-                                                            شقة {{ $commentVote->apartment->unit_number }}
+                                                            {{ $commentVote->apartment->formatted_unit }}
                                                             @if($commentVote->apartment->building)
                                                                 <small style="color:var(--text-muted);">({{ $commentVote->apartment->building->name }})</small>
                                                             @endif

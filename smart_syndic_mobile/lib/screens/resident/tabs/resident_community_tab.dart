@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../providers/resident_provider.dart';
 import '../../../widgets/empty_state.dart';
+import '../../../core/utils/number_utils.dart';
 import '../dialogs/submit_suggestion_dialog.dart';
 
 class ResidentCommunityTab extends StatefulWidget {
@@ -407,7 +408,7 @@ class ResidentCommunityTabState extends State<ResidentCommunityTab> with SingleT
                                         if (vote['is_anonymous'] == true || vote['is_anonymous'] == 1 || vote['is_anonymous'] == '1')
                                           Text('مجهول', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary))
                                         else
-                                          Text('شقة ${vote['apartment']} - عمارة ${vote['building']}', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                                          Text('${formatUnitLabel(vote['apartment']?.toString())} - عمارة ${vote['building']}', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                                         if (vote['is_mine'] == true || vote['is_mine'] == 1 || vote['is_mine'] == '1')
                                           Padding(
                                             padding: const EdgeInsets.only(right: 8.0),

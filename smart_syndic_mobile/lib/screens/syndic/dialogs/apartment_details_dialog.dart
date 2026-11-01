@@ -31,7 +31,7 @@ class ApartmentDetailsDialog extends StatelessWidget {
     } else if (cleanPhone.startsWith('+')) {
       cleanPhone = cleanPhone.substring(1);
     }
-    final message = Uri.encodeComponent('السلام عليكم، بخصوص الشقة رقم $unit في الإقامة.');
+    final message = Uri.encodeComponent('السلام عليكم، بخصوص ${formatDefiniteUnit(unit)} في الإقامة.');
     final uri = Uri.parse('https://wa.me/$cleanPhone?text=$message');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -64,8 +64,8 @@ class ApartmentDetailsDialog extends StatelessWidget {
     final isBillable = apartment.isBillable;
     final title = isBillable ? 'تأكيد إعفاء الشقة من واجبات السانديك' : 'إلغاء إعفاء الشقة وإعادة الفوترة';
     final message = isBillable
-        ? 'هل أنت متأكد من رغبتك في إعفاء الشقة ${apartment.unitNumber} من واجبات السانديك الشهرية؟\n\n• لن تُحسب عليها أي متأخرات.\n• سيتم استثناؤها من المداخيل الشهرية المتوقعة للإقامة.'
-        : 'هل تريد إلغاء إعفاء الشقة ${apartment.unitNumber} وإعادة إدراجها في حسابات واجبات السانديك الشهرية والمتأخرات؟';
+        ? 'هل أنت متأكد من رغبتك في إعفاء ${apartment.definiteUnit} من واجبات السانديك الشهرية؟\n\n• لن تُحسب عليها أي متأخرات.\n• سيتم استثناؤها من المداخيل الشهرية المتوقعة للإقامة.'
+        : 'هل تريد إلغاء إعفاء ${apartment.definiteUnit} وإعادة إدراجها في حسابات واجبات السانديك الشهرية والمتأخرات؟';
 
     final confirm = await showDialog<bool>(
       context: context,
@@ -129,7 +129,7 @@ class ApartmentDetailsDialog extends StatelessWidget {
     final confirm = await ConfirmActionDialog.show(
       context,
       title: 'إخلاء الشقة وحذف حساب الساكن',
-      message: 'هل أنت متأكد من رغبتك في إخلاء الشقة ${apartment.unitNumber} وحذف حساب $residentName؟\n\n'
+      message: 'هل أنت متأكد من رغبتك في إخلاء ${apartment.definiteUnit} وحذف حساب $residentName؟\n\n'
           '• سيتم حذف حساب الساكن نهائياً لتصبح الشقة شاغرة وقابلة لربط شخص آخر بها.\n'
           '• سيتم تصفير وإرجاع الحسابات والمبالغ للصيغة الأولى (0 درهم متأخرات).',
       confirmText: 'تأكيد الإخلاء والحذف',
@@ -890,7 +890,7 @@ class ApartmentDetailsDialog extends StatelessWidget {
                             final confirm = await ConfirmActionDialog.show(
                               context,
                               title: 'تأكيد حذف الشقة نهائياً',
-                              message: 'هل أنت متأكد من رغبتك في حذف الشقة ${apartment.unitNumber}؟\n\n'
+                              message: 'هل أنت متأكد من رغبتك في حذف ${apartment.definiteUnit}؟\n\n'
                                   '⚠️ تنبيه: سيتم مباشرة حذف حساب الساكن المرتبط بها، بالإضافة إلى كافة إيصالاتها ومستحقاتها المالية.',
                               confirmText: 'تأكيد الحذف النهائي',
                               type: ConfirmDialogType.danger,

@@ -62,4 +62,8 @@ class ApartmentModel {
       isBillable: isBillableBool, // Feature 4
     );
   }
+
+  String get formattedUnit => formatUnitLabel(unitNumber);
+  String get definiteUnit => formatDefiniteUnit(unitNumber);
+  String get cleanUnit => cleanUnitNumber(unitNumber);
 }

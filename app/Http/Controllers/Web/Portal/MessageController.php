@@ -244,7 +244,7 @@ class MessageController extends Controller
             $senderBadge = $m->isFromSuperAdmin()
                 ? 'إعلان رسمي'
                 : ($m->isFromResident()
-                    ? ('شقة ' . ($m->target_metadata['unit_number'] ?? ($m->sender?->apartments?->first()?->unit_number ?? '—')))
+                    ? format_unit_label($m->target_metadata['unit_number'] ?? ($m->sender?->apartments?->first()?->unit_number ?? '—'))
                     : 'سانديك');
 
             return [

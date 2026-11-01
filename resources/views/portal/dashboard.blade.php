@@ -33,7 +33,7 @@
                             <optgroup label="🏢 {{ $groupName }}">
                                 @foreach($apts as $apt)
                                     @php
-                                        $cleanUnit = str_starts_with(trim($apt->unit_number), 'شقة') ? $apt->unit_number : 'شقة ' . $apt->unit_number;
+                                        $cleanUnit = $apt->formatted_unit;
                                         $residentName = $apt->residents->first()?->full_name;
                                     @endphp
                                     <option value="{{ $apt->id }}" data-fee="{{ (float) $apt->monthly_fee }}">
@@ -454,7 +454,7 @@
                                 </td>
                                 <td>
                                     <span class="badge badge-neutral num" style="font-weight:800;">
-                                        شقة {{ $payment->apartment?->unit_number ?? '—' }}
+                                        {{ $payment->apartment ? $payment->apartment->formatted_unit : '—' }}
                                     </span>
                                 </td>
                                 <td>
@@ -542,7 +542,7 @@
                             <div style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">
                                 <span>📞 {{ $pUser->phone }}</span>
                                 @if($pUser->apartments->isNotEmpty())
-                                    <span> • شقة {{ $pUser->apartments->first()->unit_number }}</span>
+                                    <span> • {{ $pUser->apartments->first()->formatted_unit }}</span>
                                 @endif
                             </div>
                         </div>
@@ -595,7 +595,7 @@
                                 <div>
                                     <div style="display:flex; align-items:center; gap:0.4rem;">
                                         <span class="badge badge-warning num" style="font-weight:800; font-size:0.75rem; padding:0.15rem 0.45rem;">
-                                            شقة {{ $uApt->unit_number }}
+                                            {{ $uApt->formatted_unit }}
                                         </span>
                                         <span style="font-size:0.85rem; font-weight:700; color:var(--text-primary);">
                                             {{ $uApt->residents->first()?->full_name ?? 'المالك' }}

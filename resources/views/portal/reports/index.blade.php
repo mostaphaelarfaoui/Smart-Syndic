@@ -283,7 +283,7 @@
                         <tr style="border-bottom:1px solid var(--border-color); background: {{ $row['status'] === 'PAID' ? 'rgba(16,185,129,0.04)' : ($row['status'] === 'PARTIAL' ? 'rgba(245,158,11,0.04)' : 'rgba(244,63,94,0.04)') }};">
                             <td style="padding:0.65rem 0.75rem;">{{ $idx + 1 }}</td>
                             <td style="padding:0.65rem 0.75rem; font-weight:700;">
-                                شقة {{ $row['unit_number'] }}
+                                {{ format_unit_label($row['unit_number']) }}
                                 @if($row['building_name'] && $row['building_name'] !== '—')
                                     <small style="color:var(--text-secondary); font-weight:normal;">({{ $row['building_name'] }})</small>
                                 @endif

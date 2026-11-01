@@ -7,6 +7,7 @@ import '../../../models/apartment_model.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/syndic_provider.dart';
 import '../../../widgets/empty_state.dart';
+import '../../../core/utils/number_utils.dart';
 import '../dialogs/add_apartment_dialog.dart';
 import '../dialogs/apartment_details_dialog.dart';
 import '../dialogs/edit_apartment_dialog.dart';
@@ -17,8 +18,8 @@ extension _BillableToggle on _SyndicApartmentsTabState {
     final isCurrentlyBillable = apt.isBillable;
     final actionTitle = isCurrentlyBillable ? 'إعفاء الشقة من واجبات السانديك' : 'إلغاء الإعفاء وإعادة الفوترة';
     final actionMessage = isCurrentlyBillable
-        ? 'هل أنت متأكد من رغبتك في إعفاء الشقة ${apt.unitNumber} من واجبات السانديك الشهرية؟\n\n• لن تُحسب عليها أي متأخرات.\n• سيتم استثناؤها من المداخيل الشهرية المتوقعة للإقامة.'
-        : 'هل تريد إلغاء إعفاء الشقة ${apt.unitNumber} وإعادة إدراجها في حسابات واجبات السانديك الشهرية والمتأخرات؟';
+        ? 'هل أنت متأكد من رغبتك في إعفاء ${apt.definiteUnit} من واجبات السانديك الشهرية؟\n\n• لن تُحسب عليها أي متأخرات.\n• سيتم استثناؤها من المداخيل الشهرية المتوقعة للإقامة.'
+        : 'هل تريد إلغاء إعفاء ${apt.definiteUnit} وإعادة إدراجها في حسابات واجبات السانديك الشهرية والمتأخرات؟';
 
     final confirm = await showDialog<bool>(
       context: ctx,
@@ -105,7 +106,7 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
     } else if (cleanPhone.startsWith('+')) {
       cleanPhone = cleanPhone.substring(1);
     }
-    final message = Uri.encodeComponent('السلام عليكم، بخصوص الشقة رقم $unit.');
+    final message = Uri.encodeComponent('السلام عليكم، بخصوص ${formatDefiniteUnit(unit)}.');
     final uri = Uri.parse('https://wa.me/$cleanPhone?text=$message');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);

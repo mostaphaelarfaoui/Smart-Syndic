@@ -171,7 +171,7 @@
             @forelse($paidApartments as $pApt)
                 <div style="display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0.85rem; border-bottom:1px solid var(--border-subtle);">
                     <div>
-                        <strong class="num">شقة {{ $pApt->unit_number }}</strong>
+                        <strong class="num">{{ $pApt->formatted_unit }}</strong>
                         <span style="font-size:0.8rem; color:var(--text-muted); margin-right:0.5rem;">({{ $pApt->residents->first()?->full_name ?? 'المالك' }})</span>
                     </div>
                     <span class="badge badge-success" style="font-size:0.75rem;">تم الأداء ✓</span>
@@ -193,7 +193,7 @@
             @forelse($unpaidApartments as $uApt)
                 <div style="display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0.85rem; border-bottom:1px solid var(--border-subtle);">
                     <div>
-                        <strong class="num">شقة {{ $uApt->unit_number }}</strong>
+                        <strong class="num">{{ $uApt->formatted_unit }}</strong>
                         <span style="font-size:0.8rem; color:var(--text-muted); margin-right:0.5rem;">({{ $uApt->residents->first()?->full_name ?? 'المالك' }})</span>
                     </div>
                     <span class="num" style="font-weight:700; color:var(--color-warning);">
