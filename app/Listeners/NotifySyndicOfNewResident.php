@@ -13,7 +13,8 @@ class NotifySyndicOfNewResident implements ShouldQueue
     {
         $resident = $event->resident;
         $apartment = $resident->apartments()->first();
-        $aptNumber = $apartment ? ' (' . $apartment->formatted_unit . ')' : '';
+        $unitLabel = $apartment ? format_unit_label($apartment->clean_unit_number) : null;
+        $aptNumber = $unitLabel ? " ({$unitLabel})" : '';
 
         app(\App\Services\NotificationService::class)->sendToTenantSyndics(
             tenantId: $resident->tenant_id,
@@ -23,8 +24,13 @@ class NotifySyndicOfNewResident implements ShouldQueue
             url: route('portal.residents.index'),
             icon: '📋',
             extra: [
-                'target_screen' => 'pending_residents',
-                'target_id'     => $resident->id,
+                'target_screen'  => 'pending_residents',
+                'target_id'      => $resident->id,
+                'actor_name'     => $resident->full_name,
+                'actor_role'     => 'ساكن جديد',
+                'unit_number'    => $apartment?->clean_unit_number,
+                'building_name'  => $apartment?->building?->name,
+                'recipient_label'=> 'إدارة السانديك',
             ]
         );
     }

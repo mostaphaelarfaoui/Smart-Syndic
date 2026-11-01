@@ -51,8 +51,12 @@ class CommunityController extends Controller
                 url: route('portal.dashboard'),
                 icon: '💬',
                 extra: [
-                    'target_screen' => 'community',
-                    'target_id'     => $suggestion->id,
+                    'target_screen'  => 'community',
+                    'target_id'      => $suggestion->id,
+                    'actor_name'     => 'إدارة السانديك',
+                    'actor_role'     => 'سانديك',
+                    'recipient_name' => $suggestion->user->full_name,
+                    'unit_number'    => $suggestion->apartment?->clean_unit_number ?? $suggestion->user->apartments()->first()?->clean_unit_number,
                 ]
             );
         }
@@ -120,8 +124,11 @@ class CommunityController extends Controller
             url: route('portal.residents.index', ['tab' => 'polls']),
             icon: '🗳️',
             extra: [
-                'target_screen' => 'polls',
-                'target_id'     => $poll->id,
+                'target_screen'   => 'polls',
+                'target_id'       => $poll->id,
+                'actor_name'      => 'إدارة السانديك',
+                'actor_role'      => 'سانديك',
+                'recipient_label' => 'كافة سكان الإقامة',
             ]
         );
 
@@ -135,8 +142,12 @@ class CommunityController extends Controller
                 url: route('portal.dashboard'),
                 icon: '🗳️',
                 extra: [
-                    'target_screen' => 'polls',
-                    'target_id'     => $poll->id,
+                    'target_screen'  => 'polls',
+                    'target_id'      => $poll->id,
+                    'actor_name'     => 'إدارة السانديك',
+                    'actor_role'     => 'سانديك',
+                    'recipient_name' => $suggestion->user->full_name,
+                    'unit_number'    => $suggestion->apartment?->clean_unit_number ?? $suggestion->user->apartments()->first()?->clean_unit_number,
                 ]
             );
         }

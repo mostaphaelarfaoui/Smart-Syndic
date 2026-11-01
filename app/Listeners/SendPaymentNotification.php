@@ -42,8 +42,13 @@ class SendPaymentNotification implements ShouldQueue
             url: route('receipts.download', $payment->id),
             icon: '💰',
             extra: [
-                'target_screen' => 'payments',
-                'target_id'     => $payment->id,
+                'target_screen'  => 'payments',
+                'target_id'      => $payment->id,
+                'actor_name'     => 'إدارة السانديك',
+                'actor_role'     => 'سانديك',
+                'recipient_name' => $resident->full_name,
+                'unit_number'    => $payment->apartment?->clean_unit_number,
+                'building_name'  => $payment->apartment?->building?->name,
             ]
         );
     }

@@ -146,7 +146,6 @@
                        class="message-list-row {{ $isSelected ? 'active-row' : '' }} {{ $isUnread ? 'unread-row' : '' }}" 
                        style="display:flex; align-items:flex-start; gap:0.75rem; padding:0.9rem 1.1rem; border-bottom:1px solid var(--border-color); text-decoration:none; color:inherit; transition:background 0.15s; position:relative; background:{{ $isSelected ? 'rgba(99, 102, 241, 0.08)' : ($isUnread ? 'rgba(99, 102, 241, 0.03)' : 'transparent') }}; border-right:4px solid {{ $isSelected ? 'var(--brand-primary)' : ($isAdmin ? '#6366f1' : 'transparent') }};">
                         
-                        {{-- Avatar --}}
                         <div style="width:40px; height:40px; min-width:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.15rem; background:{{ $isAdmin ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(79, 70, 229, 0.3))' : ($isResident ? 'rgba(16, 185, 129, 0.15)' : 'rgba(99, 102, 241, 0.15)') }};">
                             {{ $isAdmin ? '🛡️' : ($isResident ? '👤' : '📤') }}
                         </div>
@@ -157,14 +156,14 @@
                                 <div style="display:flex; align-items:center; gap:0.35rem; overflow:hidden;">
                                     <strong style="font-size:0.84rem; color:var(--text-primary); white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">
                                         @if($isInbox)
-                                            {{ $isAdmin ? 'الإدارة العامة للمنصة' : $msg->sender?->full_name }}
+                                            من: {{ $msg->sender_display_name }}
                                         @else
-                                            إلى: {{ $msg->target_type === 'ALL_RESIDENTS' ? 'كافة سكان الإقامة' : ($msg->target_metadata['recipient_name'] ?? ($msg->target_type === 'GROUP' ? 'مجموعة سكان' : 'ساكن محدد')) }}
+                                            إلى: {{ $msg->recipient_label }}
                                         @endif
                                     </strong>
-                                    @if($isResident && isset($msg->target_metadata['unit_number']))
+                                    @if($isInbox && $msg->sender_unit_label)
                                         <span class="badge badge-neutral num" style="font-size:0.68rem; padding:0.1rem 0.35rem;">
-                                            {{ format_unit_label($msg->target_metadata['unit_number']) }}
+                                            {{ $msg->sender_unit_label }}
                                         </span>
                                     @endif
                                 </div>
@@ -179,6 +178,15 @@
 
                             <div style="font-size:0.78rem; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">
                                 {{ \Illuminate\Support\Str::limit($msg->body, 60) }}
+                            </div>
+
+                            {{-- Sub-recipient/sender indicator --}}
+                            <div style="font-size:0.71rem; color:var(--text-muted); margin-top:3px; display:flex; align-items:center; gap:0.3rem;">
+                                @if($isInbox)
+                                    <span>🎯 إلى: إدارة السانديك</span>
+                                @else
+                                    <span>👤 من: {{ $msg->sender_display_name }}</span>
+                                @endif
                             </div>
                         </div>
 
@@ -216,23 +224,22 @@
                                 <h3 style="margin:0; font-size:1.15rem; font-weight:800; color:var(--text-primary);">
                                     {{ $selectedMessage->subject }}
                                 </h3>
-                                <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-top:0.35rem; font-size:0.8rem; color:var(--text-secondary);">
-                                    @if($selectedMessage->sender_id === auth()->id())
-                                        <span>
-                                            <strong>إلى:</strong> 
-                                            {{ $selectedMessage->target_type === 'ALL_RESIDENTS' ? 'كافة سكان الإقامة' : ($selectedMessage->target_metadata['recipient_name'] ?? 'ساكن محدد') }}
-                                        </span>
-                                    @else
-                                        <span>
-                                            <strong>من:</strong> 
-                                            {{ $selectedMessage->isFromSuperAdmin() ? 'الإدارة العامة للمنصة' : $selectedMessage->sender?->full_name }}
-                                        </span>
-                                    @endif
-                                    @if(isset($selectedMessage->target_metadata['unit_number']))
-                                        <span>• <strong>{{ format_unit_label($selectedMessage->target_metadata['unit_number']) }}</strong></span>
-                                    @endif
-                                    @if($selectedMessage->sender_id !== auth()->id() && $selectedMessage->sender?->phone)
-                                        <span>• هاتف: <strong class="num">{{ $selectedMessage->sender->phone }}</strong></span>
+                                
+                                {{-- Dual info box: Sender & Recipient --}}
+                                <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; margin-top:0.45rem; font-size:0.81rem; color:var(--text-secondary);">
+                                    <span style="background:rgba(16, 185, 129, 0.1); color:#10b981; padding:0.18rem 0.55rem; border-radius:6px; font-weight:700;">
+                                        👤 <strong>المرسل (من):</strong> {{ $selectedMessage->sender_display_name }}
+                                        @if($selectedMessage->sender_unit_label)
+                                            ({{ $selectedMessage->sender_unit_label }})
+                                        @endif
+                                    </span>
+
+                                    <span style="background:rgba(99, 102, 241, 0.1); color:#6366f1; padding:0.18rem 0.55rem; border-radius:6px; font-weight:700;">
+                                        🎯 <strong>المرسل إليه (إلى):</strong> {{ $selectedMessage->recipient_label }}
+                                    </span>
+
+                                    @if($selectedMessage->sender_id !== auth()->id() && ($selectedMessage->sender?->phone || isset($selectedMessage->target_metadata['resident_phone'])))
+                                        <span>• 📞 هاتف: <strong class="num">{{ $selectedMessage->target_metadata['resident_phone'] ?? $selectedMessage->sender->phone }}</strong></span>
                                     @endif
                                     <span>• 🕒 {{ $selectedMessage->created_at->format('Y/m/d H:i') }}</span>
                                 </div>
@@ -259,14 +266,7 @@
                     {{-- Target Metadata if Broadcast --}}
                     @if($selectedMessage->sender_id === auth()->id())
                         <div style="background:var(--bg-secondary); padding:0.85rem 1.1rem; border-radius:10px; border:1px solid var(--border-color); font-size:0.82rem; color:var(--text-secondary); margin-bottom:1.5rem;">
-                            📢 <strong>المستهدفون بالرسالة:</strong> 
-                            @if($selectedMessage->target_type === 'ALL_RESIDENTS')
-                                كافة سكان الإقامة
-                            @elseif($selectedMessage->target_type === 'INDIVIDUAL')
-                                {{ $selectedMessage->target_metadata['recipient_name'] ?? 'ساكن محدد' }}
-                            @else
-                                مجموعة شقق ({{ isset($selectedMessage->target_metadata['targeted_units']) ? implode(', ', $selectedMessage->target_metadata['targeted_units']) : 'محددة' }})
-                            @endif
+                            📢 <strong>المستهدفون بالرسالة (إلى):</strong> {{ $selectedMessage->recipient_label }}
                             (تم تسليمها لـ {{ $selectedMessage->recipients()->count() }} مستخدم).
                         </div>
                     @endif

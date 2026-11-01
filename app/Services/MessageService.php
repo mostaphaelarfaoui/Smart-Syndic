@@ -100,10 +100,12 @@ class MessageService
                 'category'        => $category,
                 'priority'        => $priority,
                 'target_metadata' => [
-                    'apartment_id'   => $apartment?->id,
-                    'unit_number'    => $apartment ? $apartment->clean_unit_number : 'غير محدد',
-                    'resident_name'  => $resident->full_name,
-                    'resident_phone' => $resident->phone,
+                    'apartment_id'    => $apartment?->id,
+                    'unit_number'     => $apartment ? $apartment->clean_unit_number : 'غير محدد',
+                    'building_name'   => $apartment?->building?->name,
+                    'resident_name'   => $resident->full_name,
+                    'resident_phone'  => $resident->phone,
+                    'recipient_label' => 'إدارة السانديك',
                 ],
             ]);
 
@@ -149,24 +151,31 @@ class MessageService
                     ->where('status', 'ACTIVE')
                     ->get();
                 $metadata['description'] = 'رسالة عامة لكافة سكان الإقامة';
+                $metadata['recipient_label'] = 'كافة سكان الإقامة';
             } elseif ($targetType === 'INDIVIDUAL') {
                 // targetIds[0] can be user_id or apartment_id
                 $id = $targetIds[0] ?? null;
                 if ($id) {
                     $user = User::where('tenant_id', $tenantId)->where('id', $id)->first();
+                    $apartment = null;
                     if (! $user) {
                         // Check if it's an apartment ID
                         $apartment = Apartment::find($id);
                         $user = $apartment?->residents()->first();
+                    } else {
+                        $apartment = $user->apartments()->first();
                     }
                     if ($user) {
                         $targetUsers = collect([$user]);
                         $metadata['recipient_name'] = $user->full_name;
+                        $metadata['unit_number'] = $apartment?->clean_unit_number;
+                        $metadata['building_name'] = $apartment?->building?->name;
+                        $metadata['recipient_label'] = $user->full_name . ($apartment ? ' (' . format_unit_label($apartment->clean_unit_number) . ')' : '');
                     }
                 }
             } elseif ($targetType === 'GROUP') {
                 // targetIds can be array of apartment IDs or user IDs
-                $apartments = Apartment::whereIn('id', $targetIds)->with('residents')->get();
+                $apartments = Apartment::whereIn('id', $targetIds)->with(['residents', 'building'])->get();
                 $users = collect();
                 $unitNumbers = [];
 
@@ -182,6 +191,8 @@ class MessageService
                 $targetUsers = $users->merge($directUsers)->unique('id');
                 $metadata['targeted_units'] = $unitNumbers;
                 $metadata['count'] = $targetUsers->count();
+                $formattedUnits = array_map(fn($u) => format_unit_label($u), $unitNumbers);
+                $metadata['recipient_label'] = 'مجموعة شقق: ' . implode(', ', $formattedUnits);
             }
 
             $message = Message::create([

@@ -337,6 +337,84 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         height: 1.4,
                       ),
                     ),
+                    if (item.actorLabel != null || item.recipientLabel != null || item.unitLabel != null) ...[
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          if (item.actorLabel != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withAlpha(15),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text('👤 ', style: TextStyle(fontSize: 10)),
+                                  Text(
+                                    'من طرف: ${item.actorLabel}',
+                                    style: GoogleFonts.cairo(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          if (item.recipientLabel != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xff6366f1).withAlpha(15),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text('🎯 ', style: TextStyle(fontSize: 10)),
+                                  Text(
+                                    'المعني: ${item.recipientLabel}',
+                                    style: GoogleFonts.cairo(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xff4f46e5),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          if (item.unitLabel != null &&
+                              !(item.actorLabel?.contains(item.unitLabel!) ?? false) &&
+                              !(item.recipientLabel?.contains(item.unitLabel!) ?? false))
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: AppColors.border),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text('🏠 ', style: TextStyle(fontSize: 10)),
+                                  Text(
+                                    item.unitLabel!,
+                                    style: GoogleFonts.cairo(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),

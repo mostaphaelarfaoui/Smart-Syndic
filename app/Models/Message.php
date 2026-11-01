@@ -30,6 +30,17 @@ class Message extends Model
         'target_metadata' => 'array',
     ];
 
+    protected $appends = [
+        'category_label',
+        'priority_label',
+        'sender_display_name',
+        'sender_role_label',
+        'sender_unit_label',
+        'recipient_label',
+        'recipient_name',
+        'recipient_unit_label',
+    ];
+
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
@@ -96,5 +107,99 @@ class Message extends Model
             'HIGH'   => '⚠️ هام',
             default  => 'عادي',
         };
+    }
+
+    public function getSenderDisplayNameAttribute(): string
+    {
+        if ($this->isFromSuperAdmin()) {
+            return 'الإدارة العامة للمنصة';
+        }
+
+        return $this->sender?->full_name ?? ($this->target_metadata['resident_name'] ?? 'مستخدم');
+    }
+
+    public function getSenderRoleLabelAttribute(): string
+    {
+        if ($this->isFromSuperAdmin()) {
+            return 'الإدارة العامة للمنصة';
+        }
+        if ($this->isFromSyndic()) {
+            return 'إدارة السانديك';
+        }
+        return 'ساكن مقيم';
+    }
+
+    public function getSenderUnitLabelAttribute(): ?string
+    {
+        if (! $this->isFromResident()) {
+            return null;
+        }
+
+        $rawUnit = $this->target_metadata['unit_number'] ?? null;
+        if (! $rawUnit && $this->relationLoaded('sender') && $this->sender) {
+            $rawUnit = $this->sender->apartments?->first()?->clean_unit_number;
+        }
+
+        return $rawUnit ? format_unit_label($rawUnit) : null;
+    }
+
+    public function getRecipientLabelAttribute(): string
+    {
+        if ($this->target_type === 'ALL_RESIDENTS') {
+            return 'كافة سكان الإقامة';
+        }
+
+        if (in_array($this->target_type, ['SYNDIC', 'SYNDICS_ONLY'], true)) {
+            return 'إدارة السانديك';
+        }
+
+        if ($this->target_type === 'INDIVIDUAL') {
+            $name = $this->target_metadata['recipient_name'] ?? null;
+            $unit = $this->target_metadata['unit_number'] ?? null;
+            if (! $name && $this->relationLoaded('recipients') && $this->recipients->first()?->user) {
+                $user = $this->recipients->first()->user;
+                $name = $user->full_name;
+                $unit = $user->apartments?->first()?->clean_unit_number;
+            }
+            if ($name && $unit) {
+                return $name . ' (' . format_unit_label($unit) . ')';
+            }
+            return $name ?: 'ساكن محدد';
+        }
+
+        if ($this->target_type === 'GROUP') {
+            $units = $this->target_metadata['targeted_units'] ?? [];
+            if (! empty($units)) {
+                $formatted = array_map(fn($u) => format_unit_label($u), (array) $units);
+                return 'مجموعة شقق: ' . implode(', ', $formatted);
+            }
+            return 'مجموعة شقق محددة';
+        }
+
+        if (in_array($this->target_type, ['RESIDENTS_ONLY', 'SPECIFIC_TENANT'], true)) {
+            return 'سكان الإقامة';
+        }
+
+        return $this->target_metadata['recipient_label'] ?? 'المستلم';
+    }
+
+    public function getRecipientNameAttribute(): ?string
+    {
+        if ($this->target_type === 'INDIVIDUAL') {
+            return $this->target_metadata['recipient_name'] ?? $this->recipients->first()?->user?->full_name;
+        }
+        return null;
+    }
+
+    public function getRecipientUnitLabelAttribute(): ?string
+    {
+        if ($this->target_type === 'INDIVIDUAL') {
+            $unit = $this->target_metadata['unit_number'] ?? null;
+            if (! $unit && $this->relationLoaded('recipients') && $this->recipients->first()?->user) {
+                $unit = $this->recipients->first()->user->apartments?->first()?->clean_unit_number;
+            }
+            return $unit ? format_unit_label($unit) : null;
+        }
+        return null;
     }
 }

@@ -216,16 +216,20 @@ class _MessagesScreenState extends State<MessagesScreen> with SingleTickerProvid
                       width: 42,
                       height: 42,
                       decoration: BoxDecoration(
-                        color: isAdmin
-                            ? const Color(0xff6366f1).withAlpha(25)
-                            : (msg.isFromResident
-                                ? AppColors.success.withAlpha(25)
-                                : AppColors.primary.withAlpha(25)),
+                        color: !isInbox
+                            ? const Color(0xff6366f1).withAlpha(20)
+                            : (isAdmin
+                                ? const Color(0xff6366f1).withAlpha(25)
+                                : (msg.isFromResident
+                                    ? AppColors.success.withAlpha(25)
+                                    : AppColors.primary.withAlpha(25))),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Center(
                         child: Text(
-                          isAdmin ? '🛡️' : (msg.isFromResident ? '👤' : '🏢'),
+                          !isInbox
+                              ? '📤'
+                              : (isAdmin ? '🛡️' : (msg.isFromResident ? '👤' : '🏢')),
                           style: const TextStyle(fontSize: 20),
                         ),
                       ),
@@ -240,36 +244,64 @@ class _MessagesScreenState extends State<MessagesScreen> with SingleTickerProvid
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    msg.senderName,
-                                    style: GoogleFonts.cairo(
-                                      fontWeight: isUnread ? FontWeight.w900 : FontWeight.bold,
-                                      fontSize: 13,
-                                      color: AppColors.textPrimary,
-                                    ),
-                                  ),
-                                  if (isAdmin) ...[
-                                    const SizedBox(width: 6),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xff6366f1).withAlpha(30),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
+                              Expanded(
+                                child: Row(
+                                  children: [
+                                    Flexible(
                                       child: Text(
-                                        'إعلان رسمي',
+                                        isInbox
+                                            ? 'من: ${msg.senderDisplayName}'
+                                            : 'إلى: ${msg.recipientLabel}',
                                         style: GoogleFonts.cairo(
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.bold,
-                                          color: const Color(0xff6366f1),
+                                          fontWeight: isUnread ? FontWeight.w900 : FontWeight.bold,
+                                          fontSize: 13,
+                                          color: isInbox ? AppColors.textPrimary : const Color(0xff4f46e5),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    if (isInbox && msg.senderUnitLabel != null) ...[
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.surface,
+                                          borderRadius: BorderRadius.circular(4),
+                                          border: Border.all(color: AppColors.border),
+                                        ),
+                                        child: Text(
+                                          msg.senderUnitLabel!,
+                                          style: GoogleFonts.cairo(
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.textPrimary,
+                                          ),
                                         ),
                                       ),
-                                    ),
+                                    ],
+                                    if (isAdmin) ...[
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xff6366f1).withAlpha(30),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          'إعلان رسمي',
+                                          style: GoogleFonts.cairo(
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.bold,
+                                            color: const Color(0xff6366f1),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ],
-                                ],
+                                ),
                               ),
+                              const SizedBox(width: 6),
                               Text(
                                 '${msg.createdAt.year}/${msg.createdAt.month}/${msg.createdAt.day}',
                                 style: GoogleFonts.cairo(fontSize: 10, color: AppColors.textSecondary),
@@ -293,6 +325,39 @@ class _MessagesScreenState extends State<MessagesScreen> with SingleTickerProvid
                             style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary, height: 1.4),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 5),
+
+                          // Party indicator ( من / إلى ) & category badge
+                          Row(
+                            children: [
+                              Text(
+                                isInbox
+                                    ? '🎯 إلى: ${msg.recipientLabel}'
+                                    : '👤 من: أنت (${msg.senderRoleLabel})',
+                                style: GoogleFonts.cairo(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                              const Spacer(),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withAlpha(15),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  msg.categoryLabel,
+                                  style: GoogleFonts.cairo(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),

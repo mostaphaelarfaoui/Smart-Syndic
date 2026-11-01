@@ -90,63 +90,175 @@ class _MessageDetailScreenState extends State<MessageDetailScreen> {
                         color: isSuperAdmin ? const Color(0xff6366f1).withAlpha(60) : AppColors.border,
                       ),
                     ),
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: isSuperAdmin
-                                ? const Color(0xff6366f1).withAlpha(30)
-                                : AppColors.primary.withAlpha(20),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Center(
-                            child: Text(
-                              isSuperAdmin ? '🛡️' : (msg.isFromResident ? '👤' : '🏢'),
-                              style: const TextStyle(fontSize: 22),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                msg.senderName,
-                                style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 14),
+                        // Row 1: Sender (من)
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: isSuperAdmin
+                                    ? const Color(0xff6366f1).withAlpha(25)
+                                    : (msg.isFromResident
+                                        ? AppColors.success.withAlpha(25)
+                                        : AppColors.primary.withAlpha(25)),
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              Row(
+                              child: Center(
+                                child: Text(
+                                  isSuperAdmin ? '🛡️' : (msg.isFromResident ? '👤' : '🏢'),
+                                  style: const TextStyle(fontSize: 18),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                                    decoration: BoxDecoration(
-                                      color: isSuperAdmin
-                                          ? const Color(0xff6366f1).withAlpha(30)
-                                          : AppColors.primary.withAlpha(20),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text(
-                                      isSuperAdmin
-                                          ? 'الإدارة العامة'
-                                          : (msg.isFromResident ? 'ساكن مقيم' : 'إدارة السانديك'),
-                                      style: GoogleFonts.cairo(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                        color: isSuperAdmin ? const Color(0xff6366f1) : AppColors.primary,
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'من (المرسل): ',
+                                        style: GoogleFonts.cairo(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.textSecondary,
+                                        ),
                                       ),
-                                    ),
+                                      Expanded(
+                                        child: Text(
+                                          msg.senderDisplayName,
+                                          style: GoogleFonts.cairo(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.textPrimary,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    '${msg.createdAt.year}/${msg.createdAt.month}/${msg.createdAt.day}',
-                                    style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary),
+                                  const SizedBox(height: 2),
+                                  Wrap(
+                                    spacing: 6,
+                                    runSpacing: 4,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                        decoration: BoxDecoration(
+                                          color: isSuperAdmin
+                                              ? const Color(0xff6366f1).withAlpha(25)
+                                              : AppColors.primary.withAlpha(20),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          msg.senderRoleLabel,
+                                          style: GoogleFonts.cairo(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: isSuperAdmin ? const Color(0xff6366f1) : AppColors.primary,
+                                          ),
+                                        ),
+                                      ),
+                                      if (msg.senderUnitLabel != null)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.background,
+                                            borderRadius: BorderRadius.circular(4),
+                                            border: Border.all(color: AppColors.border),
+                                          ),
+                                          child: Text(
+                                            msg.senderUnitLabel!,
+                                            style: GoogleFonts.cairo(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppColors.textPrimary,
+                                            ),
+                                          ),
+                                        ),
+                                      if (msg.buildingName != null)
+                                        Text(
+                                          '• عمارة ${msg.buildingName}',
+                                          style: GoogleFonts.cairo(fontSize: 10, color: AppColors.textSecondary),
+                                        ),
+                                      if (msg.residentPhone != null && msg.residentPhone!.isNotEmpty)
+                                        Text(
+                                          '• 📞 ${msg.residentPhone}',
+                                          style: GoogleFonts.cairo(fontSize: 10, color: AppColors.textSecondary),
+                                        ),
+                                    ],
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
+                        ),
+
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 10),
+                          child: Divider(height: 1),
+                        ),
+
+                        // Row 2: Recipient (إلى)
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: const Color(0xff6366f1).withAlpha(20),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Center(
+                                child: Text('🎯', style: TextStyle(fontSize: 18)),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'إلى (المرسل إليه): ',
+                                        style: GoogleFonts.cairo(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Text(
+                                          msg.recipientLabel,
+                                          style: GoogleFonts.cairo(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            color: const Color(0xff4f46e5),
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '🕒 ${msg.createdAt.year}/${msg.createdAt.month}/${msg.createdAt.day} - ${msg.createdAt.hour.toString().padLeft(2, '0')}:${msg.createdAt.minute.toString().padLeft(2, '0')}',
+                                    style: GoogleFonts.cairo(fontSize: 10, color: AppColors.textSecondary),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

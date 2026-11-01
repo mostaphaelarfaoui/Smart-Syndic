@@ -145,21 +145,7 @@ class MessageProvider extends ChangeNotifier {
     try {
       await _api.post(ApiConstants.messageMarkAllRead, {});
       _unreadCount = 0;
-      _inbox = _inbox.map((m) => MessageModel(
-        id: m.id,
-        subject: m.subject,
-        body: m.body,
-        category: m.category,
-        priority: m.priority,
-        senderId: m.senderId,
-        senderName: m.senderName,
-        senderRole: m.senderRole,
-        targetType: m.targetType,
-        targetMetadata: m.targetMetadata,
-        isRead: true,
-        createdAt: m.createdAt,
-        replies: m.replies,
-      )).toList();
+      _inbox = _inbox.map((m) => m.copyWith(isRead: true)).toList();
       notifyListeners();
     } catch (_) {}
   }

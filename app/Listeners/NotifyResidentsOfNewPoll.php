@@ -22,8 +22,11 @@ class NotifyResidentsOfNewPoll implements ShouldQueue
             url: route('portal.community.index', ['tab' => 'polls']),
             icon: '🗳️',
             extra: [
-                'target_screen' => 'polls',
-                'target_id'     => $poll->id,
+                'target_screen'   => 'polls',
+                'target_id'       => $poll->id,
+                'actor_name'      => 'إدارة السانديك',
+                'actor_role'      => 'سانديك',
+                'recipient_label' => 'كافة سكان الإقامة',
             ]
         );
     }
