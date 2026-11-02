@@ -39,6 +39,9 @@ class Message extends Model
         'recipient_label',
         'recipient_name',
         'recipient_unit_label',
+        'latest_activity_at',
+        'latest_message_body',
+        'is_read',
     ];
 
     public function tenant(): BelongsTo
@@ -201,5 +204,71 @@ class Message extends Model
             return $unit ? format_unit_label($unit) : null;
         }
         return null;
+    }
+
+    public function getLatestActivityAtAttribute()
+    {
+        if ($this->relationLoaded('replies') && $this->replies->isNotEmpty()) {
+            return $this->replies->last()->created_at;
+        }
+
+        return $this->replies()->latest('created_at')->value('created_at') ?? $this->created_at;
+    }
+
+    public function getLatestMessageBodyAttribute(): string
+    {
+        if ($this->relationLoaded('replies') && $this->replies->isNotEmpty()) {
+            return $this->replies->last()->body;
+        }
+
+        return $this->body;
+    }
+
+    public function getIsReadAttribute(): bool
+    {
+        $userId = auth()->id();
+        if (! $userId) {
+            return true;
+        }
+
+        return ! $this->isUnreadForUser($userId);
+    }
+
+    public function isUnreadForUser(string $userId): bool
+    {
+        // Check recipient record on root message
+        if ($this->relationLoaded('recipients')) {
+            $parentRec = $this->recipients->firstWhere('user_id', $userId);
+            if ($parentRec && ! $parentRec->is_read) {
+                return true;
+            }
+        } else {
+            $hasUnreadParent = $this->recipients()->where('user_id', $userId)->where('is_read', false)->exists();
+            if ($hasUnreadParent) {
+                return true;
+            }
+        }
+
+        // Check recipient records on all replies
+        if ($this->relationLoaded('replies')) {
+            foreach ($this->replies as $reply) {
+                if ($reply->relationLoaded('recipients')) {
+                    $replyRec = $reply->recipients->firstWhere('user_id', $userId);
+                    if ($replyRec && ! $replyRec->is_read) {
+                        return true;
+                    }
+                } else {
+                    if ($reply->recipients()->where('user_id', $userId)->where('is_read', false)->exists()) {
+                        return true;
+                    }
+                }
+            }
+        } else {
+            if ($this->replies()->whereHas('recipients', fn ($r) => $r->where('user_id', $userId)->where('is_read', false))->exists()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

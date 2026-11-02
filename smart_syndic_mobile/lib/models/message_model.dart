@@ -85,6 +85,20 @@ class MessageModel {
   bool get isFromSyndic => senderRole == 'ADMIN_SYNDIC' || senderRole == 'SYNDIC';
   bool get isFromResident => senderRole == 'RESIDENT';
 
+  DateTime get latestActivityAt {
+    if (replies.isNotEmpty) {
+      return replies.last.createdAt;
+    }
+    return createdAt;
+  }
+
+  String get latestMessageBody {
+    if (replies.isNotEmpty) {
+      return replies.last.body;
+    }
+    return body;
+  }
+
   String get categoryLabel {
     switch (category) {
       case 'ANNOUNCEMENT':

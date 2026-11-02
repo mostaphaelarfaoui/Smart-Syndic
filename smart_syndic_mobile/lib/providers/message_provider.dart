@@ -50,6 +50,7 @@ class MessageProvider extends ChangeNotifier {
           _inbox = (inboxData['data'] as List)
               .map((e) => MessageModel.fromJson(e as Map<String, dynamic>))
               .toList();
+          _inbox.sort((a, b) => b.latestActivityAt.compareTo(a.latestActivityAt));
         }
 
         final sentData = res['sent'];
@@ -57,6 +58,7 @@ class MessageProvider extends ChangeNotifier {
           _sent = (sentData['data'] as List)
               .map((e) => MessageModel.fromJson(e as Map<String, dynamic>))
               .toList();
+          _sent.sort((a, b) => b.latestActivityAt.compareTo(a.latestActivityAt));
         }
       }
       _isLoading = false;
@@ -77,10 +79,16 @@ class MessageProvider extends ChangeNotifier {
         }
         final updatedMsg = MessageModel.fromJson(res['message'] as Map<String, dynamic>);
         
-        // Update local inbox read status
+        // Update local inbox read status & re-sort
         final idx = _inbox.indexWhere((m) => m.id == id);
         if (idx != -1) {
           _inbox[idx] = updatedMsg;
+          _inbox.sort((a, b) => b.latestActivityAt.compareTo(a.latestActivityAt));
+        }
+        final sentIdx = _sent.indexWhere((m) => m.id == id);
+        if (sentIdx != -1) {
+          _sent[sentIdx] = updatedMsg;
+          _sent.sort((a, b) => b.latestActivityAt.compareTo(a.latestActivityAt));
         }
         notifyListeners();
         return updatedMsg;

@@ -226,23 +226,36 @@ class MessageService
     {
         $role = $sender->isResident() ? 'RESIDENT' : ($sender->isSuperAdmin() ? 'SUPER_ADMIN' : 'ADMIN_SYNDIC');
 
-        return DB::transaction(function () use ($sender, $parentMessage, $body, $role) {
+        // Resolve root message if called on a reply
+        $rootMessage = $parentMessage->parent_id ? ($parentMessage->parent ?? $parentMessage) : $parentMessage;
+
+        return DB::transaction(function () use ($sender, $rootMessage, $body, $role) {
             $reply = Message::create([
-                'tenant_id'   => $parentMessage->tenant_id,
+                'tenant_id'   => $rootMessage->tenant_id,
                 'sender_id'   => $sender->id,
                 'sender_role' => $role,
                 'target_type' => 'INDIVIDUAL',
-                'subject'     => 'رد: ' . $parentMessage->subject,
+                'subject'     => 'رد: ' . $rootMessage->subject,
                 'body'        => $body,
-                'category'    => $parentMessage->category,
-                'priority'    => $parentMessage->priority,
-                'parent_id'   => $parentMessage->id,
+                'category'    => $rootMessage->category,
+                'priority'    => $rootMessage->priority,
+                'parent_id'   => $rootMessage->id,
             ]);
 
-            // Target recipient is original sender (if replying to them) or the resident
-            $recipientId = ($parentMessage->sender_id === $sender->id)
-                ? $parentMessage->recipients()->where('user_id', '!=', $sender->id)->first()?->user_id
-                : $parentMessage->sender_id;
+            // Smart recipient resolution:
+            // If sender is NOT parent sender, recipient is parent sender (e.g. syndic)
+            // If sender IS parent sender, recipient is resident who replied last, or parent recipient
+            if ($rootMessage->sender_id !== $sender->id) {
+                $recipientId = $rootMessage->sender_id;
+            } else {
+                $lastOtherSender = $rootMessage->replies()
+                    ->where('sender_id', '!=', $sender->id)
+                    ->latest('created_at')
+                    ->value('sender_id');
+
+                $recipientId = $lastOtherSender 
+                    ?? $rootMessage->recipients()->where('user_id', '!=', $sender->id)->value('user_id');
+            }
 
             if ($recipientId) {
                 MessageRecipient::create([
@@ -250,27 +263,51 @@ class MessageService
                     'user_id'    => $recipientId,
                     'is_read'    => false,
                 ]);
+
+                // Ensure the recipient record on the root message is updated/created and marked unread
+                // so the entire conversation thread shows as unread in their inbox!
+                $rootRec = MessageRecipient::firstOrCreate(
+                    ['message_id' => $rootMessage->id, 'user_id' => $recipientId],
+                    ['is_read' => false]
+                );
+                $rootRec->update([
+                    'is_read' => false,
+                    'read_at' => null,
+                ]);
             }
+
+            // Touch the root message to update its updated_at timestamp
+            $rootMessage->touch();
 
             return $reply;
         });
     }
 
     /**
-     * Mark a message as read for a specific user.
+     * Mark a message as read for a specific user (marks all messages in the conversation thread).
      */
     public function markAsRead(string $messageId, string $userId): bool
     {
-        $recipient = MessageRecipient::where('message_id', $messageId)
-            ->where('user_id', $userId)
-            ->first();
-
-        if ($recipient) {
-            $recipient->markAsRead();
-            return true;
+        $message = Message::find($messageId);
+        if (! $message) {
+            return false;
         }
 
-        return false;
+        $threadId = $message->parent_id ?? $message->id;
+        $allIds = Message::where('id', $threadId)
+            ->orWhere('parent_id', $threadId)
+            ->pluck('id')
+            ->toArray();
+
+        MessageRecipient::whereIn('message_id', $allIds)
+            ->where('user_id', $userId)
+            ->where('is_read', false)
+            ->update([
+                'is_read' => true,
+                'read_at' => now(),
+            ]);
+
+        return true;
     }
 
     /**
@@ -287,14 +324,16 @@ class MessageService
     }
 
     /**
-     * Get unread messages count for a user.
+     * Get unread messages/conversations count for a user.
      */
     public function getUnreadCount(User $user): int
     {
-        return MessageRecipient::where('user_id', $user->id)
-            ->where('is_read', false)
-            ->where('is_archived', false)
-            ->count();
+        return MessageRecipient::where('message_recipients.user_id', $user->id)
+            ->where('message_recipients.is_read', false)
+            ->where('message_recipients.is_archived', false)
+            ->join('messages', 'messages.id', '=', 'message_recipients.message_id')
+            ->distinct()
+            ->count(DB::raw('COALESCE(messages.parent_id, messages.id)'));
     }
 
     /**

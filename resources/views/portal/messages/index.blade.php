@@ -135,11 +135,12 @@
                 @forelse($list as $msg)
                     @php
                         $isInbox = $tab === 'inbox';
-                        $recipientPivot = $isInbox ? $msg->recipients->firstWhere('user_id', auth()->id()) : null;
-                        $isUnread = $isInbox && $recipientPivot && ! $recipientPivot->is_read;
+                        $isUnread = $msg->isUnreadForUser(auth()->id());
                         $isSelected = $selectedMessage && $selectedMessage->id === $msg->id;
                         $isAdmin = $msg->isFromSuperAdmin();
                         $isResident = $msg->isFromResident();
+                        $latestTime = $msg->latest_activity_at ?? $msg->created_at;
+                        $latestSnippet = $msg->latest_message_body ?? $msg->body;
                     @endphp
 
                     <a href="{{ route('portal.messages.index', ['tab' => $tab, 'filter' => $filter, 'selected' => $msg->id]) }}" 
@@ -168,7 +169,7 @@
                                     @endif
                                 </div>
                                 <span class="num" style="font-size:0.7rem; color:var(--text-muted); flex-shrink:0;">
-                                    {{ $msg->created_at->diffForHumans() }}
+                                    {{ $latestTime->diffForHumans() }}
                                 </span>
                             </div>
 
@@ -177,7 +178,7 @@
                             </div>
 
                             <div style="font-size:0.78rem; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">
-                                {{ \Illuminate\Support\Str::limit($msg->body, 60) }}
+                                {{ \Illuminate\Support\Str::limit($latestSnippet, 60) }}
                             </div>
 
                             <div style="font-size:0.72rem; color:var(--text-muted); margin-top:5px; display:flex; align-items:center; justify-content:space-between; gap:0.4rem;">

@@ -29,25 +29,40 @@ class MessageApiController extends Controller
 
         $filter = $request->get('filter', 'all'); // all, unread, admin
 
-        $inboxQuery = Message::whereHas('recipients', function ($q) use ($user) {
-            $q->where('user_id', $user->id);
-        })->with(['sender.apartments', 'recipients' => function ($q) use ($user) {
-            $q->where('user_id', $user->id);
-        }]);
+        $latestActivitySql = 'COALESCE((SELECT MAX(created_at) FROM messages as r WHERE r.parent_id = messages.id), messages.created_at) DESC';
+
+        $inboxQuery = Message::whereNull('parent_id')
+            ->where(function ($q) use ($user) {
+                $q->whereHas('recipients', fn ($r) => $r->where('user_id', $user->id))
+                  ->orWhereHas('replies.recipients', fn ($r) => $r->where('user_id', $user->id));
+            })
+            ->with([
+                'sender.apartments',
+                'recipients' => fn ($q) => $q->where('user_id', $user->id),
+                'replies' => fn ($q) => $q->orderBy('created_at', 'asc')->with(['sender.apartments', 'recipients']),
+            ]);
 
         if ($filter === 'unread') {
-            $inboxQuery->whereHas('recipients', function ($q) use ($user) {
-                $q->where('user_id', $user->id)->where('is_read', false);
+            $inboxQuery->where(function ($q) use ($user) {
+                $q->whereHas('recipients', fn ($r) => $r->where('user_id', $user->id)->where('is_read', false))
+                  ->orWhereHas('replies.recipients', fn ($r) => $r->where('user_id', $user->id)->where('is_read', false));
             });
         } elseif ($filter === 'admin') {
             $inboxQuery->where('sender_role', 'SUPER_ADMIN');
         }
 
-        $inbox = $inboxQuery->orderBy('created_at', 'desc')->paginate(20);
+        $inbox = $inboxQuery->orderByRaw($latestActivitySql)->paginate(20);
 
-        $sent = Message::where('sender_id', $user->id)
-            ->with('recipients.user')
-            ->orderBy('created_at', 'desc')
+        $sent = Message::whereNull('parent_id')
+            ->where(function ($q) use ($user) {
+                $q->where('sender_id', $user->id)
+                  ->orWhereHas('replies', fn ($rq) => $rq->where('sender_id', $user->id));
+            })
+            ->with([
+                'recipients.user',
+                'replies' => fn ($q) => $q->orderBy('created_at', 'asc')->with(['sender.apartments', 'recipients']),
+            ])
+            ->orderByRaw($latestActivitySql)
             ->paginate(20);
 
         return response()->json([
@@ -66,14 +81,19 @@ class MessageApiController extends Controller
     {
         $user = $request->user();
 
-        $message = Message::with(['sender.apartments', 'recipients.user', 'replies.sender'])
+        $message = Message::with(['sender.apartments', 'recipients.user', 'replies.sender.apartments', 'replies.recipients'])
             ->where(function ($q) use ($user) {
                 $q->where('sender_id', $user->id)
-                  ->orWhereHas('recipients', fn ($r) => $r->where('user_id', $user->id));
+                  ->orWhereHas('recipients', fn ($r) => $r->where('user_id', $user->id))
+                  ->orWhereHas('replies', fn ($rq) => $rq->where('sender_id', $user->id)->orWhereHas('recipients', fn ($rr) => $rr->where('user_id', $user->id)));
             })
             ->findOrFail($id);
 
-        // Mark as read for this user
+        if ($message->parent_id) {
+            $message = Message::with(['sender.apartments', 'recipients.user', 'replies.sender.apartments', 'replies.recipients'])->findOrFail($message->parent_id);
+        }
+
+        // Mark entire thread and all replies as read for this user
         $this->messageService->markAsRead($message->id, $user->id);
 
         return response()->json([

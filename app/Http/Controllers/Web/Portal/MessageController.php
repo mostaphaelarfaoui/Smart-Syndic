@@ -33,30 +33,48 @@ class MessageController extends Controller
         $tab = $request->get('tab', 'inbox'); // 'inbox' or 'sent'
         $filter = $request->get('filter', 'all'); // 'all', 'unread', 'admin', 'residents'
 
-        // Inbox query
-        $inboxQuery = Message::whereHas('recipients', function ($q) use ($user) {
-            $q->where('user_id', $user->id);
-        })->with(['sender.apartments', 'recipients' => function ($q) use ($user) {
-            $q->where('user_id', $user->id);
-        }]);
+        $latestActivitySql = 'COALESCE((SELECT MAX(created_at) FROM messages as r WHERE r.parent_id = messages.id), messages.created_at) DESC';
+
+        // Inbox query: Threads where user received the message or received a reply
+        $inboxQuery = Message::whereNull('parent_id')
+            ->where(function ($q) use ($user) {
+                $q->whereHas('recipients', fn ($r) => $r->where('user_id', $user->id))
+                  ->orWhereHas('replies.recipients', fn ($r) => $r->where('user_id', $user->id));
+            })
+            ->with([
+                'sender.apartments',
+                'recipients' => fn ($q) => $q->where('user_id', $user->id),
+                'replies' => fn ($q) => $q->orderBy('created_at', 'asc')->with(['sender.apartments', 'recipients']),
+            ]);
 
         if ($filter === 'unread') {
-            $inboxQuery->whereHas('recipients', function ($q) use ($user) {
-                $q->where('user_id', $user->id)->where('is_read', false);
+            $inboxQuery->where(function ($q) use ($user) {
+                $q->whereHas('recipients', fn ($r) => $r->where('user_id', $user->id)->where('is_read', false))
+                  ->orWhereHas('replies.recipients', fn ($r) => $r->where('user_id', $user->id)->where('is_read', false));
             });
         } elseif ($filter === 'admin') {
             $inboxQuery->where('sender_role', 'SUPER_ADMIN');
         } elseif ($filter === 'residents') {
-            $inboxQuery->where('sender_role', 'RESIDENT');
+            $inboxQuery->where(function ($q) {
+                $q->where('sender_role', 'RESIDENT')
+                  ->orWhereHas('replies', fn ($rq) => $rq->where('sender_role', 'RESIDENT'));
+            });
         }
 
-        $inboxMessages = $inboxQuery->orderBy('created_at', 'desc')->paginate(15, ['*'], 'inbox_page');
+        $inboxMessages = $inboxQuery->orderByRaw($latestActivitySql)->paginate(15, ['*'], 'inbox_page');
 
-        // Sent query
-        $sentMessages = Message::where('sender_id', $user->id)
-            ->with(['recipients.user'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(15, ['*'], 'sent_page');
+        // Sent query: Threads where user sent either the initial message or sent a reply
+        $sentQuery = Message::whereNull('parent_id')
+            ->where(function ($q) use ($user) {
+                $q->where('sender_id', $user->id)
+                  ->orWhereHas('replies', fn ($rq) => $rq->where('sender_id', $user->id));
+            })
+            ->with([
+                'recipients.user',
+                'replies' => fn ($q) => $q->orderBy('created_at', 'asc')->with(['sender.apartments', 'recipients']),
+            ]);
+
+        $sentMessages = $sentQuery->orderByRaw($latestActivitySql)->paginate(15, ['*'], 'sent_page');
 
         // Buildings & Apartments with Residents for targeting modal
         $buildings = Building::where('tenant_id', $tenantId)
@@ -72,18 +90,38 @@ class MessageController extends Controller
             ->get();
 
         $unreadCount = $this->messageService->getUnreadCount($user);
-        $totalInboxCount = Message::whereHas('recipients', fn ($q) => $q->where('user_id', $user->id))->count();
-        $adminMessagesCount = Message::whereHas('recipients', fn ($q) => $q->where('user_id', $user->id))
-            ->where('sender_role', 'SUPER_ADMIN')->count();
-        $residentMessagesCount = Message::whereHas('recipients', fn ($q) => $q->where('user_id', $user->id))
-            ->where('sender_role', 'RESIDENT')->count();
+        $totalInboxCount = Message::whereNull('parent_id')
+            ->where(function ($q) use ($user) {
+                $q->whereHas('recipients', fn ($r) => $r->where('user_id', $user->id))
+                  ->orWhereHas('replies.recipients', fn ($r) => $r->where('user_id', $user->id));
+            })->count();
+
+        $adminMessagesCount = Message::whereNull('parent_id')
+            ->where('sender_role', 'SUPER_ADMIN')
+            ->whereHas('recipients', fn ($q) => $q->where('user_id', $user->id))
+            ->count();
+
+        $residentMessagesCount = Message::whereNull('parent_id')
+            ->where(function ($q) use ($user) {
+                $q->where('sender_role', 'RESIDENT')
+                  ->orWhereHas('replies', fn ($rq) => $rq->where('sender_role', 'RESIDENT'));
+            })
+            ->where(function ($q) use ($user) {
+                $q->whereHas('recipients', fn ($r) => $r->where('user_id', $user->id))
+                  ->orWhereHas('replies.recipients', fn ($r) => $r->where('user_id', $user->id));
+            })
+            ->count();
 
         $selectedMessageId = $request->get('selected');
         $selectedMessage = null;
         if ($selectedMessageId) {
-            $selectedMessage = Message::with(['sender.apartments', 'recipients.user', 'replies.sender'])->find($selectedMessageId);
+            $selectedMessage = Message::with(['sender.apartments', 'recipients.user', 'replies.sender.apartments', 'replies.recipients'])->find($selectedMessageId);
             if ($selectedMessage) {
-                $this->messageService->markAsRead($selectedMessageId, $user->id);
+                // If a reply ID was passed, point to the root conversation thread
+                if ($selectedMessage->parent_id) {
+                    $selectedMessage = Message::with(['sender.apartments', 'recipients.user', 'replies.sender.apartments', 'replies.recipients'])->find($selectedMessage->parent_id);
+                }
+                $this->messageService->markAsRead($selectedMessage->id, $user->id);
                 $unreadCount = $this->messageService->getUnreadCount($user);
             }
         }
@@ -228,14 +266,17 @@ class MessageController extends Controller
 
         $recipients = MessageRecipient::where('user_id', $user->id)
             ->where('is_archived', false)
-            ->with(['message.sender.apartments'])
+            ->with(['message.sender.apartments', 'message.parent'])
             ->orderBy('created_at', 'desc')
-            ->limit(10)
+            ->limit(15)
             ->get();
 
         $messages = $recipients->map(function ($r) {
             $m = $r->message;
             if (! $m) return null;
+
+            $rootId = $m->parent_id ?? $m->id;
+            $rootSubject = $m->parent ? $m->parent->subject : $m->subject;
 
             $senderName = $m->isFromSuperAdmin()
                 ? 'الإدارة العامة للمنصة'
@@ -248,8 +289,8 @@ class MessageController extends Controller
                     : 'سانديك');
 
             return [
-                'id'           => $m->id,
-                'subject'      => $m->subject,
+                'id'           => $rootId,
+                'subject'      => $rootSubject,
                 'body_snippet' => \Illuminate\Support\Str::limit($m->body, 70),
                 'sender_name'  => $senderName,
                 'sender_badge' => $senderBadge,
@@ -257,7 +298,7 @@ class MessageController extends Controller
                 'is_read'      => $r->is_read,
                 'time_ago'     => $m->created_at->diffForHumans(),
             ];
-        })->filter()->values();
+        })->filter()->unique('id')->values()->take(10);
 
         return response()->json([
             'messages'     => $messages,

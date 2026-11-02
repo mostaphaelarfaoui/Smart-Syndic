@@ -303,7 +303,7 @@ class _MessagesScreenState extends State<MessagesScreen> with SingleTickerProvid
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                '${msg.createdAt.year}/${msg.createdAt.month}/${msg.createdAt.day}',
+                                '${msg.latestActivityAt.year}/${msg.latestActivityAt.month}/${msg.latestActivityAt.day}',
                                 style: GoogleFonts.cairo(fontSize: 10, color: AppColors.textSecondary),
                               ),
                             ],
@@ -321,7 +321,7 @@ class _MessagesScreenState extends State<MessagesScreen> with SingleTickerProvid
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            msg.body,
+                            msg.latestMessageBody,
                             style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary, height: 1.4),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
