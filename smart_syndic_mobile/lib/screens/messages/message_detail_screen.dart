@@ -237,7 +237,6 @@ class _MessageDetailScreenState extends State<MessageDetailScreen> {
                   senderTitle: isSentByMe ? 'أنت' : msg.senderDisplayName,
                   unitBadge: !isSentByMe ? msg.senderUnitLabel : null,
                   time: msg.createdAt,
-                  subject: msg.subject,
                   body: msg.body,
                   isInitial: true,
                 ),
@@ -366,7 +365,6 @@ class _MessageDetailScreenState extends State<MessageDetailScreen> {
     required String senderTitle,
     String? unitBadge,
     required DateTime time,
-    String? subject,
     required String body,
     required bool isInitial,
   }) {
@@ -432,19 +430,6 @@ class _MessageDetailScreenState extends State<MessageDetailScreen> {
               ],
             ),
             const SizedBox(height: 4),
-
-            // Subject if original message
-            if (isInitial && subject != null && subject.isNotEmpty) ...[
-              Text(
-                subject,
-                style: GoogleFonts.cairo(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.bold,
-                  color: isMe ? const Color(0xff3730a3) : AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 4),
-            ],
 
             // Body
             Text(

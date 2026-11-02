@@ -121,7 +121,6 @@ class _MessagesScreenState extends State<MessagesScreen> with SingleTickerProvid
             builder: (_) => const ComposeMessageDialog(),
           );
           if (res == true && mounted) {
-            if (!mounted) return;
             context.read<MessageProvider>().fetchMessages();
           }
         },
@@ -182,6 +181,7 @@ class _MessagesScreenState extends State<MessagesScreen> with SingleTickerProvid
           final msg = messages[index];
           final isUnread = isInbox && !msg.isRead;
           final isAdmin = msg.isFromSuperAdmin;
+          final currentUserId = context.read<AuthProvider>().user?.id;
 
           return Card(
             margin: const EdgeInsets.symmetric(vertical: 4),
@@ -308,21 +308,15 @@ class _MessagesScreenState extends State<MessagesScreen> with SingleTickerProvid
                               ),
                             ],
                           ),
-                          const SizedBox(height: 3),
+                          const SizedBox(height: 4),
                           Text(
-                            msg.subject,
+                            msg.lastMessagePreview(currentUserId),
                             style: GoogleFonts.cairo(
-                              fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
-                              fontSize: 13,
-                              color: isUnread ? AppColors.primary : AppColors.textPrimary,
+                              fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
+                              fontSize: 12.5,
+                              color: isUnread ? AppColors.textPrimary : AppColors.textSecondary,
+                              height: 1.35,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            msg.latestMessageBody,
-                            style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary, height: 1.4),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),

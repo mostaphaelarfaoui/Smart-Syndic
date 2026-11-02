@@ -133,7 +133,6 @@
                             <span class="sender-badge" :class="item.is_admin ? 'badge-admin' : 'badge-resident'" x-text="item.sender_badge"></span>
                             <span class="message-time" x-text="item.time_ago"></span>
                         </div>
-                        <h5 class="message-subject" x-text="item.subject"></h5>
                         <p class="message-snippet" x-text="item.body_snippet"></p>
                     </div>
 
@@ -422,24 +421,19 @@
     margin-right: auto;
 }
 
-.message-subject {
-    margin: 0;
-    font-size: 0.88rem;
-    font-weight: 700;
-    color: var(--text-primary, #0f172a);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
 .message-snippet {
-    margin: 0.15rem 0 0;
-    font-size: 0.78rem;
+    margin: 0.2rem 0 0;
+    font-size: 0.82rem;
     color: var(--text-secondary, #64748b);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     line-height: 1.4;
+}
+
+.message-item.unread .message-snippet {
+    color: var(--text-primary, #0f172a);
+    font-weight: 700;
 }
 
 .unread-dot {

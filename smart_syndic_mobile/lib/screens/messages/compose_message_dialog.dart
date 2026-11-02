@@ -23,7 +23,6 @@ class ComposeMessageDialog extends StatefulWidget {
 
 class _ComposeMessageDialogState extends State<ComposeMessageDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _subjectController = TextEditingController();
   final _bodyController = TextEditingController();
 
   String _category = 'GENERAL';
@@ -44,7 +43,6 @@ class _ComposeMessageDialogState extends State<ComposeMessageDialog> {
 
   @override
   void dispose() {
-    _subjectController.dispose();
     _bodyController.dispose();
     super.dispose();
   }
@@ -79,9 +77,13 @@ class _ComposeMessageDialogState extends State<ComposeMessageDialog> {
     setState(() => _isSubmitting = true);
     final msgProvider = context.read<MessageProvider>();
 
+    final bodyText = _bodyController.text.trim();
+    final cleanBody = bodyText.replaceAll(RegExp(r'\s+'), ' ');
+    final fallbackSubject = cleanBody.length > 50 ? '${cleanBody.substring(0, 47)}...' : cleanBody;
+
     final success = await msgProvider.sendMessage(
-      subject: _subjectController.text.trim(),
-      body: _bodyController.text.trim(),
+      subject: fallbackSubject,
+      body: bodyText,
       category: _category,
       priority: _priority,
       targetType: isSyndic ? _targetType : 'SYNDIC',
@@ -305,21 +307,6 @@ class _ComposeMessageDialogState extends State<ComposeMessageDialog> {
                             ),
                           ),
                         ],
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Subject
-                      Text('موضوع الرسالة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12)),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _subjectController,
-                        decoration: InputDecoration(
-                          hintText: 'مثال: بخصوص صيانة المصعد / استفسار عن وصل',
-                          hintStyle: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                        validator: (v) => (v == null || v.trim().isEmpty) ? 'يرجى كتابة موضوع الرسالة' : null,
                       ),
                       const SizedBox(height: 12),
 

@@ -81,21 +81,22 @@ class MessageService
      */
     public function sendResidentToSyndic(
         User $resident,
-        string $subject,
+        ?string $subject,
         string $body,
         string $category = 'INQUIRY',
         string $priority = 'NORMAL'
     ): Message {
         $tenantId = $resident->tenant_id;
         $apartment = $resident->apartments()->first();
+        $finalSubject = !empty($subject) ? trim($subject) : \Illuminate\Support\Str::limit(preg_replace('/\s+/', ' ', trim($body)), 50);
 
-        return DB::transaction(function () use ($resident, $tenantId, $apartment, $subject, $body, $category, $priority) {
+        return DB::transaction(function () use ($resident, $tenantId, $apartment, $finalSubject, $body, $category, $priority) {
             $message = Message::create([
                 'tenant_id'       => $tenantId,
                 'sender_id'       => $resident->id,
                 'sender_role'     => 'RESIDENT',
                 'target_type'     => 'SYNDIC',
-                'subject'         => $subject,
+                'subject'         => $finalSubject,
                 'body'            => $body,
                 'category'        => $category,
                 'priority'        => $priority,
@@ -123,6 +124,23 @@ class MessageService
                 ]);
             }
 
+            // Send notification with message body preview
+            $previewText = \Illuminate\Support\Str::limit(preg_replace('/\s+/', ' ', trim($body)), 120);
+            $unitStr = $apartment ? ' (' . format_unit_label($apartment->clean_unit_number) . ')' : '';
+            $this->notificationService->sendToTenantSyndics(
+                tenantId: $tenantId,
+                title: 'رسالة جديدة من ' . $resident->full_name . $unitStr,
+                message: $previewText,
+                type: 'info',
+                url: route('portal.messages.index', ['selected' => $message->id]),
+                icon: '✉️',
+                extra: [
+                    'actor_label' => $resident->full_name . $unitStr,
+                    'unit_label'  => $apartment?->clean_unit_number,
+                    'category'    => 'MESSAGES',
+                ]
+            );
+
             return $message;
         });
     }
@@ -134,14 +152,15 @@ class MessageService
         User $syndic,
         string $targetType,
         array $targetIds,
-        string $subject,
+        ?string $subject,
         string $body,
         string $category = 'GENERAL',
         string $priority = 'NORMAL'
     ): Message {
         $tenantId = $syndic->tenant_id;
+        $finalSubject = !empty($subject) ? trim($subject) : \Illuminate\Support\Str::limit(preg_replace('/\s+/', ' ', trim($body)), 50);
 
-        return DB::transaction(function () use ($syndic, $tenantId, $targetType, $targetIds, $subject, $body, $category, $priority) {
+        return DB::transaction(function () use ($syndic, $tenantId, $targetType, $targetIds, $finalSubject, $body, $category, $priority) {
             $targetUsers = collect();
             $metadata = [];
 
@@ -153,13 +172,11 @@ class MessageService
                 $metadata['description'] = 'رسالة عامة لكافة سكان الإقامة';
                 $metadata['recipient_label'] = 'كافة سكان الإقامة';
             } elseif ($targetType === 'INDIVIDUAL') {
-                // targetIds[0] can be user_id or apartment_id
                 $id = $targetIds[0] ?? null;
                 if ($id) {
                     $user = User::where('tenant_id', $tenantId)->where('id', $id)->first();
                     $apartment = null;
                     if (! $user) {
-                        // Check if it's an apartment ID
                         $apartment = Apartment::find($id);
                         $user = $apartment?->residents()->first();
                     } else {
@@ -174,7 +191,6 @@ class MessageService
                     }
                 }
             } elseif ($targetType === 'GROUP') {
-                // targetIds can be array of apartment IDs or user IDs
                 $apartments = Apartment::whereIn('id', $targetIds)->with(['residents', 'building'])->get();
                 $users = collect();
                 $unitNumbers = [];
@@ -186,7 +202,6 @@ class MessageService
                     }
                 }
 
-                // In case direct user IDs were passed
                 $directUsers = User::whereIn('id', $targetIds)->where('role', 'RESIDENT')->get();
                 $targetUsers = $users->merge($directUsers)->unique('id');
                 $metadata['targeted_units'] = $unitNumbers;
@@ -200,7 +215,7 @@ class MessageService
                 'sender_id'       => $syndic->id,
                 'sender_role'     => 'ADMIN_SYNDIC',
                 'target_type'     => $targetType,
-                'subject'         => $subject,
+                'subject'         => $finalSubject,
                 'body'            => $body,
                 'category'        => $category,
                 'priority'        => $priority,
@@ -213,6 +228,21 @@ class MessageService
                     'user_id'    => $user->id,
                     'is_read'    => false,
                 ]);
+
+                // Send notification to each resident with message body preview
+                $previewText = \Illuminate\Support\Str::limit(preg_replace('/\s+/', ' ', trim($body)), 120);
+                $this->notificationService->send(
+                    user: $user,
+                    title: 'رسالة جديدة من إدارة السانديك',
+                    message: $previewText,
+                    type: 'info',
+                    url: route('portal.messages.index', ['selected' => $message->id]),
+                    icon: '📢',
+                    extra: [
+                        'actor_label' => 'إدارة السانديك',
+                        'category'    => 'MESSAGES',
+                    ]
+                );
             }
 
             return $message;
@@ -274,6 +304,25 @@ class MessageService
                     'is_read' => false,
                     'read_at' => null,
                 ]);
+
+                // Send notification to recipient with reply body preview
+                $recipientUser = User::find($recipientId);
+                if ($recipientUser) {
+                    $senderName = $sender->isResident() ? $sender->full_name : 'إدارة السانديك';
+                    $previewText = \Illuminate\Support\Str::limit(preg_replace('/\s+/', ' ', trim($body)), 120);
+                    $this->notificationService->send(
+                        user: $recipientUser,
+                        title: 'رد جديد من ' . $senderName,
+                        message: $previewText,
+                        type: 'info',
+                        url: route('portal.messages.index', ['selected' => $rootMessage->id]),
+                        icon: '💬',
+                        extra: [
+                            'actor_label' => $senderName,
+                            'category'    => 'MESSAGES',
+                        ]
+                    );
+                }
             }
 
             // Touch the root message to update its updated_at timestamp

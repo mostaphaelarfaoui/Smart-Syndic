@@ -41,6 +41,7 @@ class Message extends Model
         'recipient_unit_label',
         'latest_activity_at',
         'latest_message_body',
+        'last_message_preview',
         'is_read',
     ];
 
@@ -270,5 +271,42 @@ class Message extends Model
         }
 
         return false;
+    }
+
+    public function getLastMessageAttribute()
+    {
+        if ($this->relationLoaded('replies') && $this->replies->isNotEmpty()) {
+            return $this->replies->last();
+        }
+
+        return $this->replies()->latest('created_at')->first() ?? $this;
+    }
+
+    public function getLastMessageBodyAttribute(): string
+    {
+        return $this->last_message->body;
+    }
+
+    public function getLastMessageSenderIdAttribute(): string
+    {
+        return $this->last_message->sender_id;
+    }
+
+    public function getLastMessageIsMeAttribute(): bool
+    {
+        return auth()->id() && $this->last_message_sender_id === auth()->id();
+    }
+
+    public function getLastMessagePreviewAttribute(): string
+    {
+        $body = $this->last_message_body;
+        $clean = preg_replace('/\s+/', ' ', trim($body));
+        $snippet = \Illuminate\Support\Str::limit($clean, 65);
+
+        if ($this->last_message_is_me) {
+            return 'أنت: ' . $snippet;
+        }
+
+        return $snippet;
     }
 }

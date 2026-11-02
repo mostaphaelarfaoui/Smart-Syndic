@@ -99,6 +99,30 @@ class MessageModel {
     return body;
   }
 
+  bool isLastMessageFromMe(String? currentUserId) {
+    if (currentUserId == null) return false;
+    if (replies.isNotEmpty) {
+      return replies.last.senderId == currentUserId;
+    }
+    return senderId == currentUserId;
+  }
+
+  String get lastMessageSenderId {
+    if (replies.isNotEmpty) {
+      return replies.last.senderId;
+    }
+    return senderId;
+  }
+
+  String lastMessagePreview(String? currentUserId) {
+    final clean = latestMessageBody.replaceAll(RegExp(r'\s+'), ' ').trim();
+    final snippet = clean.length > 60 ? '${clean.substring(0, 57)}...' : clean;
+    if (isLastMessageFromMe(currentUserId)) {
+      return 'أنت: $snippet';
+    }
+    return snippet;
+  }
+
   String get categoryLabel {
     switch (category) {
       case 'ANNOUNCEMENT':

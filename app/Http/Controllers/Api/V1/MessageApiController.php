@@ -114,15 +114,19 @@ class MessageApiController extends Controller
         if ($user->isResident()) {
             // Resident sending to Syndic
             $request->validate([
-                'subject'  => ['required', 'string', 'max:255'],
+                'subject'  => ['nullable', 'string', 'max:255'],
                 'body'     => ['required', 'string', 'max:10000'],
                 'category' => ['nullable', 'in:GENERAL,INQUIRY,COMPLAINT,MAINTENANCE,FINANCIAL'],
                 'priority' => ['nullable', 'in:NORMAL,HIGH,URGENT'],
             ]);
 
+            $finalSubject = !empty($request->subject)
+                ? trim($request->subject)
+                : \Illuminate\Support\Str::limit(preg_replace('/\s+/', ' ', trim($request->body)), 50);
+
             $message = $this->messageService->sendResidentToSyndic(
                 resident: $user,
-                subject: $request->subject,
+                subject: $finalSubject,
                 body: $request->body,
                 category: $request->category ?? 'INQUIRY',
                 priority: $request->priority ?? 'NORMAL'
@@ -146,7 +150,7 @@ class MessageApiController extends Controller
             'target_type'  => ['required', 'in:ALL_RESIDENTS,INDIVIDUAL,GROUP'],
             'target_ids'   => ['nullable', 'array'],
             'target_ids.*' => ['nullable', 'string'],
-            'subject'      => ['required', 'string', 'max:255'],
+            'subject'      => ['nullable', 'string', 'max:255'],
             'body'         => ['required', 'string', 'max:10000'],
             'category'     => ['nullable', 'in:GENERAL,ANNOUNCEMENT,INQUIRY,COMPLAINT,MAINTENANCE,FINANCIAL'],
             'priority'     => ['nullable', 'in:NORMAL,HIGH,URGENT'],
@@ -163,11 +167,15 @@ class MessageApiController extends Controller
             ], 422);
         }
 
+        $finalSubject = !empty($request->subject)
+            ? trim($request->subject)
+            : \Illuminate\Support\Str::limit(preg_replace('/\s+/', ' ', trim($request->body)), 50);
+
         $message = $this->messageService->sendSyndicToResidents(
             syndic: $user,
             targetType: $request->target_type,
             targetIds: $targetIds,
-            subject: $request->subject,
+            subject: $finalSubject,
             body: $request->body,
             category: $request->category ?? 'GENERAL',
             priority: $request->priority ?? 'NORMAL'
