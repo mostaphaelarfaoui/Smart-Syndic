@@ -152,12 +152,14 @@ class _ConfirmActionDialogState extends State<ConfirmActionDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       backgroundColor: Theme.of(context).cardColor,
       elevation: 10,
-      child: Container(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 420),
-        padding: const EdgeInsets.all(22),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             // Icon Header
             Container(
               width: 58,
@@ -335,6 +337,7 @@ class _ConfirmActionDialogState extends State<ConfirmActionDialog> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
