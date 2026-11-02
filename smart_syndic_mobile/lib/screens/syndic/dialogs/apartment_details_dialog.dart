@@ -13,8 +13,13 @@ import '../../common/receipt_viewer_screen.dart';
 
 class ApartmentDetailsDialog extends StatelessWidget {
   final ApartmentModel apartment;
+  final bool isComplex;
 
-  const ApartmentDetailsDialog({super.key, required this.apartment});
+  const ApartmentDetailsDialog({
+    super.key,
+    required this.apartment,
+    this.isComplex = false,
+  });
 
   Future<void> _makePhoneCall(String phone) async {
     final cleanPhone = phone.replaceAll(RegExp(r'\s+'), '');
@@ -203,28 +208,18 @@ class ApartmentDetailsDialog extends StatelessWidget {
                             color: Colors.white,
                           ),
                         ),
-                        Text(
-                          '${apartment.block != null ? "بلوك ${apartment.block} • " : ""}${apartment.buildingName ?? "الإقامة"}',
-                          style: GoogleFonts.cairo(
-                            fontSize: 12,
-                            color: Colors.white.withAlpha(220),
+                        if (isComplex &&
+                            ((apartment.buildingName != null && apartment.buildingName!.isNotEmpty) ||
+                                apartment.block != null))
+                          Text(
+                            '${apartment.block != null ? "بلوك ${apartment.block} • " : ""}${apartment.buildingName ?? ""}',
+                            style: GoogleFonts.cairo(
+                              fontSize: 12,
+                              color: Colors.white.withAlpha(220),
+                            ),
                           ),
-                        ),
                       ],
                     ),
-                  ),
-                  IconButton(
-                    onPressed: () async {
-                      final updated = await showDialog<bool>(
-                        context: context,
-                        builder: (ctx) => EditApartmentDialog(apartment: apartment),
-                      );
-                      if (updated == true && context.mounted) {
-                        Navigator.pop(context, true);
-                      }
-                    },
-                    icon: const Icon(Icons.edit_outlined, color: Colors.white),
-                    tooltip: 'تعديل الواجب الشهري وبيانات الشقة',
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
@@ -241,53 +236,6 @@ class ApartmentDetailsDialog extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Exemption Banner
-                    if (!apartment.isBillable) ...[
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        margin: const EdgeInsets.only(bottom: 14),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.shade50,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: Colors.orange.shade300, width: 1.2),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.shade100,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(Icons.shield_outlined, color: Colors.orange.shade900, size: 22),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'شقة معفاة من واجبات السانديك',
-                                    style: GoogleFonts.cairo(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.orange.shade900,
-                                    ),
-                                  ),
-                                  Text(
-                                    'هذه الشقة معفاة حالياً من المستحقات الشهرية ولا تترتب عليها أي متأخرات مالية للإقامة.',
-                                    style: GoogleFonts.cairo(
-                                      fontSize: 11,
-                                      color: Colors.orange.shade800,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
 
                     // Financial Status Banner
                     Container(

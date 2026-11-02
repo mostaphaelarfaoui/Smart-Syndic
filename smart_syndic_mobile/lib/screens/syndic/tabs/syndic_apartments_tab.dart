@@ -1,83 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../models/apartment_model.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/syndic_provider.dart';
 import '../../../widgets/empty_state.dart';
-import '../../../core/utils/number_utils.dart';
 import '../dialogs/add_apartment_dialog.dart';
 import '../dialogs/apartment_details_dialog.dart';
-import '../dialogs/edit_apartment_dialog.dart';
-
-// Feature 4 helper — toggle billable from apartment list
-extension _BillableToggle on _SyndicApartmentsTabState {
-  Future<void> toggleBillable(BuildContext ctx, ApartmentModel apt) async {
-    final isCurrentlyBillable = apt.isBillable;
-    final actionTitle = isCurrentlyBillable ? 'إعفاء الشقة من واجبات السانديك' : 'إلغاء الإعفاء وإعادة الفوترة';
-    final actionMessage = isCurrentlyBillable
-        ? 'هل أنت متأكد من رغبتك في إعفاء ${apt.definiteUnit} من واجبات السانديك الشهرية؟\n\n• لن تُحسب عليها أي متأخرات.\n• سيتم استثناؤها من المداخيل الشهرية المتوقعة للإقامة.'
-        : 'هل تريد إلغاء إعفاء ${apt.definiteUnit} وإعادة إدراجها في حسابات واجبات السانديك الشهرية والمتأخرات؟';
-
-    final confirm = await showDialog<bool>(
-      context: ctx,
-      builder: (c) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(
-              isCurrentlyBillable ? Icons.money_off_rounded : Icons.restore_rounded,
-              color: isCurrentlyBillable ? AppColors.warning : AppColors.success,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                actionTitle,
-                style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-            ),
-          ],
-        ),
-        content: Text(
-          actionMessage,
-          style: GoogleFonts.cairo(fontSize: 13, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(c, false),
-            child: Text('إلغاء', style: GoogleFonts.cairo(color: AppColors.textSecondary)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isCurrentlyBillable ? AppColors.warning : AppColors.success,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            onPressed: () => Navigator.pop(c, true),
-            child: Text(
-              isCurrentlyBillable ? 'تأكيد الإعفاء' : 'إعادة الفوترة',
-              style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: Colors.white),
-            ),
-          ),
-        ],
-      ),
-    );
-    if (confirm != true || !ctx.mounted) return;
-    final syndic = Provider.of<SyndicProvider>(ctx, listen: false);
-    final ok = await syndic.toggleApartmentBillable(apt.id);
-    if (ctx.mounted) {
-      ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-        content: Text(
-          ok
-              ? (isCurrentlyBillable ? 'تم إعفاء الشقة من واجبات السانديك بنجاح ✓' : 'تم إلغاء الإعفاء وإعادة فوترة الشقة بنجاح ✓')
-              : (syndic.errorMessage ?? 'حدث خطأ'),
-          style: GoogleFonts.cairo(),
-        ),
-        backgroundColor: ok ? AppColors.success : AppColors.danger,
-      ));
-    }
-  }
-}
 
 class SyndicApartmentsTab extends StatefulWidget {
   const SyndicApartmentsTab({super.key});
@@ -97,32 +27,6 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
-  }
-
-  Future<void> _openWhatsApp(String phone, String unit) async {
-    var cleanPhone = phone.replaceAll(RegExp(r'\s+'), '');
-    if (cleanPhone.startsWith('0')) {
-      cleanPhone = '212${cleanPhone.substring(1)}';
-    } else if (cleanPhone.startsWith('+')) {
-      cleanPhone = cleanPhone.substring(1);
-    }
-    final message = Uri.encodeComponent('السلام عليكم، بخصوص ${formatDefiniteUnit(unit)}.');
-    final uri = Uri.parse('https://wa.me/$cleanPhone?text=$message');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-  }
-
-  Future<void> _openEditApartment(BuildContext context, ApartmentModel apt) async {
-    final syndic = Provider.of<SyndicProvider>(context, listen: false);
-    final updated = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => EditApartmentDialog(apartment: apt),
-    );
-    if (updated == true && mounted) {
-      await syndic.fetchApartments();
-      await syndic.fetchDashboardKpis();
-    }
   }
 
   /// Natural comparison for alphanumeric strings (e.g. "1", "2", "10", "A1", "A2")
@@ -379,8 +283,6 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
   }
 
   Widget _buildApartmentCard(ApartmentModel apt, {required bool isComplex}) {
-    final phone = apt.resident?['phone'] as String?;
-
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
@@ -407,7 +309,7 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
           final syndic = Provider.of<SyndicProvider>(context, listen: false);
           final res = await showDialog<bool>(
             context: context,
-            builder: (_) => ApartmentDetailsDialog(apartment: apt),
+            builder: (_) => ApartmentDetailsDialog(apartment: apt, isComplex: isComplex),
           );
           if (res == true && mounted) {
             await syndic.fetchApartments();
@@ -420,8 +322,8 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
             children: [
               // Leading Apartment Number Badge
               Container(
-                width: 50,
-                height: 50,
+                width: 48,
+                height: 48,
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                 decoration: BoxDecoration(
                   color: !apt.isBillable
@@ -488,18 +390,31 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      isComplex
-                          ? '${apt.block != null ? "بلوك ${apt.block} • " : ""}${apt.buildingName != null && apt.buildingName!.isNotEmpty ? "${apt.buildingName} • " : ""}الواجب: ${apt.monthlyFee.toStringAsFixed(0)} درهم'
-                          : '${apt.buildingName != null && apt.buildingName!.isNotEmpty ? "${apt.buildingName} • " : ""}الواجب: ${apt.monthlyFee.toStringAsFixed(0)} درهم',
-                      style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+
+                    // Building Name: ONLY in residential complex
+                    if (isComplex &&
+                        ((apt.buildingName != null && apt.buildingName!.isNotEmpty) ||
+                            apt.block != null)) ...[
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          const Icon(Icons.apartment_rounded, size: 12, color: AppColors.textLight),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              '${apt.block != null ? "بلوك ${apt.block} • " : ""}${apt.buildingName ?? ""}',
+                              style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+
                     const SizedBox(height: 3),
 
-                    // Status Tag: Exempted OR Settled/Arrears
+                    // Status Tag: Exempted OR Settled/Arrears OR Vacant
                     if (!apt.isBillable)
                       FittedBox(
                         fit: BoxFit.scaleDown,
@@ -551,46 +466,32 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
                             ),
                           ),
                         ),
+                      )
+                    else
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'شاغرة',
+                            style: GoogleFonts.cairo(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
                       ),
                   ],
                 ),
               ),
 
-              // WhatsApp button if phone available
-              if (phone != null && phone.isNotEmpty) ...[
-                IconButton(
-                  visualDensity: VisualDensity.compact,
-                  padding: const EdgeInsets.all(4),
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                  onPressed: () => _openWhatsApp(phone, apt.unitNumber),
-                  icon: const Icon(Icons.chat, color: AppColors.success, size: 18),
-                  tooltip: 'مراسلة واتساب',
-                ),
-              ],
-
-              // Dedicated Exemption Toggle Button (For ALL apartments)
-              IconButton(
-                visualDensity: VisualDensity.compact,
-                padding: const EdgeInsets.all(4),
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                onPressed: () => toggleBillable(context, apt),
-                icon: Icon(
-                  apt.isBillable ? Icons.money_off_outlined : Icons.restore_rounded,
-                  color: apt.isBillable ? AppColors.textLight : Colors.orange.shade800,
-                  size: 18,
-                ),
-                tooltip: apt.isBillable ? 'إعفاء الشقة من واجبات السانديك' : 'إلغاء الإعفاء وإعادة الفوترة',
-              ),
-
-              // Dedicated Edit Button
-              IconButton(
-                visualDensity: VisualDensity.compact,
-                padding: const EdgeInsets.all(4),
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                onPressed: () => _openEditApartment(context, apt),
-                icon: const Icon(Icons.edit_outlined, color: AppColors.primary, size: 18),
-                tooltip: 'تعديل الواجب الشهري وبيانات الشقة',
-              ),
+              const SizedBox(width: 8),
 
               const Icon(Icons.chevron_left, color: AppColors.textLight, size: 18),
             ],
