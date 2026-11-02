@@ -291,14 +291,14 @@ class ApartmentResource extends Resource
 
                 // Vacate Resident Action
                 Action::make('vacate_resident')
-                    ->label('إخلاء الشقة وحذف الساكن')
+                    ->label('إخلاء الشقة (رحيل الساكن)')
                     ->icon('heroicon-o-user-minus')
                     ->color('danger')
                     ->visible(fn (Apartment $record) => $record->residents->isNotEmpty())
                     ->requiresConfirmation()
-                    ->modalHeading(fn (Apartment $record) => "إخلاء وتفريغ الشقة {$record->unit_number}")
-                    ->modalDescription(fn (Apartment $record) => "سيتم حذف حساب الساكن الحالي (" . ($record->residents->first()?->full_name ?? '') . ") وتفريغ الشقة لتصبح شاغرة فوراً ومتاحة لتسجيل ساكن جديد، مع تصفير مبالغ وحسابات الشقة للصيغة الأولى.")
-                    ->modalSubmitActionLabel('نعم، إخلاء الشقة وحذف الساكن')
+                    ->modalHeading(fn (Apartment $record) => "إخلاء الشقة {$record->unit_number}")
+                    ->modalDescription(fn (Apartment $record) => "سيتم فك ارتباط الساكن الحالي (" . ($record->residents->first()?->full_name ?? '') . ") وتفريغ الشقة لتصبح شاغرة ومتاحة لساكن جديد، مع الاحتفاظ بجميع سجلات الدفع السابقة.")
+                    ->modalSubmitActionLabel('تأكيد إخلاء الشقة')
                     ->action(function (Apartment $record) {
                         DB::transaction(function () use ($record) {
                             $residents = $record->residents()->get();

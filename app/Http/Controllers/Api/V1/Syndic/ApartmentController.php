@@ -380,8 +380,11 @@ class ApartmentController extends Controller
 
         DB::transaction(function () use ($apartment) {
             $residents = $apartment->residents()->get();
+            $apartment->residents()->detach();
             foreach ($residents as $resident) {
-                $resident->delete(); // Triggers User::deleting hook: clears payments & sets created_at = now()
+                if ($resident->apartments()->count() === 0) {
+                    $resident->delete();
+                }
             }
             $apartment->refresh();
         });
@@ -398,7 +401,7 @@ class ApartmentController extends Controller
         );
 
         return response()->json([
-            'message'      => "تم إخلاء الشقة {$unitNumber} بنجاح وحذف حساب الساكن وتصفير المبالغ لتبدأ من جديد.",
+            'message'      => "تم إخلاء الشقة {$unitNumber} بنجاح لتصبح شاغرة، مع الاحتفاظ الكامل بسجلات الدفع السابقة.",
             'apartment_id' => $apartment->id,
         ]);
     }

@@ -133,14 +133,14 @@ class ApartmentDetailsDialog extends StatelessWidget {
     final residentName = resident?['name'] ?? 'الساكن';
     final confirm = await ConfirmActionDialog.show(
       context,
-      title: 'إخلاء الشقة وحذف حساب الساكن',
-      message: 'هل أنت متأكد من رغبتك في إخلاء ${apartment.definiteUnit} وحذف حساب $residentName؟\n\n'
-          '• سيتم حذف حساب الساكن نهائياً لتصبح الشقة شاغرة وقابلة لربط شخص آخر بها.\n'
-          '• سيتم تصفير وإرجاع الحسابات والمبالغ للصيغة الأولى (0 درهم متأخرات).',
-      confirmText: 'تأكيد الإخلاء والحذف',
+      title: 'إخلاء الشقة (رحيل الساكن)',
+      message: 'هل أنت متأكد من رغبتك في إخلاء ${apartment.definiteUnit} وفك ارتباط $residentName؟\n\n'
+          '• ستصبح الشقة شاغرة ومتاحة لتسجيل ساكن جديد عبر رمز الدعوة.\n'
+          '• سيتم الاحتفاظ بكافة سجلات وإيصالات الدفعات السابقة لضمان سلامة المحاسبة والمالية.',
+      confirmText: 'تأكيد إخلاء الشقة',
       type: ConfirmDialogType.danger,
       requiresPassword: true,
-      passwordHint: 'عملية حساسة: يرجى إدخال كلمة مرور حساب السانديك لتأكيد الحذف والإخلاء',
+      passwordHint: 'عملية حساسة: يرجى إدخال كلمة مرور حساب السانديك لتأكيد الإخلاء',
     );
 
     if (confirm == true && context.mounted) {
@@ -152,7 +152,7 @@ class ApartmentDetailsDialog extends StatelessWidget {
           SnackBar(
             content: Text(
               ok
-                  ? 'تم إخلاء الشقة وتصفير سجلاتها وحذف حساب الساكن بنجاح ✓'
+                  ? 'تم إخلاء الشقة بنجاح مع الاحتفاظ بكافة السجلات المالية ✓'
                   : (syndic.errorMessage ?? 'تعذر إخلاء الشقة'),
               style: GoogleFonts.cairo(),
             ),
@@ -454,7 +454,7 @@ class ApartmentDetailsDialog extends StatelessWidget {
                                 onPressed: () => _vacateApartment(context),
                                 icon: const Icon(Icons.person_remove_outlined, size: 16),
                                 label: Text(
-                                  'إخلاء الشقة وحذف حساب الساكن',
+                                  'إخلاء الشقة (رحيل الساكن)',
                                   style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12),
                                 ),
                               ),
@@ -835,11 +835,20 @@ class ApartmentDetailsDialog extends StatelessWidget {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           ),
                           onPressed: () async {
+                            if (hasResident) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  backgroundColor: AppColors.warning,
+                                  content: Text('لا يمكن حذف الشقة من العمارة وهي مسكونة. يرجى إخلاء الشقة أولاً من بطاقة الساكن.'),
+                                ),
+                              );
+                              return;
+                            }
                             final confirm = await ConfirmActionDialog.show(
                               context,
-                              title: 'تأكيد حذف الشقة نهائياً',
-                              message: 'هل أنت متأكد من رغبتك في حذف ${apartment.definiteUnit}؟\n\n'
-                                  '⚠️ تنبيه: سيتم مباشرة حذف حساب الساكن المرتبط بها، بالإضافة إلى كافة إيصالاتها ومستحقاتها المالية.',
+                              title: 'تأكيد حذف الشقة من العمارة',
+                              message: 'هل أنت متأكد من رغبتك في حذف ${apartment.definiteUnit} نهائياً؟\n\n'
+                                  '• سيتم مسح رقم هذه الشقة بالكامل من قائمة شقق الإقامة.',
                               confirmText: 'تأكيد الحذف النهائي',
                               type: ConfirmDialogType.danger,
                               requiresPassword: true,

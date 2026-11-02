@@ -327,19 +327,16 @@ class ApartmentController extends Controller
             ->findOrFail($id);
 
         DB::transaction(function () use ($apartment) {
-            // Detach all residents
+            $residents = $apartment->residents()->get();
             $apartment->residents()->detach();
-
-            // Reset payments for this apartment
-            $apartment->payments()->delete();
-
-            // Reset created_at so arrears calculation restarts clean from now
-            $apartment->forceFill([
-                'created_at' => now(),
-            ])->saveQuietly();
+            foreach ($residents as $resident) {
+                if ($resident->apartments()->count() === 0) {
+                    $resident->delete();
+                }
+            }
         });
 
-        return back()->with('success', "تم تفريغ الشقة {$apartment->unit_number} وإعادة ضبط حساباتها لتصبح شاغرة.");
+        return back()->with('success', "تم تفريغ الشقة {$apartment->unit_number} لتصبح شاغرة، مع الاحتفاظ بجميع سجلات الدفع السابقة.");
     }
 
     public function toggleBillable($id)
