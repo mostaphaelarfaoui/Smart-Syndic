@@ -836,10 +836,47 @@ class ApartmentDetailsDialog extends StatelessWidget {
                           ),
                           onPressed: () async {
                             if (hasResident) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  backgroundColor: AppColors.warning,
-                                  content: Text('لا يمكن حذف الشقة من العمارة وهي مسكونة. يرجى إخلاء الشقة أولاً من بطاقة الساكن.'),
+                              await showDialog(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                                  title: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.warning.withAlpha(25),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 24),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          'لا يمكن حذف الشقة',
+                                          style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 16),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  content: Text(
+                                    'هذه الشقة مسكونة حالياً ومرتبطة بساكن.\n\nلحماية بيانات الساكن، يرجى أولاً الضغط على «إخلاء الشقة (رحيل الساكن)» في بطاقة الساكن بالأعلى، وبعد أن تصبح الشقة شاغرة يمكنك حذفها من العمارة إذا أردت ذلك.',
+                                    style: GoogleFonts.cairo(fontSize: 13, height: 1.5, color: AppColors.textPrimary),
+                                  ),
+                                  actions: [
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppColors.primary,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                      ),
+                                      onPressed: () => Navigator.pop(ctx),
+                                      child: Text(
+                                        'فهمت ذلك',
+                                        style: GoogleFonts.cairo(fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               );
                               return;
