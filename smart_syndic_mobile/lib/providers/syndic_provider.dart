@@ -7,6 +7,7 @@ import '../models/expense_model.dart';
 import '../models/apartment_model.dart';
 import '../models/suggestion_model.dart';
 import '../models/poll_model.dart';
+import '../models/announcement_model.dart';
 
 class SyndicProvider extends ChangeNotifier {
   final ApiService _api = ApiService();
@@ -19,6 +20,7 @@ class SyndicProvider extends ChangeNotifier {
   List<Map<String, dynamic>> _pendingResidents = [];
   List<SuggestionModel> _suggestions = [];
   List<PollModel> _polls = [];
+  List<AnnouncementModel> _announcements = [];
   String? _invitationCode;
 
   bool _isLoading = false;
@@ -32,6 +34,7 @@ class SyndicProvider extends ChangeNotifier {
   List<Map<String, dynamic>> get pendingResidents => _pendingResidents;
   List<SuggestionModel> get suggestions => _suggestions;
   List<PollModel> get polls => _polls;
+  List<AnnouncementModel> get announcements => _announcements;
   String? get invitationCode => _invitationCode;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -45,6 +48,7 @@ class SyndicProvider extends ChangeNotifier {
     _pendingResidents = [];
     _suggestions = [];
     _polls = [];
+    _announcements = [];
     _invitationCode = null;
     _isLoading = false;
     _errorMessage = null;
@@ -624,6 +628,75 @@ class SyndicProvider extends ChangeNotifier {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
       notifyListeners();
       return null;
+    }
+  }
+
+  Future<void> fetchAnnouncements({bool silent = false}) async {
+    if (!silent) {
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+    }
+    try {
+      final response = await _api.get(ApiConstants.tenantAnnouncements);
+      if (response != null && response['data'] != null) {
+        final list = response['data'] is Map ? response['data']['data'] : response['data'];
+        if (list is List) {
+          _announcements = list
+              .map((e) => AnnouncementModel.fromJson(e as Map<String, dynamic>))
+              .toList();
+        }
+      }
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
+    }
+  }
+
+  Future<bool> createAnnouncement({
+    required String title,
+    required String content,
+    String priority = 'NORMAL',
+    bool isPinned = false,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final response = await _api.post(ApiConstants.syndicAnnouncements, {
+        'title': title,
+        'content': content,
+        'priority': priority,
+        'is_pinned': isPinned,
+      });
+      _isLoading = false;
+      if (response != null && response['status'] == 'success') {
+        await fetchAnnouncements(silent: true);
+        return true;
+      }
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> deleteAnnouncement(String id) async {
+    try {
+      await _api.delete(ApiConstants.deleteSyndicAnnouncement(id));
+      _announcements.removeWhere((a) => a.id == id);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
+      return false;
     }
   }
 }

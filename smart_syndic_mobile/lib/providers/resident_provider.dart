@@ -4,6 +4,7 @@ import '../core/services/api_service.dart';
 import '../models/payment_model.dart';
 import '../models/suggestion_model.dart';
 import '../models/poll_model.dart';
+import '../models/announcement_model.dart';
 
 class ResidentProvider extends ChangeNotifier {
   final ApiService _api = ApiService();
@@ -14,6 +15,7 @@ class ResidentProvider extends ChangeNotifier {
   Map<String, dynamic>? _transparencyData;
   List<SuggestionModel> _mySuggestions = [];
   List<PollModel> _polls = [];
+  List<AnnouncementModel> _announcements = [];
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -24,6 +26,7 @@ class ResidentProvider extends ChangeNotifier {
   Map<String, dynamic>? get transparencyData => _transparencyData;
   List<SuggestionModel> get mySuggestions => _mySuggestions;
   List<PollModel> get polls => _polls;
+  List<AnnouncementModel> get announcements => _announcements;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
@@ -34,6 +37,7 @@ class ResidentProvider extends ChangeNotifier {
     _transparencyData = null;
     _mySuggestions = [];
     _polls = [];
+    _announcements = [];
     _isLoading = false;
     _errorMessage = null;
     notifyListeners();
@@ -177,6 +181,31 @@ class ResidentProvider extends ChangeNotifier {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
       notifyListeners();
       return false;
+    }
+  }
+
+  Future<void> fetchAnnouncements({bool silent = false}) async {
+    if (!silent) {
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+    }
+    try {
+      final response = await _api.get(ApiConstants.tenantAnnouncements);
+      if (response != null && response['data'] != null) {
+        final list = response['data'] is Map ? response['data']['data'] : response['data'];
+        if (list is List) {
+          _announcements = list
+              .map((e) => AnnouncementModel.fromJson(e as Map<String, dynamic>))
+              .toList();
+        }
+      }
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
     }
   }
 }

@@ -369,7 +369,7 @@
                 <div>
                     <h3 class="modal-title" style="margin:0;">✉️ كتابة وإرسال رسالة جديدة</h3>
                     <p style="margin:0.25rem 0 0; font-size:0.82rem; color:var(--text-secondary);">
-                        إرسال رسالة عامة لكافة السكان أو تخصيصها لساكن أو شقق بعينها
+                        بدء محادثة فردية مباشرة مع أحد سكان الإقامة
                     </p>
                 </div>
                 <button type="button" class="icon-btn" @click="composeModal = false">✕</button>
@@ -377,39 +377,13 @@
 
             <form method="POST" action="{{ route('portal.messages.store') }}">
                 @csrf
+                <input type="hidden" name="target_type" value="INDIVIDUAL">
                 <div class="modal-body">
-                    {{-- Target Type Selector --}}
+                    {{-- Single Resident Selector (Individual Direct Chat) --}}
                     <div class="form-group">
-                        <label class="form-label" style="font-weight:700;">المستهدفون بالرسالة</label>
-                        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:0.5rem;">
-                            <label style="border:2px solid; border-color:var(--border-color); border-radius:10px; padding:0.65rem 0.5rem; text-align:center; cursor:pointer; transition:all 0.15s;"
-                                   :style="composeData.targetType === 'ALL_RESIDENTS' ? 'border-color:var(--brand-primary); background:rgba(99, 102, 241, 0.08); font-weight:800;' : ''">
-                                <input type="radio" name="target_type" value="ALL_RESIDENTS" x-model="composeData.targetType" style="display:none;">
-                                <div style="font-size:1.2rem;">📢</div>
-                                <div style="font-size:0.8rem; margin-top:2px;">كافة السكان</div>
-                            </label>
-
-                            <label style="border:2px solid; border-color:var(--border-color); border-radius:10px; padding:0.65rem 0.5rem; text-align:center; cursor:pointer; transition:all 0.15s;"
-                                   :style="composeData.targetType === 'INDIVIDUAL' ? 'border-color:var(--brand-primary); background:rgba(99, 102, 241, 0.08); font-weight:800;' : ''">
-                                <input type="radio" name="target_type" value="INDIVIDUAL" x-model="composeData.targetType" style="display:none;">
-                                <div style="font-size:1.2rem;">👤</div>
-                                <div style="font-size:0.8rem; margin-top:2px;">ساكن محدد</div>
-                            </label>
-
-                            <label style="border:2px solid; border-color:var(--border-color); border-radius:10px; padding:0.65rem 0.5rem; text-align:center; cursor:pointer; transition:all 0.15s;"
-                                   :style="composeData.targetType === 'GROUP' ? 'border-color:var(--brand-primary); background:rgba(99, 102, 241, 0.08); font-weight:800;' : ''">
-                                <input type="radio" name="target_type" value="GROUP" x-model="composeData.targetType" style="display:none;">
-                                <div style="font-size:1.2rem;">👥</div>
-                                <div style="font-size:0.8rem; margin-top:2px;">مجموعة شقق</div>
-                            </label>
-                        </div>
-                    </div>
-
-                    {{-- Conditional: Single Resident Selector --}}
-                    <div class="form-group" x-show="composeData.targetType === 'INDIVIDUAL'" x-cloak>
-                        <label class="form-label" style="font-weight:700;">اختر الساكن المستهدف</label>
-                        <select name="target_ids[]" class="form-select" :disabled="composeData.targetType !== 'INDIVIDUAL'">
-                            <option value="">-- اختر الساكن --</option>
+                        <label class="form-label" style="font-weight:700;">👤 اختر الساكن (محادثة فردية مباشرة)</label>
+                        <select name="target_ids[]" class="form-select" required>
+                            <option value="">-- اختر الساكن لبدء المحادثة معه --</option>
                             @foreach($residents as $res)
                                 @php
                                     $aptUnits = $res->apartments->map(fn($a) => $a->formatted_unit)->join('، ');
@@ -419,26 +393,9 @@
                                 </option>
                             @endforeach
                         </select>
-                    </div>
-
-                    {{-- Conditional: Multi-apartment Group Selector --}}
-                    <div class="form-group" x-show="composeData.targetType === 'GROUP'" x-cloak>
-                        <label class="form-label" style="font-weight:700;">اختر الشقق المستهدفة (يمكن تحديد عدة شقق)</label>
-                        <div style="max-height:160px; overflow-y:auto; border:1px solid var(--border-color); border-radius:10px; padding:0.75rem; background:var(--bg-secondary);">
-                            @foreach($buildings as $b)
-                                <div style="font-weight:800; font-size:0.8rem; color:var(--brand-primary); margin-bottom:0.4rem;">
-                                    🏢 {{ $b->name }}{{ $b->block ? ' - بلوك ' . $b->block : '' }}
-                                </div>
-                                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:0.4rem; margin-bottom:0.75rem;">
-                                    @foreach($b->apartments as $apt)
-                                        <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.78rem; cursor:pointer; background:var(--bg-surface); padding:0.35rem 0.5rem; border-radius:6px; border:1px solid var(--border-color);">
-                                            <input type="checkbox" name="target_ids[]" value="{{ $apt->id }}" style="accent-color:var(--brand-primary);" :disabled="composeData.targetType !== 'GROUP'">
-                                            <span>{{ $apt->formatted_unit }}</span>
-                                        </label>
-                                    @endforeach
-                                </div>
-                            @endforeach
-                        </div>
+                        <p style="margin:0.35rem 0 0; font-size:0.78rem; color:var(--text-muted);">
+                            💡 الرسائل مخصصة للدردشة المباشرة الفردية فقط. لنشر إعلان لكافة السكان، يرجى استخدام قسم «لوحة الإعلانات».
+                        </p>
                     </div>
 
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">

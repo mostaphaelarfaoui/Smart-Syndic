@@ -7,6 +7,7 @@ import '../../../widgets/empty_state.dart';
 import '../../../core/utils/number_utils.dart';
 import '../dialogs/convert_to_poll_dialog.dart';
 import '../dialogs/create_poll_dialog.dart';
+import '../dialogs/create_announcement_dialog.dart';
 
 class SyndicCommunityTab extends StatefulWidget {
   const SyndicCommunityTab({super.key});
@@ -27,12 +28,13 @@ class SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTicke
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(() {
       setState(() {});
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<SyndicProvider>().fetchPendingResidents();
+      context.read<SyndicProvider>().fetchAnnouncements();
     });
   }
 
@@ -119,6 +121,7 @@ class SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTicke
               ),
               const Tab(text: 'صندوق الاقتراحات'),
               const Tab(text: 'استطلاعات الرأي'),
+              const Tab(text: '📢 إعلانات الإقامة'),
             ],
           ),
         ),
@@ -134,6 +137,9 @@ class SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTicke
 
           // 3. Polls View
           _buildPollsView(context, syndic),
+
+          // 4. Announcements View
+          _buildAnnouncementsView(context, syndic),
         ],
       ),
       floatingActionButton: _tabController.index == 2
@@ -148,7 +154,19 @@ class SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTicke
               icon: const Icon(Icons.add, color: Colors.white),
               label: Text('تصويت جديد', style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.bold)),
             )
-          : null,
+          : (_tabController.index == 3
+              ? FloatingActionButton.extended(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => const CreateAnnouncementDialog(),
+                    );
+                  },
+                  backgroundColor: const Color(0xff4f46e5),
+                  icon: const Icon(Icons.campaign_rounded, color: Colors.white),
+                  label: Text('نشر إعلان جديد', style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.bold)),
+                )
+              : null),
     );
   }
 
@@ -818,6 +836,143 @@ class SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTicke
           ),
         );
       },
+    );
+  }
+
+  Widget _buildAnnouncementsView(BuildContext context, SyndicProvider syndic) {
+    final announcements = syndic.announcements;
+
+    return RefreshIndicator(
+      onRefresh: () async => await syndic.fetchAnnouncements(),
+      child: announcements.isEmpty
+          ? const EmptyStateWidget(
+              icon: Icons.campaign_outlined,
+              title: 'لا توجد إعلانات منشورة حالياً',
+              description: 'يمكنك نشر إعلانات وبيانات الإقامة لتصل لكافة السكان في خدمة الإشعارات فوراً.',
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.only(left: 14, right: 14, top: 12, bottom: 80),
+              itemCount: announcements.length,
+              itemBuilder: (ctx, i) {
+                final item = announcements[i];
+                final isUrgent = item.isUrgent;
+                final isInfo = item.isInfo;
+                final priorityColor = isUrgent
+                    ? AppColors.danger
+                    : (isInfo ? const Color(0xff4f46e5) : AppColors.textSecondary);
+
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    side: BorderSide(
+                      color: item.isPinned
+                          ? const Color(0xfff59e0b).withAlpha(120)
+                          : AppColors.border,
+                      width: item.isPinned ? 1.5 : 1,
+                    ),
+                  ),
+                  color: item.isPinned ? const Color(0xfffef3c7).withAlpha(20) : Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: priorityColor.withAlpha(20),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: priorityColor.withAlpha(40)),
+                              ),
+                              child: Text(
+                                item.priorityLabel,
+                                style: GoogleFonts.cairo(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: priorityColor,
+                                ),
+                              ),
+                            ),
+                            if (item.isPinned) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xfff59e0b).withAlpha(25),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  '📌 مثبت',
+                                  style: GoogleFonts.cairo(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xffd97706),
+                                  ),
+                                ),
+                              ),
+                            ],
+                            const Spacer(),
+                            Text(
+                              '${item.createdAt.year}/${item.createdAt.month}/${item.createdAt.day}',
+                              style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          item.title,
+                          style: GoogleFonts.cairo(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          item.content,
+                          style: GoogleFonts.cairo(
+                            fontSize: 12.5,
+                            color: AppColors.textPrimary,
+                            height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const Divider(height: 1),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Text(
+                              'نُشر بواسطة: ${item.creatorName}',
+                              style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary),
+                            ),
+                            const Spacer(),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline, size: 20, color: AppColors.danger),
+                              tooltip: 'حذف الإعلان',
+                              onPressed: () async {
+                                final confirm = await _showConfirmDialog(
+                                  context,
+                                  title: 'حذف الإعلان',
+                                  message: 'هل أنت متأكد من حذف هذا الإعلان نهائياً؟',
+                                  confirmText: 'حذف',
+                                  confirmColor: AppColors.danger,
+                                );
+                                if (confirm == true) {
+                                  await syndic.deleteAnnouncement(item.id);
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
     );
   }
 }

@@ -97,6 +97,11 @@ class Tenant extends Model implements HasName
         return $this->hasMany(Poll::class);
     }
 
+    public function announcements(): HasMany
+    {
+        return $this->hasMany(Announcement::class);
+    }
+
     // ─── Business Logic ───────────────────────────────────────────────
 
     /**

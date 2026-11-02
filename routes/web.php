@@ -173,6 +173,12 @@ Route::middleware(['auth:web', 'role:ADMIN_SYNDIC,SUPER_ADMIN'])->prefix('portal
     Route::post('/messages/{id}/read', [MessageController::class, 'markAsRead'])->name('messages.read');
     Route::post('/messages/mark-all-read', [MessageController::class, 'markAllAsRead'])->name('messages.mark-all-read');
     Route::get('/messages/quick-list', [MessageController::class, 'quickList'])->name('messages.quick-list');
+
+    // Tenant / Syndic Announcements (Broadcasts to all residents via notifications)
+    Route::get('/announcements', [\App\Http\Controllers\Web\Portal\AnnouncementController::class, 'index'])->name('announcements.index');
+    Route::post('/announcements', [\App\Http\Controllers\Web\Portal\AnnouncementController::class, 'store'])->name('announcements.store');
+    Route::post('/announcements/{id}/toggle-pin', [\App\Http\Controllers\Web\Portal\AnnouncementController::class, 'togglePin'])->name('announcements.toggle-pin');
+    Route::delete('/announcements/{id}', [\App\Http\Controllers\Web\Portal\AnnouncementController::class, 'destroy'])->name('announcements.destroy');
     Route::get('/messages/unread-count', [MessageController::class, 'unreadCount'])->name('messages.unread-count');
 
     // Settings

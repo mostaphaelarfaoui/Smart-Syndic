@@ -62,6 +62,11 @@ class ApiConstants {
   static String messageRead(String id) => '/messages/$id/read';
   static const String messageMarkAllRead = '/messages/mark-all-read';
 
+  // Tenant Announcements endpoints
+  static const String tenantAnnouncements = '/tenant-announcements';
+  static const String syndicAnnouncements = '/syndic/announcements';
+  static String deleteSyndicAnnouncement(String id) => '/syndic/announcements/$id';
+
   // Security & Password verification for sensitive actions
   static const String verifyPassword = '/auth/verify-password';
 }

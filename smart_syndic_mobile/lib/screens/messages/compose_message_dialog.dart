@@ -27,16 +27,14 @@ class _ComposeMessageDialogState extends State<ComposeMessageDialog> {
 
   String _category = 'GENERAL';
   String _priority = 'NORMAL';
-  String _targetType = 'ALL_RESIDENTS';
+  final String _targetType = 'INDIVIDUAL';
   String? _selectedResidentId;
-  final List<String> _selectedApartmentIds = [];
   bool _isSubmitting = false;
 
   @override
   void initState() {
     super.initState();
     if (widget.initialResidentId != null) {
-      _targetType = 'INDIVIDUAL';
       _selectedResidentId = widget.initialResidentId;
     }
   }
@@ -55,23 +53,13 @@ class _ComposeMessageDialogState extends State<ComposeMessageDialog> {
 
     List<String>? targetIds;
     if (isSyndic) {
-      if (_targetType == 'INDIVIDUAL') {
-        if (_selectedResidentId == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('يرجى اختيار الساكن المستهدف')),
-          );
-          return;
-        }
-        targetIds = [_selectedResidentId!];
-      } else if (_targetType == 'GROUP') {
-        if (_selectedApartmentIds.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('يرجى تحديد شقة واحدة على الأقل')),
-          );
-          return;
-        }
-        targetIds = _selectedApartmentIds;
+      if (_selectedResidentId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('يرجى اختيار الساكن لبدء المحادثة معه')),
+        );
+        return;
       }
+      targetIds = [_selectedResidentId!];
     }
 
     setState(() => _isSubmitting = true);
@@ -172,86 +160,38 @@ class _ComposeMessageDialogState extends State<ComposeMessageDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Target Type for Syndic
+                      // Target Resident for Syndic (Direct 1-on-1 Chat)
                       if (isSyndic) ...[
-                        Text('المستهدفون بالرسالة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12)),
+                        Text(
+                          '👤 اختر الساكن (محادثة مباشرة فردية)',
+                          style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12.5),
+                        ),
                         const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildRadioOption('ALL_RESIDENTS', '📢 عامة للجميع'),
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: _buildRadioOption('INDIVIDUAL', '👤 ساكن محدد'),
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: _buildRadioOption('GROUP', '👥 مجموعة شقق'),
-                            ),
-                          ],
+                        DropdownButtonFormField<String>(
+                          initialValue: _selectedResidentId,
+                          decoration: InputDecoration(
+                            prefixIcon: const Icon(Icons.person_outline, size: 20),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                            hintText: '-- اختر الشقة أو الساكن لبدء المحادثة --',
+                            hintStyle: GoogleFonts.cairo(fontSize: 12),
+                          ),
+                          items: apartments.map((apt) {
+                            final resName = apt.resident != null ? (apt.resident!['name'] ?? 'ساكن الإقامة') : 'شاغرة';
+                            final resVal = apt.resident != null ? (apt.resident!['id']?.toString() ?? apt.id) : apt.id;
+                            return DropdownMenuItem(
+                              value: resVal,
+                              child: Text('${apt.formattedUnit} ($resName)', style: GoogleFonts.cairo(fontSize: 12)),
+                            );
+                          }).toList(),
+                          onChanged: (val) => setState(() => _selectedResidentId = val),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '💡 الرسائل مخصصة للتواصل المباشر الفردي فقط. للإعلانات العامة الموجهة للجميع، يرجى استخدام قسم الإعلانات.',
+                          style: GoogleFonts.cairo(fontSize: 10.5, color: AppColors.textSecondary),
                         ),
                         const SizedBox(height: 12),
-
-                        // If Individual -> Apartment / Resident Dropdown
-                        if (_targetType == 'INDIVIDUAL') ...[
-                          Text('اختر الشقة أو الساكن', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12)),
-                          const SizedBox(height: 6),
-                          DropdownButtonFormField<String>(
-                            initialValue: _selectedResidentId,
-                            decoration: InputDecoration(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                              hintText: '-- اختر الشقة --',
-                            ),
-                            items: apartments.map((apt) {
-                              final resName = apt.resident != null ? (apt.resident!['name'] ?? 'ساكن الإقامة') : 'شاغرة';
-                              final resVal = apt.resident != null ? (apt.resident!['id']?.toString() ?? apt.id) : apt.id;
-                              return DropdownMenuItem(
-                                value: resVal,
-                                child: Text('${apt.formattedUnit} ($resName)', style: GoogleFonts.cairo(fontSize: 12)),
-                              );
-                            }).toList(),
-                            onChanged: (val) => setState(() => _selectedResidentId = val),
-                          ),
-                          const SizedBox(height: 12),
-                        ],
-
-                        // If Group -> Apartments selection
-                        if (_targetType == 'GROUP') ...[
-                          Text('حدد الشقق المستهدفة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12)),
-                          const SizedBox(height: 6),
-                          Container(
-                            height: 120,
-                            decoration: BoxDecoration(
-                              color: AppColors.background,
-                              border: Border.all(color: AppColors.border),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: ListView.builder(
-                              itemCount: apartments.length,
-                              itemBuilder: (ctx, i) {
-                                final apt = apartments[i];
-                                final isSelected = _selectedApartmentIds.contains(apt.id);
-                                return CheckboxListTile(
-                                  dense: true,
-                                  title: Text('${apt.formattedUnit} (${apt.buildingName})', style: GoogleFonts.cairo(fontSize: 12)),
-                                  value: isSelected,
-                                  onChanged: (val) {
-                                    setState(() {
-                                      if (val == true) {
-                                        _selectedApartmentIds.add(apt.id);
-                                      } else {
-                                        _selectedApartmentIds.remove(apt.id);
-                                      }
-                                    });
-                                  },
-                                );
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                        ],
                       ],
 
                       // Category and Priority in one row
@@ -372,28 +312,4 @@ class _ComposeMessageDialogState extends State<ComposeMessageDialog> {
     );
   }
 
-  Widget _buildRadioOption(String val, String label) {
-    final isSelected = _targetType == val;
-    return InkWell(
-      onTap: () => setState(() => _targetType = val),
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withAlpha(20) : AppColors.background,
-          border: Border.all(color: isSelected ? AppColors.primary : AppColors.border, width: isSelected ? 1.5 : 1),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: GoogleFonts.cairo(
-            fontSize: 10,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected ? AppColors.primary : AppColors.textPrimary,
-          ),
-        ),
-      ),
-    );
-  }
 }

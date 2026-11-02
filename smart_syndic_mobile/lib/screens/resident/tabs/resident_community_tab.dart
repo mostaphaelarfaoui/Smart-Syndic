@@ -30,7 +30,13 @@ class ResidentCommunityTabState extends State<ResidentCommunityTab> with SingleT
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      setState(() {});
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ResidentProvider>().fetchAnnouncements();
+    });
   }
 
   @override
@@ -57,31 +63,37 @@ class ResidentCommunityTabState extends State<ResidentCommunityTab> with SingleT
             labelStyle: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13),
             unselectedLabelStyle: GoogleFonts.cairo(fontSize: 13),
             tabs: const [
+              Tab(text: '📢 إعلانات الإقامة'),
               Tab(text: 'استطلاعات الرأي والتصويت'),
               Tab(text: 'اقتراحاتي وملاحظاتي'),
             ],
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (_) => const SubmitSuggestionDialog(),
-          );
-        },
-        icon: const Icon(Icons.add_comment_outlined),
-        label: Text('تقديم فكرة جديدة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
-      ),
+      floatingActionButton: _tabController.index == 2
+          ? FloatingActionButton.extended(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (_) => const SubmitSuggestionDialog(),
+                );
+              },
+              icon: const Icon(Icons.add_comment_outlined),
+              label: Text('تقديم فكرة جديدة', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+            )
+          : null,
       body: TabBarView(
         controller: _tabController,
         children: [
-          // 1. Polls & Voting View
+          // 1. Announcements View
+          _buildAnnouncementsView(context, resident),
+
+          // 2. Polls & Voting View
           _buildPollsView(context, resident),
 
-          // 2. Suggestions View
+          // 3. Suggestions View
           _buildSuggestionsView(context, resident),
         ],
       ),
@@ -535,6 +547,122 @@ class ResidentCommunityTabState extends State<ResidentCommunityTab> with SingleT
                         ),
                       ],
                     ],
+                  ),
+                );
+              },
+            ),
+    );
+  }
+
+  Widget _buildAnnouncementsView(BuildContext context, ResidentProvider resident) {
+    final announcements = resident.announcements;
+
+    return RefreshIndicator(
+      onRefresh: () async => await resident.fetchAnnouncements(),
+      child: announcements.isEmpty
+          ? const EmptyStateWidget(
+              icon: Icons.campaign_outlined,
+              title: 'لا توجد إعلانات منشورة حالياً',
+              description: 'عندما تنشر إدارة السانديك بياناً أو إعلاناً للإقامة، سيصلك إشعار فوري وسيظهر هنا.',
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.only(left: 14, right: 14, top: 12, bottom: 20),
+              itemCount: announcements.length,
+              itemBuilder: (ctx, i) {
+                final item = announcements[i];
+                final isUrgent = item.isUrgent;
+                final isInfo = item.isInfo;
+                final priorityColor = isUrgent
+                    ? AppColors.danger
+                    : (isInfo ? const Color(0xff4f46e5) : AppColors.textSecondary);
+
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    side: BorderSide(
+                      color: item.isPinned
+                          ? const Color(0xfff59e0b).withAlpha(120)
+                          : AppColors.border,
+                      width: item.isPinned ? 1.5 : 1,
+                    ),
+                  ),
+                  color: item.isPinned ? const Color(0xfffef3c7).withAlpha(20) : Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: priorityColor.withAlpha(20),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: priorityColor.withAlpha(40)),
+                              ),
+                              child: Text(
+                                item.priorityLabel,
+                                style: GoogleFonts.cairo(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: priorityColor,
+                                ),
+                              ),
+                            ),
+                            if (item.isPinned) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xfff59e0b).withAlpha(25),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  '📌 مثبت',
+                                  style: GoogleFonts.cairo(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xffd97706),
+                                  ),
+                                ),
+                              ),
+                            ],
+                            const Spacer(),
+                            Text(
+                              '${item.createdAt.year}/${item.createdAt.month}/${item.createdAt.day}',
+                              style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          item.title,
+                          style: GoogleFonts.cairo(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          item.content,
+                          style: GoogleFonts.cairo(
+                            fontSize: 12.5,
+                            color: AppColors.textPrimary,
+                            height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const Divider(height: 1),
+                        const SizedBox(height: 8),
+                        Text(
+                          'نُشر بواسطة: ${item.creatorName}',
+                          style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },

@@ -96,10 +96,20 @@ Route::middleware(['auth:sanctum', 'tenant.scope', 'tenant.active'])->group(func
         ]);
     })->name('api.announcements.index');
 
+    // ─── Tenant / Residence Announcements API ───────────────────────
+    Route::get('/tenant-announcements', [\App\Http\Controllers\Api\V1\AnnouncementApiController::class, 'index'])
+        ->name('api.tenant-announcements.index');
+
     // ─── Syndic / Admin Operations ────────────────────────────────
     Route::prefix('syndic')
         ->middleware('role:ADMIN_SYNDIC')
         ->group(function () {
+
+            // ─── Announcements (Broadcasts to all residents via notifications) ───
+            Route::post('/announcements', [\App\Http\Controllers\Api\V1\AnnouncementApiController::class, 'store'])
+                ->name('syndic.announcements.store');
+            Route::delete('/announcements/{id}', [\App\Http\Controllers\Api\V1\AnnouncementApiController::class, 'destroy'])
+                ->name('syndic.announcements.destroy');
 
             // ─── Dashboard KPIs ──────────────────────────────────
             Route::get('/dashboard/kpis', [DashboardController::class, 'kpis'])
