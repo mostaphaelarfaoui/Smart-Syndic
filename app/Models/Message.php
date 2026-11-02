@@ -39,6 +39,8 @@ class Message extends Model
         'recipient_label',
         'recipient_name',
         'recipient_unit_label',
+        'chat_partner_name',
+        'chat_partner_badge',
         'latest_activity_at',
         'latest_message_body',
         'last_message_preview',
@@ -205,6 +207,34 @@ class Message extends Model
             return $unit ? format_unit_label($unit) : null;
         }
         return null;
+    }
+
+    public function getChatPartnerNameAttribute(): string
+    {
+        $userId = auth()->id();
+        if ($this->sender_id === $userId) {
+            return $this->recipient_label;
+        }
+
+        if ($this->isFromSuperAdmin()) {
+            return 'الإدارة العامة للمنصة';
+        }
+
+        return $this->sender_display_name;
+    }
+
+    public function getChatPartnerBadgeAttribute(): ?string
+    {
+        $userId = auth()->id();
+        if ($this->sender_id === $userId) {
+            return in_array($this->target_type, ['ALL_RESIDENTS', 'GROUP']) ? 'جماعي' : null;
+        }
+
+        if ($this->isFromSuperAdmin()) {
+            return 'إعلان رسمي';
+        }
+
+        return $this->sender_unit_label;
     }
 
     public function getLatestActivityAtAttribute()

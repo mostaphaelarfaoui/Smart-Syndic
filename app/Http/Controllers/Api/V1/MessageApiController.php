@@ -31,44 +31,35 @@ class MessageApiController extends Controller
 
         $latestActivitySql = 'COALESCE((SELECT MAX(created_at) FROM messages as r WHERE r.parent_id = messages.id), messages.created_at) DESC';
 
-        $inboxQuery = Message::whereNull('parent_id')
+        $conversationsQuery = Message::whereNull('parent_id')
             ->where(function ($q) use ($user) {
-                $q->whereHas('recipients', fn ($r) => $r->where('user_id', $user->id))
-                  ->orWhereHas('replies.recipients', fn ($r) => $r->where('user_id', $user->id));
+                $q->where('sender_id', $user->id)
+                  ->orWhereHas('recipients', fn ($r) => $r->where('user_id', $user->id))
+                  ->orWhereHas('replies', fn ($rq) => $rq->where('sender_id', $user->id))
+                  ->orWhereHas('replies.recipients', fn ($rq) => $rq->where('user_id', $user->id));
             })
             ->with([
                 'sender.apartments',
-                'recipients' => fn ($q) => $q->where('user_id', $user->id),
+                'recipients.user.apartments',
                 'replies' => fn ($q) => $q->orderBy('created_at', 'asc')->with(['sender.apartments', 'recipients']),
             ]);
 
         if ($filter === 'unread') {
-            $inboxQuery->where(function ($q) use ($user) {
+            $conversationsQuery->where(function ($q) use ($user) {
                 $q->whereHas('recipients', fn ($r) => $r->where('user_id', $user->id)->where('is_read', false))
                   ->orWhereHas('replies.recipients', fn ($r) => $r->where('user_id', $user->id)->where('is_read', false));
             });
         } elseif ($filter === 'admin') {
-            $inboxQuery->where('sender_role', 'SUPER_ADMIN');
+            $conversationsQuery->where('sender_role', 'SUPER_ADMIN');
         }
 
-        $inbox = $inboxQuery->orderByRaw($latestActivitySql)->paginate(20);
-
-        $sent = Message::whereNull('parent_id')
-            ->where(function ($q) use ($user) {
-                $q->where('sender_id', $user->id)
-                  ->orWhereHas('replies', fn ($rq) => $rq->where('sender_id', $user->id));
-            })
-            ->with([
-                'recipients.user',
-                'replies' => fn ($q) => $q->orderBy('created_at', 'asc')->with(['sender.apartments', 'recipients']),
-            ])
-            ->orderByRaw($latestActivitySql)
-            ->paginate(20);
+        $conversations = $conversationsQuery->orderByRaw($latestActivitySql)->paginate(30);
 
         return response()->json([
-            'unread_count' => $this->messageService->getUnreadCount($user),
-            'inbox'        => $inbox,
-            'sent'         => $sent,
+            'unread_count'  => $this->messageService->getUnreadCount($user),
+            'conversations' => $conversations,
+            'inbox'         => $conversations,
+            'sent'          => $conversations,
         ]);
     }
 

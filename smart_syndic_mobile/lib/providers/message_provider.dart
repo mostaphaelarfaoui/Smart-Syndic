@@ -7,15 +7,15 @@ import '../models/message_model.dart';
 class MessageProvider extends ChangeNotifier {
   final ApiService _api = ApiService();
 
-  List<MessageModel> _inbox = [];
-  List<MessageModel> _sent = [];
+  List<MessageModel> _conversations = [];
   int _unreadCount = 0;
   bool _isLoading = false;
   String? _errorMessage;
   Timer? _pollingTimer;
 
-  List<MessageModel> get inbox => _inbox;
-  List<MessageModel> get sent => _sent;
+  List<MessageModel> get conversations => _conversations;
+  List<MessageModel> get inbox => _conversations;
+  List<MessageModel> get sent => _conversations;
   int get unreadCount => _unreadCount;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -45,20 +45,12 @@ class MessageProvider extends ChangeNotifier {
       if (res is Map<String, dynamic>) {
         _unreadCount = res['unread_count'] ?? 0;
 
-        final inboxData = res['inbox'];
-        if (inboxData is Map && inboxData['data'] is List) {
-          _inbox = (inboxData['data'] as List)
+        final convData = res['conversations'] ?? res['inbox'];
+        if (convData is Map && convData['data'] is List) {
+          _conversations = (convData['data'] as List)
               .map((e) => MessageModel.fromJson(e as Map<String, dynamic>))
               .toList();
-          _inbox.sort((a, b) => b.latestActivityAt.compareTo(a.latestActivityAt));
-        }
-
-        final sentData = res['sent'];
-        if (sentData is Map && sentData['data'] is List) {
-          _sent = (sentData['data'] as List)
-              .map((e) => MessageModel.fromJson(e as Map<String, dynamic>))
-              .toList();
-          _sent.sort((a, b) => b.latestActivityAt.compareTo(a.latestActivityAt));
+          _conversations.sort((a, b) => b.latestActivityAt.compareTo(a.latestActivityAt));
         }
       }
       _isLoading = false;
@@ -79,16 +71,14 @@ class MessageProvider extends ChangeNotifier {
         }
         final updatedMsg = MessageModel.fromJson(res['message'] as Map<String, dynamic>);
         
-        // Update local inbox read status & re-sort
-        final idx = _inbox.indexWhere((m) => m.id == id);
+        // Update local conversation read status & re-sort
+        final idx = _conversations.indexWhere((m) => m.id == id);
         if (idx != -1) {
-          _inbox[idx] = updatedMsg;
-          _inbox.sort((a, b) => b.latestActivityAt.compareTo(a.latestActivityAt));
-        }
-        final sentIdx = _sent.indexWhere((m) => m.id == id);
-        if (sentIdx != -1) {
-          _sent[sentIdx] = updatedMsg;
-          _sent.sort((a, b) => b.latestActivityAt.compareTo(a.latestActivityAt));
+          _conversations[idx] = updatedMsg;
+          _conversations.sort((a, b) => b.latestActivityAt.compareTo(a.latestActivityAt));
+        } else {
+          _conversations.insert(0, updatedMsg);
+          _conversations.sort((a, b) => b.latestActivityAt.compareTo(a.latestActivityAt));
         }
         notifyListeners();
         return updatedMsg;
@@ -153,7 +143,7 @@ class MessageProvider extends ChangeNotifier {
     try {
       await _api.post(ApiConstants.messageMarkAllRead, {});
       _unreadCount = 0;
-      _inbox = _inbox.map((m) => m.copyWith(isRead: true)).toList();
+      _conversations = _conversations.map((m) => m.copyWith(isRead: true)).toList();
       notifyListeners();
     } catch (_) {}
   }

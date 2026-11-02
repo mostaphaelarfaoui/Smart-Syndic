@@ -30,12 +30,12 @@
     <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:1.75rem;">
         <div class="card" style="padding:1.15rem; display:flex; align-items:center; gap:1rem;">
             <div style="width:48px; height:48px; border-radius:12px; background:rgba(99, 102, 241, 0.12); color:var(--brand-primary); display:flex; align-items:center; justify-content:center; font-size:1.4rem;">
-                📥
+                💬
             </div>
             <div>
-                <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">صندوق الوارد</div>
+                <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">المحادثات والدردشة</div>
                 <div class="num" style="font-size:1.35rem; font-weight:900; color:var(--text-primary); margin-top:2px;">
-                    {{ number_format($totalInboxCount) }}
+                    {{ number_format($totalConversationsCount) }}
                 </div>
             </div>
         </div>
@@ -80,132 +80,123 @@
     {{-- Main Two-Column Layout (Messages List + Details View) --}}
     <div style="display:grid; grid-template-columns: minmax(320px, 420px) 1fr; gap:1.25rem; align-items:flex-start;">
         
-        {{-- Column 1: Tabs & Message List --}}
+        {{-- Column 1: Conversations Stream (نمط الدردشة الموحد) --}}
         <div class="card" style="padding:0; overflow:hidden;">
-            {{-- Main Tabs (Inbox / Sent) --}}
-            <div style="display:flex; border-bottom:1px solid var(--border-color); background:var(--bg-secondary);">
-                <a href="{{ route('portal.messages.index', ['tab' => 'inbox']) }}" 
-                   class="tab-btn {{ $tab === 'inbox' ? 'active' : '' }}" 
-                   style="flex:1; padding:0.85rem 1rem; text-align:center; font-weight:800; font-size:0.88rem; text-decoration:none; color:inherit; display:flex; align-items:center; justify-content:center; gap:0.4rem; border-bottom:2px solid {{ $tab === 'inbox' ? 'var(--brand-primary)' : 'transparent' }}; background:{{ $tab === 'inbox' ? 'var(--bg-surface)' : 'transparent' }};">
-                    <span>📥 صندوق الوارد</span>
-                    @if($unreadCount > 0)
-                        <span class="badge badge-primary num" style="font-size:0.7rem; padding:0.12rem 0.45rem;">{{ $unreadCount }}</span>
+            {{-- Header: Search & Filters --}}
+            <div style="padding:0.9rem 1rem; border-bottom:1px solid var(--border-color); background:var(--bg-secondary);">
+                <form method="GET" action="{{ route('portal.messages.index') }}" style="margin-bottom:0.6rem;">
+                    @if($filter !== 'all')
+                        <input type="hidden" name="filter" value="{{ $filter }}">
                     @endif
-                </a>
+                    <div style="position:relative;">
+                        <input type="text" name="search" value="{{ $search }}" placeholder="🔍 بحث في الدردشات أو السكان..." class="form-control" style="border-radius:20px; font-size:0.82rem; padding:0.45rem 1rem 0.45rem 2rem;">
+                        @if($search)
+                            <a href="{{ route('portal.messages.index', ['filter' => $filter]) }}" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); text-decoration:none; color:var(--text-muted); font-size:0.8rem;">✕</a>
+                        @endif
+                    </div>
+                </form>
 
-                <a href="{{ route('portal.messages.index', ['tab' => 'sent']) }}" 
-                   class="tab-btn {{ $tab === 'sent' ? 'active' : '' }}" 
-                   style="flex:1; padding:0.85rem 1rem; text-align:center; font-weight:800; font-size:0.88rem; text-decoration:none; color:inherit; display:flex; align-items:center; justify-content:center; gap:0.4rem; border-bottom:2px solid {{ $tab === 'sent' ? 'var(--brand-primary)' : 'transparent' }}; background:{{ $tab === 'sent' ? 'var(--bg-surface)' : 'transparent' }};">
-                    <span>📤 الرسائل المرسلة</span>
-                </a>
-            </div>
-
-            {{-- Filter Pills for Inbox --}}
-            @if($tab === 'inbox')
-                <div style="display:flex; align-items:center; gap:0.4rem; padding:0.75rem 1rem; border-bottom:1px solid var(--border-color); background:var(--bg-surface); overflow-x:auto;">
-                    <a href="{{ route('portal.messages.index', ['tab' => 'inbox', 'filter' => 'all']) }}" 
+                {{-- Filter Pills --}}
+                <div style="display:flex; align-items:center; gap:0.4rem; overflow-x:auto;">
+                    <a href="{{ route('portal.messages.index', ['filter' => 'all', 'search' => $search]) }}" 
                        class="btn btn-sm {{ $filter === 'all' ? 'btn-primary' : 'btn-secondary' }}" 
                        style="font-size:0.76rem; font-weight:700; padding:0.25rem 0.65rem; border-radius:20px;">
                         الكل
                     </a>
-                    <a href="{{ route('portal.messages.index', ['tab' => 'inbox', 'filter' => 'unread']) }}" 
+                    <a href="{{ route('portal.messages.index', ['filter' => 'unread', 'search' => $search]) }}" 
                        class="btn btn-sm {{ $filter === 'unread' ? 'btn-primary' : 'btn-secondary' }}" 
-                       style="font-size:0.76rem; font-weight:700; padding:0.25rem 0.65rem; border-radius:20px;">
-                        غير المقروءة ({{ $unreadCount }})
+                       style="font-size:0.76rem; font-weight:700; padding:0.25rem 0.65rem; border-radius:20px; display:flex; align-items:center; gap:0.25rem;">
+                        <span>غير المقروءة</span>
+                        @if($unreadCount > 0)
+                            <span class="badge badge-danger num" style="font-size:0.65rem; padding:0.05rem 0.35rem;">{{ $unreadCount }}</span>
+                        @endif
                     </a>
-                    <a href="{{ route('portal.messages.index', ['tab' => 'inbox', 'filter' => 'admin']) }}" 
+                    <a href="{{ route('portal.messages.index', ['filter' => 'admin', 'search' => $search]) }}" 
                        class="btn btn-sm {{ $filter === 'admin' ? 'btn-primary' : 'btn-secondary' }}" 
                        style="font-size:0.76rem; font-weight:700; padding:0.25rem 0.65rem; border-radius:20px;">
-                        🛡️ إعلانات الإدارة
+                        🛡️ الإعلانات
                     </a>
-                    <a href="{{ route('portal.messages.index', ['tab' => 'inbox', 'filter' => 'residents']) }}" 
+                    <a href="{{ route('portal.messages.index', ['filter' => 'residents', 'search' => $search]) }}" 
                        class="btn btn-sm {{ $filter === 'residents' ? 'btn-primary' : 'btn-secondary' }}" 
                        style="font-size:0.76rem; font-weight:700; padding:0.25rem 0.65rem; border-radius:20px;">
                         👤 السكان
                     </a>
                 </div>
-            @endif
+            </div>
 
-            {{-- Messages List --}}
+            {{-- Unified Conversations List --}}
             <div style="max-height:650px; overflow-y:auto;">
-                @php
-                    $list = $tab === 'inbox' ? $inboxMessages : $sentMessages;
-                @endphp
-
-                @forelse($list as $msg)
+                @forelse($conversations as $msg)
                     @php
-                        $isInbox = $tab === 'inbox';
                         $isUnread = $msg->isUnreadForUser(auth()->id());
                         $isSelected = $selectedMessage && $selectedMessage->id === $msg->id;
                         $isAdmin = $msg->isFromSuperAdmin();
                         $isResident = $msg->isFromResident();
                         $latestTime = $msg->latest_activity_at ?? $msg->created_at;
-                        $latestSnippet = $msg->latest_message_body ?? $msg->body;
                     @endphp
 
-                    <a href="{{ route('portal.messages.index', ['tab' => $tab, 'filter' => $filter, 'selected' => $msg->id]) }}" 
+                    <a href="{{ route('portal.messages.index', ['filter' => $filter, 'search' => $search, 'selected' => $msg->id]) }}" 
                        class="message-list-row {{ $isSelected ? 'active-row' : '' }} {{ $isUnread ? 'unread-row' : '' }}" 
-                       style="display:flex; align-items:flex-start; gap:0.75rem; padding:0.9rem 1.1rem; border-bottom:1px solid var(--border-color); text-decoration:none; color:inherit; transition:background 0.15s; position:relative; background:{{ $isSelected ? 'rgba(99, 102, 241, 0.08)' : ($isUnread ? 'rgba(99, 102, 241, 0.03)' : 'transparent') }}; border-right:4px solid {{ $isSelected ? 'var(--brand-primary)' : ($isAdmin ? '#6366f1' : 'transparent') }};">
+                       style="display:flex; align-items:flex-start; gap:0.85rem; padding:0.95rem 1.15rem; border-bottom:1px solid var(--border-color); text-decoration:none; color:inherit; transition:all 0.15s ease; position:relative; background:{{ $isSelected ? 'rgba(99, 102, 241, 0.08)' : ($isUnread ? 'rgba(99, 102, 241, 0.04)' : 'transparent') }}; border-right:4px solid {{ $isSelected ? 'var(--brand-primary)' : ($isUnread ? '#6366f1' : 'transparent') }};">
                         
-                        <div style="width:40px; height:40px; min-width:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.15rem; background:{{ $isAdmin ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(79, 70, 229, 0.3))' : ($isResident ? 'rgba(16, 185, 129, 0.15)' : 'rgba(99, 102, 241, 0.15)') }};">
-                            {{ $isAdmin ? '🛡️' : ($isResident ? '👤' : '📤') }}
+                        <div style="width:42px; height:42px; min-width:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; position:relative; background:{{ $isAdmin ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(79, 70, 229, 0.3))' : ($isResident ? 'rgba(16, 185, 129, 0.15)' : 'rgba(99, 102, 241, 0.15)') }};">
+                            {{ $isAdmin ? '🛡️' : ($isResident ? '👤' : '🏢') }}
+                            @if($isUnread)
+                                <span style="position:absolute; top:-2px; right:-2px; width:10px; height:10px; border-radius:50%; background:#6366f1; border:2px solid var(--bg-surface);"></span>
+                            @endif
                         </div>
 
                         {{-- Details --}}
                         <div style="flex:1; min-width:0;">
-                            <div style="display:flex; align-items:center; justify-content:space-between; gap:0.35rem; margin-bottom:0.25rem;">
-                                <div style="display:flex; align-items:center; gap:0.35rem; overflow:hidden;">
-                                    <strong style="font-size:0.88rem; color:var(--text-primary); white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">
-                                        @if($isInbox)
-                                            من: {{ $msg->sender_display_name }}
-                                        @else
-                                            إلى: {{ $msg->recipient_label }}
-                                        @endif
+                            <div style="display:flex; align-items:center; justify-content:space-between; gap:0.4rem; margin-bottom:0.25rem;">
+                                <div style="display:flex; align-items:center; gap:0.4rem; overflow:hidden;">
+                                    <strong style="font-size:{{ $isUnread ? '0.94rem' : '0.88rem' }}; font-weight:{{ $isUnread ? '900' : '700' }}; color:var(--text-primary); white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">
+                                        {{ $msg->chat_partner_name }}
                                     </strong>
-                                    @if($isInbox && $msg->sender_unit_label)
-                                        <span class="badge badge-neutral num" style="font-size:0.68rem; padding:0.1rem 0.35rem;">
-                                            {{ $msg->sender_unit_label }}
+                                    @if($msg->chat_partner_badge)
+                                        <span class="badge badge-neutral num" style="font-size:0.68rem; padding:0.1rem 0.4rem; font-weight:700;">
+                                            {{ $msg->chat_partner_badge }}
                                         </span>
                                     @endif
                                 </div>
-                                <span class="num" style="font-size:0.7rem; color:{{ $isUnread ? 'var(--brand-primary)' : 'var(--text-muted)' }}; font-weight:{{ $isUnread ? '700' : '500' }}; flex-shrink:0;">
+                                <span class="num" style="font-size:0.72rem; color:{{ $isUnread ? 'var(--brand-primary)' : 'var(--text-muted)' }}; font-weight:{{ $isUnread ? '800' : '500' }}; flex-shrink:0;">
                                     {{ $latestTime->diffForHumans() }}
                                 </span>
                             </div>
 
                             {{-- Social Media Chat Style: Latest Message in Conversation --}}
-                            <div style="font-size:0.82rem; color:{{ $isUnread ? 'var(--text-primary)' : 'var(--text-secondary)' }}; font-weight:{{ $isUnread ? '700' : '400' }}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.4;">
+                            <div style="font-size:{{ $isUnread ? '0.84rem' : '0.80rem' }}; color:{{ $isUnread ? 'var(--text-primary)' : 'var(--text-secondary)' }}; font-weight:{{ $isUnread ? '700' : '400' }}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.4;">
                                 {{ $msg->last_message_preview }}
                             </div>
 
                             <div style="font-size:0.72rem; color:var(--text-muted); margin-top:5px; display:flex; align-items:center; justify-content:space-between; gap:0.4rem;">
-                                <span class="badge" style="font-size:0.68rem; padding:0.1rem 0.4rem; background:rgba(99, 102, 241, 0.08); color:var(--brand-primary); font-weight:600;">
+                                <span class="badge" style="font-size:0.68rem; padding:0.1rem 0.45rem; background:rgba(99, 102, 241, 0.08); color:var(--brand-primary); font-weight:600;">
                                     {{ $msg->category_label }}
                                 </span>
                                 @if(($msg->replies_count ?? $msg->replies->count()) > 0)
-                                    <span style="font-size:0.7rem; color:var(--brand-primary); font-weight:700; display:flex; align-items:center; gap:0.2rem;">
-                                        💬 {{ $msg->replies_count ?? $msg->replies->count() }} ردود
+                                    <span style="font-size:0.7rem; color:var(--text-muted); font-weight:600; display:flex; align-items:center; gap:0.2rem;">
+                                        💬 {{ $msg->replies_count ?? $msg->replies->count() }}
                                     </span>
                                 @endif
                             </div>
                         </div>
 
                         @if($isUnread)
-                            <span style="width:8px; height:8px; border-radius:50%; background:var(--brand-primary); margin-top:0.4rem; flex-shrink:0;"></span>
+                            <span style="width:9px; height:9px; min-width:9px; border-radius:50%; background:var(--brand-primary); margin-top:0.4rem; flex-shrink:0; box-shadow:0 0 8px rgba(99, 102, 241, 0.6);"></span>
                         @endif
                     </a>
                 @empty
                     <div style="padding:3.5rem 1.5rem; text-align:center; color:var(--text-muted);">
                         <div style="font-size:2.5rem; margin-bottom:0.5rem;">📭</div>
-                        <div style="font-weight:700; font-size:0.95rem; color:var(--text-primary);">لا توجد رسائل في هذا القسم</div>
+                        <div style="font-weight:700; font-size:0.95rem; color:var(--text-primary);">لا توجد محادثات تطابق البحث</div>
                         <div style="font-size:0.8rem; margin-top:0.25rem;">يمكنك كتابة رسالة جديدة لكافة السكان أو لساكن بعينه</div>
                     </div>
                 @endforelse
             </div>
 
-            @if($list->hasPages())
+            @if($conversations->hasPages())
                 <div style="padding:0.75rem 1rem; border-top:1px solid var(--border-color); background:var(--bg-secondary);">
-                    {{ $list->links() }}
+                    {{ $conversations->appends(['filter' => $filter, 'search' => $search])->links() }}
                 </div>
             @endif
         </div>

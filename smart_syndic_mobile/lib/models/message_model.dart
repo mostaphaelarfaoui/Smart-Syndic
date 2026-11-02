@@ -123,6 +123,29 @@ class MessageModel {
     return snippet;
   }
 
+  String chatPartnerTitle(String? currentUserId) {
+    if (currentUserId != null && senderId == currentUserId) {
+      return recipientLabel;
+    }
+    if (isFromSuperAdmin) {
+      return 'الإدارة العامة للمنصة';
+    }
+    return senderDisplayName;
+  }
+
+  String? chatPartnerBadge(String? currentUserId) {
+    if (currentUserId != null && senderId == currentUserId) {
+      if (targetType == 'ALL_RESIDENTS' || targetType == 'GROUP') {
+        return 'جماعي';
+      }
+      return null;
+    }
+    if (isFromSuperAdmin) {
+      return 'إعلان رسمي';
+    }
+    return senderUnitLabel;
+  }
+
   String get categoryLabel {
     switch (category) {
       case 'ANNOUNCEMENT':
@@ -210,16 +233,17 @@ class MessageModel {
             .toList() ??
         [];
 
-    // is_read can come from recipient pivot or top-level field
-    bool isRead = json['is_read'] == true || json['is_read'] == 1;
-    if (json['recipients'] is List && (json['recipients'] as List).isNotEmpty) {
+    // is_read can come from top-level accessor (computed for current user), pivot, or recipients
+    bool isRead = true;
+    if (json.containsKey('is_read') && json['is_read'] != null) {
+      isRead = json['is_read'] == true || json['is_read'] == 1;
+    } else if (json['pivot'] is Map && (json['pivot'] as Map).containsKey('is_read')) {
+      isRead = json['pivot']['is_read'] == true || json['pivot']['is_read'] == 1;
+    } else if (json['recipients'] is List && (json['recipients'] as List).isNotEmpty) {
       final r = (json['recipients'] as List).first;
       if (r is Map && r.containsKey('is_read')) {
         isRead = r['is_read'] == true || r['is_read'] == 1;
       }
-    }
-    if (json['pivot'] is Map && (json['pivot'] as Map).containsKey('is_read')) {
-      isRead = json['pivot']['is_read'] == true || json['pivot']['is_read'] == 1;
     }
 
     return MessageModel(
