@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/constants/api_constants.dart';
+import '../../../widgets/app_alert.dart';
 
 /// Feature 1 — Screen for uploading/managing the syndic building stamp.
 /// The stamp image appears on all generated PDF receipts.
@@ -114,17 +115,11 @@ class _StampSettingsScreenState extends State<StampSettingsScreen> {
   }
 
   void _showSuccess(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg, style: GoogleFonts.cairo()),
-      backgroundColor: AppColors.success,
-    ));
+    AppAlert.success(context, msg);
   }
 
   void _showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg, style: GoogleFonts.cairo()),
-      backgroundColor: AppColors.danger,
-    ));
+    AppAlert.error(context, msg);
   }
 
   @override
@@ -148,9 +143,9 @@ class _StampSettingsScreenState extends State<StampSettingsScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.08),
+                      color: AppColors.primary.withAlpha(20),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                      border: Border.all(color: AppColors.primary.withAlpha(51)),
                     ),
                     child: Row(
                       children: [
@@ -181,7 +176,7 @@ class _StampSettingsScreenState extends State<StampSettingsScreen> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.07),
+                            color: Colors.black.withAlpha(18),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -263,7 +258,7 @@ class _StampSettingsScreenState extends State<StampSettingsScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.image_outlined, size: 48, color: AppColors.textSecondary.withOpacity(0.5)),
+        Icon(Icons.image_outlined, size: 48, color: AppColors.textSecondary.withAlpha(128)),
         const SizedBox(height: 8),
         Text(
           'لا يوجد طابع',

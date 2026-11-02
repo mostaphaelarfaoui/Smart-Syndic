@@ -9,6 +9,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/resident_provider.dart';
 import '../settings/server_settings_dialog.dart';
 import 'tabs/resident_payments_tab.dart';
+import '../../widgets/app_alert.dart';
 
 class ResidentProfileScreen extends StatefulWidget {
   const ResidentProfileScreen({super.key});
@@ -50,13 +51,7 @@ class _ResidentProfileScreenState extends State<ResidentProfileScreen> {
 
   void _copyToClipboard(BuildContext context, String text, String label) {
     Clipboard.setData(ClipboardData(text: text));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('تم نسخ $label بنجاح ✓', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
-        backgroundColor: AppColors.success,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    AppAlert.success(context, 'تم نسخ $label بنجاح ✓');
   }
 
   Future<void> _showEditProfileDialog(BuildContext context, Map<String, dynamic>? user) async {
@@ -131,19 +126,9 @@ class _ResidentProfileScreenState extends State<ResidentProfileScreen> {
                         Navigator.pop(ctx);
                         if (success) {
                           context.read<ResidentProvider>().fetchProfile();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('تم تحديث المعلومات الشخصية بنجاح ✓'),
-                              backgroundColor: AppColors.success,
-                            ),
-                          );
+                          AppAlert.success(context, 'تم تحديث المعلومات الشخصية بنجاح ✓');
                         } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(auth.errorMessage ?? 'حدث خطأ أثناء التحديث'),
-                              backgroundColor: AppColors.danger,
-                            ),
-                          );
+                          AppAlert.error(context, auth.errorMessage ?? 'حدث خطأ أثناء التحديث');
                         }
                       }
                     },
@@ -266,19 +251,9 @@ class _ResidentProfileScreenState extends State<ResidentProfileScreen> {
                       if (context.mounted) {
                         Navigator.pop(ctx);
                         if (success) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('تم تغيير كلمة المرور بنجاح ✓'),
-                              backgroundColor: AppColors.success,
-                            ),
-                          );
+                          AppAlert.success(context, 'تم تغيير كلمة المرور بنجاح ✓');
                         } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(auth.errorMessage ?? 'حدث خطأ في تغيير كلمة المرور'),
-                              backgroundColor: AppColors.danger,
-                            ),
-                          );
+                          AppAlert.error(context, auth.errorMessage ?? 'حدث خطأ في تغيير كلمة المرور');
                         }
                       }
                     },

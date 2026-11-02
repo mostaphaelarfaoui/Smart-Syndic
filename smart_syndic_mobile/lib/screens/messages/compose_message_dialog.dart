@@ -6,6 +6,7 @@ import '../../models/apartment_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/message_provider.dart';
 import '../../providers/syndic_provider.dart';
+import '../../widgets/app_alert.dart';
 
 class ComposeMessageDialog extends StatefulWidget {
   final String? initialResidentId;
@@ -54,9 +55,7 @@ class _ComposeMessageDialogState extends State<ComposeMessageDialog> {
     List<String>? targetIds;
     if (isSyndic) {
       if (_selectedResidentId == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('يرجى اختيار الساكن لبدء المحادثة معه')),
-        );
+        AppAlert.warning(context, 'يرجى اختيار الساكن لبدء المحادثة معه');
         return;
       }
       targetIds = [_selectedResidentId!];
@@ -81,19 +80,12 @@ class _ComposeMessageDialogState extends State<ComposeMessageDialog> {
     if (mounted) {
       setState(() => _isSubmitting = false);
       if (success) {
-        Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            backgroundColor: AppColors.success,
-            content: Text('تم إرسال الرسالة بنجاح ✓'),
-          ),
-        );
+        await AppAlert.success(context, 'تم إرسال الرسالة بنجاح ✓');
+        if (mounted) Navigator.pop(context, true);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.danger,
-            content: Text(msgProvider.errorMessage ?? 'تعذر إرسال الرسالة'),
-          ),
+        AppAlert.error(
+          context,
+          msgProvider.errorMessage ?? 'تعذر إرسال الرسالة',
         );
       }
     }

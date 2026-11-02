@@ -9,6 +9,7 @@ import '../../../providers/syndic_provider.dart';
 import 'edit_apartment_dialog.dart';
 import 'record_payment_dialog.dart';
 import '../../../widgets/confirm_action_dialog.dart';
+import '../../../widgets/app_alert.dart';
 import '../../common/receipt_viewer_screen.dart';
 
 class ApartmentDetailsDialog extends StatelessWidget {
@@ -112,18 +113,20 @@ class ApartmentDetailsDialog extends StatelessWidget {
       final syndic = context.read<SyndicProvider>();
       final ok = await syndic.toggleApartmentBillable(apartment.id);
       if (context.mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              ok
-                  ? (isBillable ? 'تم إعفاء الشقة من واجبات السانديك بنجاح ✓' : 'تم إلغاء الإعفاء وإعادة فوترة الشقة بنجاح ✓')
-                  : (syndic.errorMessage ?? 'تعذر تحديث حالة الإعفاء'),
-              style: GoogleFonts.cairo(),
-            ),
-            backgroundColor: ok ? AppColors.success : AppColors.danger,
-          ),
-        );
+        if (ok) {
+          await AppAlert.success(
+            context,
+            isBillable
+                ? 'تم إعفاء الشقة من واجبات السانديك بنجاح ✓'
+                : 'تم إلغاء الإعفاء وإعادة فوترة الشقة بنجاح ✓',
+          );
+          if (context.mounted) Navigator.pop(context);
+        } else {
+          await AppAlert.error(
+            context,
+            syndic.errorMessage ?? 'تعذر تحديث حالة الإعفاء',
+          );
+        }
       }
     }
   }
@@ -147,18 +150,18 @@ class ApartmentDetailsDialog extends StatelessWidget {
       final syndic = context.read<SyndicProvider>();
       final ok = await syndic.vacateApartment(apartment.id);
       if (context.mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              ok
-                  ? 'تم إخلاء الشقة بنجاح مع الاحتفاظ بكافة السجلات المالية ✓'
-                  : (syndic.errorMessage ?? 'تعذر إخلاء الشقة'),
-              style: GoogleFonts.cairo(),
-            ),
-            backgroundColor: ok ? AppColors.success : AppColors.danger,
-          ),
-        );
+        if (ok) {
+          await AppAlert.success(
+            context,
+            'تم إخلاء الشقة بنجاح مع الاحتفاظ بكافة السجلات المالية ✓',
+          );
+          if (context.mounted) Navigator.pop(context);
+        } else {
+          await AppAlert.error(
+            context,
+            syndic.errorMessage ?? 'تعذر إخلاء الشقة',
+          );
+        }
       }
     }
   }
@@ -895,21 +898,11 @@ class ApartmentDetailsDialog extends StatelessWidget {
                               final syndic = context.read<SyndicProvider>();
                               final success = await syndic.deleteApartment(apartment.id);
                               if (context.mounted) {
-                                Navigator.pop(context);
                                 if (success) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      backgroundColor: AppColors.success,
-                                      content: Text('تم حذف الشقة بنجاح ✓'),
-                                    ),
-                                  );
+                                  await AppAlert.success(context, 'تم حذف الشقة بنجاح ✓');
+                                  if (context.mounted) Navigator.pop(context);
                                 } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      backgroundColor: AppColors.danger,
-                                      content: Text(syndic.errorMessage ?? 'تعذر حذف الشقة'),
-                                    ),
-                                  );
+                                  await AppAlert.error(context, syndic.errorMessage ?? 'تعذر حذف الشقة');
                                 }
                               }
                             }

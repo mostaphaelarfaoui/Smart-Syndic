@@ -10,6 +10,7 @@ import '../../providers/auth_provider.dart';
 import '../settings/server_settings_dialog.dart';
 import 'register_resident_screen.dart';
 import 'register_syndic_screen.dart';
+import '../../widgets/app_alert.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -89,12 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
       } else if (auth.suspendedAccountData != null) {
         _showSuspendedAccountDialog(auth.suspendedAccountData!);
       } else if (auth.loginErrorType == 'UNKNOWN_ERROR') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(auth.errorMessage ?? 'فشل تسجيل الدخول', style: GoogleFonts.cairo()),
-            backgroundColor: AppColors.danger,
-          ),
-        );
+        AppAlert.error(context, auth.errorMessage ?? 'فشل تسجيل الدخول');
       }
     }
   }
@@ -818,13 +814,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _emailController.text = acc.email;
       _passwordController.text = acc.password;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('تم تحديد الحساب: ${acc.name}', style: GoogleFonts.cairo()),
-        duration: const Duration(seconds: 1),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    AppAlert.info(context, 'تم تحديد الحساب: ${acc.name}');
   }
 
   void _showSavedAccountsSheet() {

@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../settings/server_settings_dialog.dart';
+import '../../widgets/app_alert.dart';
 
 class RegisterSyndicScreen extends StatefulWidget {
   const RegisterSyndicScreen({super.key});
@@ -98,9 +99,7 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
 
   void _removeComplexBuilding(int index) {
     if (_complexBuildings.length <= 1) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يجب أن يحتوي المجمع السكني على عمارة واحدة على الأقل')),
-      );
+      AppAlert.warning(context, 'يجب أن يحتوي المجمع السكني على عمارة واحدة على الأقل');
       return;
     }
     setState(() {
@@ -272,16 +271,9 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
           ),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              auth.errorMessage ?? 'حدث خطأ أثناء التسجيل',
-              style: GoogleFonts.cairo(fontWeight: FontWeight.w600),
-            ),
-            backgroundColor: AppColors.danger,
-            duration: const Duration(seconds: 6),
-            behavior: SnackBarBehavior.floating,
-          ),
+        AppAlert.error(
+          context,
+          auth.errorMessage ?? 'حدث خطأ أثناء التسجيل',
         );
       }
     }

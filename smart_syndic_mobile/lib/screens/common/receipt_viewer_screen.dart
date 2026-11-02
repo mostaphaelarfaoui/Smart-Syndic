@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/services/api_service.dart';
 import '../../core/utils/number_utils.dart';
+import '../../widgets/app_alert.dart';
 
 class ReceiptViewerScreen extends StatefulWidget {
   final String receiptUrl;
@@ -34,9 +35,7 @@ class ReceiptViewerScreen extends StatefulWidget {
     double? amountPaid,
   }) {
     if (receiptUrl.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('رابط الوصل غير متوفر حالياً')),
-      );
+      AppAlert.warning(context, 'رابط الوصل غير متوفر حالياً');
       return;
     }
     Navigator.push(
@@ -60,9 +59,7 @@ class ReceiptViewerScreen extends StatefulWidget {
     required String receiptNumber,
   }) async {
     if (receiptUrl.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('رابط الوصل غير متوفر حالياً')),
-      );
+      AppAlert.warning(context, 'رابط الوصل غير متوفر حالياً');
       return;
     }
 
@@ -77,33 +74,14 @@ class ReceiptViewerScreen extends StatefulWidget {
       }
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.download_done_rounded, color: Colors.white, size: 20),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'جاري تنزيل الوصل ($receiptNumber.pdf)... تفقد قائمة التنزيلات',
-                    style: GoogleFonts.cairo(fontSize: 12),
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: AppColors.success,
-            duration: const Duration(seconds: 4),
-          ),
+        AppAlert.success(
+          context,
+          'جاري تنزيل الوصل ($receiptNumber.pdf)... تفقد قائمة التنزيلات',
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('تعذر تحميل الوصل: $e', style: GoogleFonts.cairo()),
-            backgroundColor: AppColors.danger,
-          ),
-        );
+        AppAlert.error(context, 'تعذر تحميل الوصل: $e');
       }
     }
   }
@@ -145,33 +123,14 @@ class _ReceiptViewerScreenState extends State<ReceiptViewerScreen> {
       }
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.download_done_rounded, color: Colors.white, size: 20),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'جاري تنزيل الوصل (${widget.receiptNumber}.pdf)... تفقد قائمة التنزيلات',
-                    style: GoogleFonts.cairo(fontSize: 12),
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: AppColors.success,
-            duration: const Duration(seconds: 4),
-          ),
+        AppAlert.success(
+          context,
+          'جاري تنزيل الوصل (${widget.receiptNumber}.pdf)... تفقد قائمة التنزيلات',
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('تعذر تحميل الوصل: $e', style: GoogleFonts.cairo()),
-            backgroundColor: AppColors.danger,
-          ),
-        );
+        AppAlert.error(context, 'تعذر تحميل الوصل: $e');
       }
     } finally {
       if (mounted) setState(() => _isDownloading = false);
@@ -202,9 +161,7 @@ class _ReceiptViewerScreenState extends State<ReceiptViewerScreen> {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تعذر فتح تطبيق واتساب')),
-        );
+        AppAlert.error(context, 'تعذر فتح تطبيق واتساب');
       }
     }
   }

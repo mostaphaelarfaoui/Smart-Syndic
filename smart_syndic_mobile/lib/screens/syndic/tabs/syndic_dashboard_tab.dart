@@ -10,6 +10,7 @@ import '../../../widgets/stat_card.dart';
 import '../dialogs/record_payment_dialog.dart';
 import '../dialogs/record_expense_dialog.dart';
 import '../dialogs/generate_report_dialog.dart';
+import '../../../widgets/app_alert.dart';
 
 class SyndicDashboardTab extends StatelessWidget {
   final void Function(int index, [int? subIndex]) onNavigateTab;
@@ -455,9 +456,7 @@ class SyndicDashboardTab extends StatelessWidget {
                               ? null
                               : () {
                                   Clipboard.setData(ClipboardData(text: syndic.invitationCode!));
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('تم نسخ رمز الدعوة', style: GoogleFonts.cairo())),
-                                  );
+                                  AppAlert.success(context, 'تم نسخ رمز الدعوة بنجاح ✓');
                                 },
                           icon: const Icon(Icons.copy, color: AppColors.primary),
                           tooltip: 'نسخ الرمز',

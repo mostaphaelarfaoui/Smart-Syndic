@@ -7,6 +7,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/services/api_service.dart';
 import '../../providers/syndic_provider.dart';
 import 'stamp_settings_screen.dart';
+import '../../widgets/app_alert.dart';
 
 class ResidenceSettingsScreen extends StatefulWidget {
   const ResidenceSettingsScreen({super.key});
@@ -94,12 +95,7 @@ class _ResidenceSettingsScreenState extends State<ResidenceSettingsScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('تعذر تحميل إعدادات الإقامة: $e', style: GoogleFonts.cairo()),
-            backgroundColor: AppColors.danger,
-          ),
-        );
+        AppAlert.error(context, 'تعذر تحميل إعدادات الإقامة: $e');
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -140,13 +136,7 @@ class _ResidenceSettingsScreenState extends State<ResidenceSettingsScreen> {
           successMsg = 'تم حفظ الإعدادات وتحديث الواجب الشهري لـ $updatedCount شقة ✓';
         }
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(successMsg, style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
-            backgroundColor: AppColors.success,
-            duration: const Duration(seconds: 4),
-          ),
-        );
+        AppAlert.success(context, successMsg);
 
         // Reset the apply switch after successful apply
         setState(() {
@@ -158,12 +148,7 @@ class _ResidenceSettingsScreenState extends State<ResidenceSettingsScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('فشل حفظ الإعدادات: $e', style: GoogleFonts.cairo()),
-            backgroundColor: AppColors.danger,
-          ),
-        );
+        AppAlert.error(context, 'فشل حفظ الإعدادات: $e');
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -329,12 +314,7 @@ class _ResidenceSettingsScreenState extends State<ResidenceSettingsScreen> {
                     tooltip: 'نسخ الرمز',
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: _invitationCode!));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('تم نسخ رمز دعوة السكان ✓', style: GoogleFonts.cairo()),
-                          duration: const Duration(seconds: 2),
-                        ),
-                      );
+                      AppAlert.success(context, 'تم نسخ رمز دعوة السكان ✓');
                     },
                   ),
                 ],
@@ -548,12 +528,7 @@ class _ResidenceSettingsScreenState extends State<ResidenceSettingsScreen> {
                   tooltip: 'نسخ الـ RIB',
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: _ribController.text.trim()));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('تم نسخ رقم الـ RIB بنجاح ✓', style: GoogleFonts.cairo()),
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
+                    AppAlert.success(context, 'تم نسخ رقم الـ RIB بنجاح ✓');
                   },
                 ),
             ],

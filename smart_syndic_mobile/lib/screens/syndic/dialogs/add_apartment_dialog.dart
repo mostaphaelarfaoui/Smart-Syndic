@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../providers/syndic_provider.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../widgets/app_alert.dart';
 
 class AddApartmentDialog extends StatefulWidget {
   final bool initialIsBulk;
@@ -98,37 +99,22 @@ class _AddApartmentDialogState extends State<AddApartmentDialog> {
       if (mounted) {
         setState(() => _isSubmitting = false);
         if (success) {
-          Navigator.pop(context, true);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              backgroundColor: AppColors.success,
-              content: Text(
-                _isBulk ? 'تم توليد وإضافة الشقق بنجاح ✓' : 'تم إضافة الشقة بنجاح ✓',
-                style: GoogleFonts.cairo(),
-              ),
-            ),
+          await AppAlert.success(
+            context,
+            _isBulk ? 'تم توليد وإضافة الشقق بنجاح ✓' : 'تم إضافة الشقة بنجاح ✓',
           );
+          if (mounted) Navigator.pop(context, true);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              backgroundColor: AppColors.danger,
-              content: Text(
-                syndic.errorMessage ?? 'حدث خطأ أثناء حفظ الشقق',
-                style: GoogleFonts.cairo(),
-              ),
-            ),
+          AppAlert.error(
+            context,
+            syndic.errorMessage ?? 'حدث خطأ أثناء حفظ الشقق',
           );
         }
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isSubmitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.danger,
-            content: Text('حدث خطأ: $e', style: GoogleFonts.cairo()),
-          ),
-        );
+        AppAlert.error(context, 'حدث خطأ: $e');
       }
     }
   }

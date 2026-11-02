@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../settings/server_settings_dialog.dart';
+import '../../widgets/app_alert.dart';
 
 class RegisterResidentScreen extends StatefulWidget {
   const RegisterResidentScreen({super.key});
@@ -65,12 +66,7 @@ class _RegisterResidentScreenState extends State<RegisterResidentScreen> {
         }
       });
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(auth.errorMessage ?? 'رمز الدعوة غير صالح', style: GoogleFonts.cairo()),
-          backgroundColor: AppColors.danger,
-        ),
-      );
+      AppAlert.error(context, auth.errorMessage ?? 'رمز الدعوة غير صالح');
     }
   }
 
@@ -96,26 +92,15 @@ class _RegisterResidentScreenState extends State<RegisterResidentScreen> {
 
   void _submitRegistration() async {
     if (_selectedApartmentId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('يرجى اختيار الشقة للمتابعة', style: GoogleFonts.cairo()),
-          backgroundColor: AppColors.danger,
-        ),
-      );
+      AppAlert.error(context, 'يرجى اختيار الشقة للمتابعة');
       return;
     }
 
     // Check Occupancy Requirement 4
     if (_selectedApartmentData != null && _selectedApartmentData!['is_occupied'] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '⚠️ هذه الشقة مشغولة ومسجل بها ساكن مسبقاً، يرجى اختيار شقة أخرى شاغرة أو التواصل مع السانديك.',
-            style: GoogleFonts.cairo(fontWeight: FontWeight.bold),
-          ),
-          backgroundColor: AppColors.danger,
-          duration: const Duration(seconds: 4),
-        ),
+      AppAlert.error(
+        context,
+        '⚠️ هذه الشقة مشغولة ومسجل بها ساكن مسبقاً، يرجى اختيار شقة أخرى شاغرة أو التواصل مع السانديك.',
       );
       return;
     }
@@ -125,12 +110,7 @@ class _RegisterResidentScreenState extends State<RegisterResidentScreen> {
         _phoneController.text.trim().isEmpty ||
         _emailController.text.trim().isEmpty ||
         _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('يرجى تعبئة كافة الحقول المطلوبة', style: GoogleFonts.cairo()),
-          backgroundColor: AppColors.danger,
-        ),
-      );
+      AppAlert.error(context, 'يرجى تعبئة كافة الحقول المطلوبة');
       return;
     }
 
@@ -138,12 +118,7 @@ class _RegisterResidentScreenState extends State<RegisterResidentScreen> {
     final cleanPhone = rawPhone.startsWith('212') && !rawPhone.startsWith('+') ? '+$rawPhone' : rawPhone;
     final phoneRegExp = RegExp(r'^(?:(?:\+|00)212|0)[5-7]\d{8}$');
     if (!phoneRegExp.hasMatch(cleanPhone)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('رقم هاتف مغربي غير صحيح (مثال: 0612345678 أو +212612345678)', style: GoogleFonts.cairo()),
-          backgroundColor: AppColors.danger,
-        ),
-      );
+      AppAlert.error(context, 'رقم هاتف مغربي غير صحيح (مثال: 0612345678 أو +212612345678)');
       return;
     }
 
@@ -193,12 +168,7 @@ class _RegisterResidentScreenState extends State<RegisterResidentScreen> {
         ),
       );
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(auth.errorMessage ?? 'فشل التسجيل، يرجى المحاولة لاحقاً', style: GoogleFonts.cairo()),
-          backgroundColor: AppColors.danger,
-        ),
-      );
+      AppAlert.error(context, auth.errorMessage ?? 'فشل التسجيل، يرجى المحاولة لاحقاً');
     }
   }
 

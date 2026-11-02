@@ -11,6 +11,7 @@ import '../../../models/apartment_model.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/syndic_provider.dart';
 import '../../common/receipt_viewer_screen.dart';
+import '../../../widgets/app_alert.dart';
 
 class RecordPaymentDialog extends StatefulWidget {
   final String? initialApartmentId;
@@ -152,9 +153,7 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedApartmentId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('المرجو اختيار الشقة')),
-      );
+      AppAlert.warning(context, 'المرجو اختيار الشقة');
       return;
     }
 
@@ -207,11 +206,9 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
           ),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.danger,
-            content: Text(syndic.errorMessage ?? 'حدث خطأ أثناء تسجيل الدفعة'),
-          ),
+        AppAlert.error(
+          context,
+          syndic.errorMessage ?? 'حدث خطأ أثناء تسجيل الدفعة',
         );
       }
     }
@@ -575,9 +572,7 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
     final amt = specificAmount ?? amountPaid;
 
     if (url == null || url.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('رابط الوصل غير متوفر حالياً')),
-      );
+      AppAlert.warning(context, 'رابط الوصل غير متوفر حالياً');
       return;
     }
     ReceiptViewerScreen.open(
@@ -596,9 +591,7 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
     final rNo = specificReceiptNo ?? receiptNumber;
 
     if (url == null || url.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('رابط الوصل غير متوفر حالياً')),
-      );
+      AppAlert.warning(context, 'رابط الوصل غير متوفر حالياً');
       return;
     }
     ReceiptViewerScreen.downloadDirectly(
@@ -652,9 +645,7 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تعذر فتح تطبيق واتساب')),
-        );
+        AppAlert.error(context, 'تعذر فتح تطبيق واتساب');
       }
     }
   }
@@ -662,13 +653,7 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
   void _copyReceiptNumber(BuildContext context, [String? rNo]) {
     final textToCopy = rNo ?? receiptNumber;
     Clipboard.setData(ClipboardData(text: textToCopy));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('تم نسخ رقم الوصل بنجاح ✓'),
-        backgroundColor: AppColors.success,
-        duration: Duration(seconds: 2),
-      ),
-    );
+    AppAlert.success(context, 'تم نسخ رقم الوصل بنجاح ✓');
   }
 
   @override

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/services/api_service.dart';
 import '../../core/services/server_discovery_service.dart';
+import '../../widgets/app_alert.dart';
 
 class ServerSettingsDialog extends StatefulWidget {
   const ServerSettingsDialog({super.key});
@@ -50,18 +51,11 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
 
     if (discovered != null) {
       setState(() => _controller.text = discovered);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('تم العثور على السيرفر بنجاح: $discovered', style: GoogleFonts.cairo()),
-          backgroundColor: AppColors.success,
-        ),
-      );
+      AppAlert.success(context, 'تم العثور على السيرفر بنجاح: $discovered');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('لم يتم العثور على سيرفر نشط في هذه الشبكة. تأكد من تشغيل أمر: php artisan serve --host=0.0.0.0', style: GoogleFonts.cairo()),
-          backgroundColor: AppColors.danger,
-        ),
+      AppAlert.error(
+        context,
+        'لم يتم العثور على سيرفر نشط في هذه الشبكة. تأكد من تشغيل أمر: php artisan serve --host=0.0.0.0',
       );
     }
   }
@@ -162,13 +156,8 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
               }
               await _api.setBaseUrl(url);
               if (!context.mounted) return;
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('تم حفظ عنوان السيرفر ($url)', style: GoogleFonts.cairo()),
-                  backgroundColor: AppColors.success,
-                ),
-              );
+              await AppAlert.success(context, 'تم حفظ عنوان السيرفر ($url)');
+              if (context.mounted) Navigator.pop(context);
             }
           },
           child: Text('حفظ', style: GoogleFonts.cairo()),

@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../providers/syndic_provider.dart';
+import '../../../widgets/app_alert.dart';
 
 class RecordExpenseDialog extends StatefulWidget {
   const RecordExpenseDialog({super.key});
@@ -62,12 +63,7 @@ class _RecordExpenseDialogState extends State<RecordExpenseDialog> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.danger,
-            content: Text('تعذر اختيار الصورة: $e'),
-          ),
-        );
+        AppAlert.error(context, 'تعذر اختيار الصورة: $e');
       }
     }
   }
@@ -145,19 +141,12 @@ class _RecordExpenseDialogState extends State<RecordExpenseDialog> {
     if (mounted) {
       setState(() => _isSubmitting = false);
       if (success) {
-        Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            backgroundColor: AppColors.success,
-            content: Text('تم تسجيل المصروف وإرفاق الفاتورة بنجاح ✓'),
-          ),
-        );
+        await AppAlert.success(context, 'تم تسجيل المصروف وإرفاق الفاتورة بنجاح ✓');
+        if (mounted) Navigator.pop(context, true);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.danger,
-            content: Text(syndic.errorMessage ?? 'حدث خطأ أثناء تسجيل المصروف'),
-          ),
+        AppAlert.error(
+          context,
+          syndic.errorMessage ?? 'حدث خطأ أثناء تسجيل المصروف',
         );
       }
     }

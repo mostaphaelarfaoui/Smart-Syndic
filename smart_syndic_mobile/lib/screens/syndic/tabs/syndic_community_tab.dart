@@ -8,6 +8,7 @@ import '../../../core/utils/number_utils.dart';
 import '../dialogs/convert_to_poll_dialog.dart';
 import '../dialogs/create_poll_dialog.dart';
 import '../dialogs/create_announcement_dialog.dart';
+import '../../../widgets/app_alert.dart';
 
 class SyndicCommunityTab extends StatefulWidget {
   const SyndicCommunityTab({super.key});
@@ -312,19 +313,9 @@ class SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTicke
                                 final ok = await syndic.approveResident(residentId);
                                 if (context.mounted) {
                                   if (ok) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        backgroundColor: AppColors.success,
-                                        content: Text('تمت الموافقة على الساكن وتفعيل حسابه ✓'),
-                                      ),
-                                    );
+                                    AppAlert.success(context, 'تمت الموافقة على الساكن وتفعيل حسابه ✓');
                                   } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        backgroundColor: AppColors.danger,
-                                        content: Text(syndic.errorMessage ?? 'تعذر قبول الطلب'),
-                                      ),
-                                    );
+                                    AppAlert.error(context, syndic.errorMessage ?? 'تعذر قبول الطلب');
                                   }
                                 }
                               },
@@ -353,16 +344,9 @@ class SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTicke
                                 final ok = await syndic.rejectResident(residentId);
                                 if (context.mounted) {
                                   if (ok) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('تم رفض الطلب بنجاح')),
-                                    );
+                                    AppAlert.success(context, 'تم رفض الطلب بنجاح');
                                   } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        backgroundColor: AppColors.danger,
-                                        content: Text(syndic.errorMessage ?? 'تعذر رفض الطلب'),
-                                      ),
-                                    );
+                                    AppAlert.error(context, syndic.errorMessage ?? 'تعذر رفض الطلب');
                                   }
                                 }
                               },
@@ -485,12 +469,7 @@ class SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTicke
                                   if (confirm == true) {
                                     await syndic.acceptSuggestion(suggestion.id);
                                     if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          backgroundColor: AppColors.success,
-                                          content: Text('تمت الموافقة على الاقتراح بنجاح ✓'),
-                                        ),
-                                      );
+                                      AppAlert.success(context, 'تمت الموافقة على الاقتراح بنجاح ✓');
                                     }
                                   }
                                 },
@@ -521,12 +500,7 @@ class SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTicke
                                   if (confirm == true) {
                                     await syndic.rejectSuggestion(suggestion.id);
                                     if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          backgroundColor: AppColors.danger,
-                                          content: Text('تم رفض الاقتراح'),
-                                        ),
-                                      );
+                                      AppAlert.info(context, 'تم رفض الاقتراح');
                                     }
                                   }
                                 },

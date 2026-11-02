@@ -9,6 +9,7 @@ import '../../../models/payment_model.dart';
 import '../../../providers/syndic_provider.dart';
 import '../../../widgets/empty_state.dart';
 import '../../../widgets/confirm_action_dialog.dart';
+import '../../../widgets/app_alert.dart';
 import '../../common/receipt_viewer_screen.dart';
 import '../dialogs/record_payment_dialog.dart';
 
@@ -85,15 +86,11 @@ class _SyndicPaymentsTabState extends State<SyndicPaymentsTab> {
     if (confirmed == true && mounted) {
       final success = await context.read<SyndicProvider>().confirmPayment(payment.id);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: success ? AppColors.success : AppColors.danger,
-            content: Text(
-              success ? 'تم تأكيد الوصل بنجاح ووثق في الأرشيف الرقابي ✓' : 'حدث خطأ أثناء تأكيد الوصل',
-              style: GoogleFonts.cairo(),
-            ),
-          ),
-        );
+        if (success) {
+          AppAlert.success(context, 'تم تأكيد الوصل بنجاح ووثق في الأرشيف الرقابي ✓');
+        } else {
+          AppAlert.error(context, 'حدث خطأ أثناء تأكيد الوصل');
+        }
       }
     }
   }
@@ -135,15 +132,11 @@ class _SyndicPaymentsTabState extends State<SyndicPaymentsTab> {
     if (confirmed == true && mounted) {
       final success = await context.read<SyndicProvider>().sendPaymentToResident(payment.id);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: success ? AppColors.success : AppColors.danger,
-            content: Text(
-              success ? 'تم إرسال الوصل للساكن بنجاح ✓' : 'حدث خطأ أثناء إرسال الوصل',
-              style: GoogleFonts.cairo(),
-            ),
-          ),
-        );
+        if (success) {
+          AppAlert.success(context, 'تم إرسال الوصل للساكن بنجاح ✓');
+        } else {
+          AppAlert.error(context, 'حدث خطأ أثناء إرسال الوصل');
+        }
       }
     }
   }
@@ -162,15 +155,11 @@ class _SyndicPaymentsTabState extends State<SyndicPaymentsTab> {
     if (confirmed == true && mounted) {
       final success = await context.read<SyndicProvider>().deletePayment(payment.id);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: success ? AppColors.success : AppColors.danger,
-            content: Text(
-              success ? 'تم حذف مسودة الوصل بنجاح' : 'لا يمكن حذف هذا الوصل',
-              style: GoogleFonts.cairo(),
-            ),
-          ),
-        );
+        if (success) {
+          AppAlert.success(context, 'تم حذف مسودة الوصل بنجاح');
+        } else {
+          AppAlert.error(context, 'لا يمكن حذف هذا الوصل');
+        }
       }
     }
   }
@@ -201,9 +190,7 @@ class _SyndicPaymentsTabState extends State<SyndicPaymentsTab> {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تعذر فتح تطبيق واتساب')),
-        );
+        AppAlert.error(context, 'تعذر فتح تطبيق واتساب');
       }
     }
   }

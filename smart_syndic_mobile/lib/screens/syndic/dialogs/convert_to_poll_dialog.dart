@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../providers/syndic_provider.dart';
+import '../../../widgets/app_alert.dart';
 import '../../../models/suggestion_model.dart';
 
 class ConvertToPollDialog extends StatefulWidget {
@@ -70,9 +71,7 @@ class _ConvertToPollDialogState extends State<ConvertToPollDialog> {
         .toList();
 
     if (options.length < 2) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('المرجو إدخال خيارين على الأقل')),
-      );
+      AppAlert.warning(context, 'المرجو إدخال خيارين على الأقل');
       return;
     }
 
@@ -98,19 +97,12 @@ class _ConvertToPollDialogState extends State<ConvertToPollDialog> {
     if (mounted) {
       setState(() => _isSubmitting = false);
       if (success) {
-        Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            backgroundColor: AppColors.success,
-            content: Text('تم تحويل الاقتراح إلى استطلاع رأي بنجاح ✓'),
-          ),
-        );
+        await AppAlert.success(context, 'تم تحويل الاقتراح إلى استطلاع رأي بنجاح ✓');
+        if (mounted) Navigator.pop(context, true);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.danger,
-            content: Text(syndic.errorMessage ?? 'حدث خطأ أثناء إنشاء التصويت'),
-          ),
+        AppAlert.error(
+          context,
+          syndic.errorMessage ?? 'حدث خطأ أثناء إنشاء التصويت',
         );
       }
     }

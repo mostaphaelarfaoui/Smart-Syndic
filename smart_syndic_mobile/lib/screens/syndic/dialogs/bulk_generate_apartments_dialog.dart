@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../providers/syndic_provider.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../widgets/app_alert.dart';
 
 class BulkGenerateApartmentsDialog extends StatefulWidget {
   const BulkGenerateApartmentsDialog({super.key});
@@ -45,9 +46,7 @@ class _BulkGenerateApartmentsDialogState extends State<BulkGenerateApartmentsDia
     final defaultFee = auth.tenant?.defaultMonthlyFee ?? 200.0;
 
     if (!_isNewBuilding && _selectedBuildingId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('الرجاء اختيار العمارة')),
-      );
+      AppAlert.warning(context, 'الرجاء اختيار العمارة');
       return;
     }
 
@@ -71,19 +70,12 @@ class _BulkGenerateApartmentsDialogState extends State<BulkGenerateApartmentsDia
     if (mounted) {
       setState(() => _isSubmitting = false);
       if (success) {
-        Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            backgroundColor: AppColors.success,
-            content: Text('تم توليد وإضافة الشقق بنجاح ✓'),
-          ),
-        );
+        await AppAlert.success(context, 'تم توليد وإضافة الشقق بنجاح ✓');
+        if (mounted) Navigator.pop(context, true);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.danger,
-            content: Text(syndic.errorMessage ?? 'حدث خطأ أثناء توليد الشقق'),
-          ),
+        AppAlert.error(
+          context,
+          syndic.errorMessage ?? 'حدث خطأ أثناء توليد الشقق',
         );
       }
     }

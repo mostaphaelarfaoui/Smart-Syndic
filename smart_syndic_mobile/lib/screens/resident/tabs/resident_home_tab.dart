@@ -7,6 +7,7 @@ import '../../../core/utils/number_utils.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/resident_provider.dart';
 import '../resident_profile_screen.dart';
+import '../../../widgets/app_alert.dart';
 
 class ResidentHomeTab extends StatelessWidget {
   final Function(int) onNavigateTab;
@@ -309,9 +310,7 @@ class ResidentHomeTab extends StatelessWidget {
                       InkWell(
                         onTap: () {
                           Clipboard.setData(const ClipboardData(text: '011780000012345678901234'));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('تم نسخ رقم الحساب (RIB) إلى الحافظة ✓')),
-                          );
+                          AppAlert.success(context, 'تم نسخ رقم الحساب (RIB) إلى الحافظة ✓');
                         },
                         child: const Icon(Icons.copy, size: 18, color: AppColors.primary),
                       ),

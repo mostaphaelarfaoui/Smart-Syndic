@@ -10,15 +10,14 @@ import '../../../providers/resident_provider.dart';
 import '../../../widgets/empty_state.dart';
 import '../../../core/utils/number_utils.dart';
 import '../../common/receipt_viewer_screen.dart';
+import '../../../widgets/app_alert.dart';
 
 class ResidentPaymentsTab extends StatelessWidget {
   const ResidentPaymentsTab({super.key});
 
   void _viewReceipt(BuildContext context, PaymentModel payment) {
     if (payment.receiptUrl == null || payment.receiptUrl!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('رابط الوصل غير متوفر حالياً')),
-      );
+      AppAlert.warning(context, 'رابط الوصل غير متوفر حالياً');
       return;
     }
     ReceiptViewerScreen.open(
@@ -31,9 +30,7 @@ class ResidentPaymentsTab extends StatelessWidget {
 
   void _downloadReceipt(BuildContext context, PaymentModel payment) {
     if (payment.receiptUrl == null || payment.receiptUrl!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('رابط الوصل غير متوفر حالياً')),
-      );
+      AppAlert.warning(context, 'رابط الوصل غير متوفر حالياً');
       return;
     }
     ReceiptViewerScreen.downloadDirectly(
@@ -60,22 +57,14 @@ class ResidentPaymentsTab extends StatelessWidget {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تعذر فتح تطبيق واتساب')),
-        );
+        AppAlert.error(context, 'تعذر فتح تطبيق واتساب');
       }
     }
   }
 
   void _copyReceiptNumber(BuildContext context, String receiptNumber) {
     Clipboard.setData(ClipboardData(text: receiptNumber));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('تم نسخ رقم الوصل بنجاح ✓'),
-        backgroundColor: AppColors.success,
-        duration: Duration(seconds: 2),
-      ),
-    );
+    AppAlert.success(context, 'تم نسخ رقم الوصل بنجاح ✓');
   }
 
   @override

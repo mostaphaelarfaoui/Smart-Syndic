@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../models/apartment_model.dart';
 import '../../../providers/syndic_provider.dart';
+import '../../../widgets/app_alert.dart';
 
 class EditApartmentDialog extends StatefulWidget {
   final ApartmentModel apartment;
@@ -53,19 +54,12 @@ class _EditApartmentDialogState extends State<EditApartmentDialog> {
     if (mounted) {
       setState(() => _isSubmitting = false);
       if (success) {
-        Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            backgroundColor: AppColors.success,
-            content: Text('تم تحديث بيانات الشقة بنجاح ✓'),
-          ),
-        );
+        await AppAlert.success(context, 'تم تحديث بيانات الشقة بنجاح ✓');
+        if (mounted) Navigator.pop(context, true);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.danger,
-            content: Text(syndic.errorMessage ?? 'حدث خطأ أثناء التحديث'),
-          ),
+        AppAlert.error(
+          context,
+          syndic.errorMessage ?? 'حدث خطأ أثناء التحديث',
         );
       }
     }

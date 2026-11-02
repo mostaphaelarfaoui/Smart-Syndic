@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../providers/syndic_provider.dart';
+import '../../../widgets/app_alert.dart';
 
 class CreateAnnouncementDialog extends StatefulWidget {
   const CreateAnnouncementDialog({super.key});
@@ -43,19 +44,12 @@ class _CreateAnnouncementDialogState extends State<CreateAnnouncementDialog> {
     if (mounted) {
       setState(() => _isSubmitting = false);
       if (success) {
-        Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            backgroundColor: AppColors.success,
-            content: Text('تم نشر الإعلان بنجاح وإرسال إشعار فوري لكافة السكان ✓'),
-          ),
-        );
+        await AppAlert.success(context, 'تم نشر الإعلان بنجاح وإرسال إشعار فوري لكافة السكان ✓');
+        if (mounted) Navigator.pop(context, true);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.danger,
-            content: Text(provider.errorMessage ?? 'تعذر نشر الإعلان'),
-          ),
+        AppAlert.error(
+          context,
+          provider.errorMessage ?? 'تعذر نشر الإعلان',
         );
       }
     }

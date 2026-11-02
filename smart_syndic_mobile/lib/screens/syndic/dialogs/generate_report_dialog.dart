@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/services/api_service.dart';
 import '../../../providers/syndic_provider.dart';
+import '../../../widgets/app_alert.dart';
 
 class GenerateReportDialog extends StatefulWidget {
   const GenerateReportDialog({super.key});
@@ -112,16 +113,12 @@ class _GenerateReportDialogState extends State<GenerateReportDialog> {
       } else {
         final launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
         if (!launched && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('تعذر فتح رابط التقرير: $url')),
-          );
+          AppAlert.error(context, 'تعذر فتح رابط التقرير: $url');
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('تعذر فتح رابط التقرير: $e')),
-        );
+        AppAlert.error(context, 'تعذر فتح رابط التقرير: $e');
       }
     }
   }

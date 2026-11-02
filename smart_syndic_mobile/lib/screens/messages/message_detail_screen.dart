@@ -5,6 +5,7 @@ import '../../core/constants/app_colors.dart';
 import '../../models/message_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/message_provider.dart';
+import '../../widgets/app_alert.dart';
 
 class MessageDetailScreen extends StatefulWidget {
   final MessageModel message;
@@ -71,9 +72,7 @@ class _MessageDetailScreenState extends State<MessageDetailScreen> {
         _replyController.clear();
         await _refreshDetails();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(backgroundColor: AppColors.success, content: Text('تم إرسال الرد بنجاح ✓')),
-          );
+          AppAlert.success(context, 'تم إرسال الرد بنجاح ✓');
         }
       }
     }

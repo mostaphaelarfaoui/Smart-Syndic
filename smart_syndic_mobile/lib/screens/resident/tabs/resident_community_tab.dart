@@ -6,6 +6,7 @@ import '../../../providers/resident_provider.dart';
 import '../../../widgets/empty_state.dart';
 import '../../../core/utils/number_utils.dart';
 import '../dialogs/submit_suggestion_dialog.dart';
+import '../../../widgets/app_alert.dart';
 
 class ResidentCommunityTab extends StatefulWidget {
   const ResidentCommunityTab({super.key});
@@ -305,13 +306,12 @@ class ResidentCommunityTabState extends State<ResidentCommunityTab> with SingleT
                                   final ok = await resident.castVote(poll.id, optionId, comment: comment, isAnonymous: isAnonymous);
                                   if (mounted) {
                                     setState(() => _votingProgress[poll.id] = false);
-                                    if (ok) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          backgroundColor: AppColors.success,
-                                          content: Text('تم تسجيل صوتك بنجاح ✓'),
-                                        ),
-                                      );
+                                    if (context.mounted) {
+                                      if (ok) {
+                                        AppAlert.success(context, 'تم تسجيل صوتك بنجاح ✓');
+                                      } else {
+                                        AppAlert.error(context, resident.errorMessage ?? 'تعذر تسجيل صوتك');
+                                      }
                                     }
                                   }
                                 },

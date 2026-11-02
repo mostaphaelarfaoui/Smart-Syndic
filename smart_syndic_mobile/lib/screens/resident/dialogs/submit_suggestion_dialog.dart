@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../providers/resident_provider.dart';
+import '../../../widgets/app_alert.dart';
 
 class SubmitSuggestionDialog extends StatefulWidget {
   const SubmitSuggestionDialog({super.key});
@@ -38,19 +39,12 @@ class _SubmitSuggestionDialogState extends State<SubmitSuggestionDialog> {
     if (mounted) {
       setState(() => _isSubmitting = false);
       if (success) {
-        Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            backgroundColor: AppColors.success,
-            content: Text('تم إرسال اقتراحك إلى السانديك بنجاح ✓'),
-          ),
-        );
+        await AppAlert.success(context, 'تم إرسال اقتراحك إلى السانديك بنجاح ✓');
+        if (mounted) Navigator.pop(context, true);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.danger,
-            content: Text(resident.errorMessage ?? 'حدث خطأ أثناء إرسال الاقتراح'),
-          ),
+        AppAlert.error(
+          context,
+          resident.errorMessage ?? 'حدث خطأ أثناء إرسال الاقتراح',
         );
       }
     }

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../widgets/app_alert.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {
   const ProfileSettingsScreen({super.key});
@@ -86,22 +87,12 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
 
     if (hasNewPassword || hasCurrentPassword) {
       if (!hasCurrentPassword) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('يرجى إدخال كلمة المرور الحالية لتأكيد التغيير', style: GoogleFonts.cairo()),
-            backgroundColor: AppColors.danger,
-          ),
-        );
+        AppAlert.error(context, 'يرجى إدخال كلمة المرور الحالية لتأكيد التغيير');
         setState(() => _isSubmitting = false);
         return;
       }
       if (!hasNewPassword) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('يرجى إدخال كلمة المرور الجديدة', style: GoogleFonts.cairo()),
-            backgroundColor: AppColors.danger,
-          ),
-        );
+        AppAlert.error(context, 'يرجى إدخال كلمة المرور الجديدة');
         setState(() => _isSubmitting = false);
         return;
       }
@@ -115,19 +106,12 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     if (mounted) {
       setState(() => _isSubmitting = false);
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('تم تحديث معلومات الحساب بنجاح', style: GoogleFonts.cairo()),
-            backgroundColor: AppColors.success,
-          ),
-        );
-        Navigator.pop(context);
+        await AppAlert.success(context, 'تم تحديث معلومات الحساب بنجاح');
+        if (mounted) Navigator.pop(context);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(auth.errorMessage ?? 'حدث خطأ', style: GoogleFonts.cairo()),
-            backgroundColor: AppColors.danger,
-          ),
+        AppAlert.error(
+          context,
+          auth.errorMessage ?? 'حدث خطأ',
         );
       }
     }

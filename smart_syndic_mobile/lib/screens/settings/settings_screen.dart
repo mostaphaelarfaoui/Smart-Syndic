@@ -10,6 +10,7 @@ import 'profile_settings_screen.dart';
 import 'residence_settings_screen.dart';
 import 'stamp_settings_screen.dart';
 import 'server_settings_dialog.dart';
+import '../../widgets/app_alert.dart';
 
 /// 🏠 Unified Settings Screen
 /// Groups all settings into clean sections (iOS/Material style).
@@ -335,17 +336,11 @@ class SettingsScreen extends StatelessWidget {
       final auth = Provider.of<AuthProvider>(context, listen: false);
       final success = await auth.logoutOtherDevices();
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              success
-                  ? 'تم إنهاء الجلسات على جميع الأجهزة الأخرى بنجاح'
-                  : (auth.errorMessage ?? 'حدث خطأ'),
-              style: GoogleFonts.cairo(),
-            ),
-            backgroundColor: success ? AppColors.success : AppColors.danger,
-          ),
-        );
+        if (success) {
+          AppAlert.success(context, 'تم إنهاء الجلسات على جميع الأجهزة الأخرى بنجاح');
+        } else {
+          AppAlert.error(context, auth.errorMessage ?? 'حدث خطأ');
+        }
       }
     }
   }
