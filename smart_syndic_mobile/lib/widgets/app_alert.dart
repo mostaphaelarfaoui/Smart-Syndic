@@ -37,7 +37,7 @@ class AppAlert {
       show(
         context,
         message: message,
-        title: title ?? 'تمت العملية بنجاح',
+        title: title ?? 'تمت العملية',
         type: AppAlertType.success,
         buttonText: buttonText,
         barrierDismissible: barrierDismissible,
@@ -53,7 +53,7 @@ class AppAlert {
       show(
         context,
         message: message,
-        title: title ?? 'تنبيه خطأ',
+        title: title ?? 'خطأ',
         type: AppAlertType.error,
         buttonText: buttonText,
         barrierDismissible: barrierDismissible,
@@ -196,9 +196,9 @@ class AppAlertDialog extends StatelessWidget {
   String get _defaultTitle {
     switch (type) {
       case AppAlertType.success:
-        return 'تمت العملية بنجاح';
+        return 'تمت العملية';
       case AppAlertType.error:
-        return 'تنبيه خطأ';
+        return 'خطأ';
       case AppAlertType.warning:
         return 'تنبيه';
       case AppAlertType.info:

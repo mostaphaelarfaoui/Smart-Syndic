@@ -209,7 +209,7 @@ class _GenerateReportDialogState extends State<GenerateReportDialog> {
                 children: [
                   Expanded(
                     child: ChoiceChip(
-                      label: Text('📈 المداخيل فقط', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold)),
+                      label: Text('المداخيل فقط', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold)),
                       selected: _selectedScope == 'revenues',
                       selectedColor: Colors.green.withAlpha(40),
                       onSelected: (val) => setState(() => _selectedScope = 'revenues'),
@@ -218,7 +218,7 @@ class _GenerateReportDialogState extends State<GenerateReportDialog> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: ChoiceChip(
-                      label: Text('📉 المصاريف فقط', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold)),
+                      label: Text('المصاريف فقط', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold)),
                       selected: _selectedScope == 'expenses',
                       selectedColor: Colors.red.withAlpha(40),
                       onSelected: (val) => setState(() => _selectedScope = 'expenses'),
@@ -400,7 +400,7 @@ class _GenerateReportDialogState extends State<GenerateReportDialog> {
                       const Icon(Icons.check_circle_outline, color: AppColors.success, size: 36),
                       const SizedBox(height: 8),
                       Text(
-                        'تم توليد التقرير المالي بنجاح! ✓',
+                        'تم توليد التقرير',
                         style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.success),
                       ),
                       const SizedBox(height: 12),
@@ -414,7 +414,7 @@ class _GenerateReportDialogState extends State<GenerateReportDialog> {
                         onPressed: () => _openReport(_generatedResult!['url']),
                         icon: const Icon(Icons.open_in_new, size: 18),
                         label: Text(
-                          'معاينة وطباعة التقرير (PDF)',
+                          'معاينة التقرير (PDF)',
                           style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13),
                         ),
                       ),
@@ -444,7 +444,7 @@ class _GenerateReportDialogState extends State<GenerateReportDialog> {
                               child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                             ),
                             const SizedBox(width: 12),
-                            Text('جارِ تجهيز التقرير والحسابات...', style: GoogleFonts.cairo(fontSize: 13)),
+                            Text('جارِ تجهيز التقرير', style: GoogleFonts.cairo(fontSize: 13)),
                           ],
                         )
                       : Row(
@@ -453,7 +453,7 @@ class _GenerateReportDialogState extends State<GenerateReportDialog> {
                             const Icon(Icons.download, size: 20),
                             const SizedBox(width: 8),
                             Text(
-                              'توليد التقرير المالي الرسمي',
+                              'توليد التقرير المالي',
                               style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 14),
                             ),
                           ],

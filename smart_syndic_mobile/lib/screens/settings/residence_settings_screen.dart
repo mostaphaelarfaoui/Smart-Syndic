@@ -131,9 +131,9 @@ class _ResidenceSettingsScreenState extends State<ResidenceSettingsScreen> {
         syndic.fetchDashboardKpis();
         syndic.fetchApartments();
 
-        String successMsg = 'تم حفظ إعدادات الإقامة بنجاح ✓';
+        String successMsg = 'تم حفظ إعدادات الإقامة';
         if (_applyToExistingApartments && updatedCount > 0) {
-          successMsg = 'تم حفظ الإعدادات وتحديث الواجب الشهري لـ $updatedCount شقة ✓';
+          successMsg = 'تم حفظ الإعدادات وتحديث الواجب لـ $updatedCount شقة';
         }
 
         AppAlert.success(context, successMsg);
@@ -314,7 +314,7 @@ class _ResidenceSettingsScreenState extends State<ResidenceSettingsScreen> {
                     tooltip: 'نسخ الرمز',
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: _invitationCode!));
-                      AppAlert.success(context, 'تم نسخ رمز دعوة السكان ✓');
+                      AppAlert.success(context, 'تم نسخ رمز الدعوة');
                     },
                   ),
                 ],
@@ -528,7 +528,7 @@ class _ResidenceSettingsScreenState extends State<ResidenceSettingsScreen> {
                   tooltip: 'نسخ الـ RIB',
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: _ribController.text.trim()));
-                    AppAlert.success(context, 'تم نسخ رقم الـ RIB بنجاح ✓');
+                    AppAlert.success(context, 'تم نسخ رقم الـ RIB');
                   },
                 ),
             ],
@@ -725,7 +725,7 @@ class _ResidenceSettingsScreenState extends State<ResidenceSettingsScreen> {
             ),
             title: Text('خاتم وطابع السانديك المعتمد', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13)),
             subtitle: Text(
-              _hasStamp ? 'تم رفع صورة الطابع المعتمد ✓' : 'لم يتم تحديد طابع الإقامة بعد',
+              _hasStamp ? 'تم رفع صورة الطابع المعتمد' : 'لم يتم تحديد طابع الإقامة بعد',
               style: GoogleFonts.cairo(
                 fontSize: 11,
                 color: _hasStamp ? AppColors.success : AppColors.textSecondary,

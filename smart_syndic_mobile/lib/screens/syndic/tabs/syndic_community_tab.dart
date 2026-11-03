@@ -122,7 +122,7 @@ class SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTicke
               ),
               const Tab(text: 'صندوق الاقتراحات'),
               const Tab(text: 'استطلاعات الرأي'),
-              const Tab(text: '📢 إعلانات الإقامة'),
+              const Tab(text: 'إعلانات الإقامة'),
             ],
           ),
         ),
@@ -303,8 +303,8 @@ class SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTicke
                               onPressed: () async {
                                 final confirm = await _showConfirmDialog(
                                   context,
-                                  title: 'تأكيد قبول الساكن',
-                                  message: 'هل أنت متأكد من قبول $name وتعيينه كـ $occupancy في $locationLabel؟',
+                                  title: 'قبول الساكن',
+                                  message: 'هل تريد قبول $name وتعيينه كـ $occupancy في $locationLabel؟',
                                   confirmText: 'قبول وتفعيل',
                                   confirmColor: AppColors.success,
                                 );
@@ -313,7 +313,7 @@ class SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTicke
                                 final ok = await syndic.approveResident(residentId);
                                 if (context.mounted) {
                                   if (ok) {
-                                    AppAlert.success(context, 'تمت الموافقة على الساكن وتفعيل حسابه ✓');
+                                    AppAlert.success(context, 'تمت الموافقة على الساكن وتفعيل حسابه');
                                   } else {
                                     AppAlert.error(context, syndic.errorMessage ?? 'تعذر قبول الطلب');
                                   }
@@ -334,8 +334,8 @@ class SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTicke
                               onPressed: () async {
                                 final confirm = await _showConfirmDialog(
                                   context,
-                                  title: 'تأكيد رفض الطلب',
-                                  message: 'هل أنت متأكد من رفض طلب $name لـ $locationLabel؟ سيتم إلغاء الطلب نهائياً.',
+                                  title: 'رفض الطلب',
+                                  message: 'هل تريد رفض طلب $name لـ $locationLabel؟',
                                   confirmText: 'رفض الطلب',
                                   confirmColor: AppColors.danger,
                                 );
@@ -344,7 +344,7 @@ class SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTicke
                                 final ok = await syndic.rejectResident(residentId);
                                 if (context.mounted) {
                                   if (ok) {
-                                    AppAlert.success(context, 'تم رفض الطلب بنجاح');
+                                    AppAlert.success(context, 'تم رفض الطلب');
                                   } else {
                                     AppAlert.error(context, syndic.errorMessage ?? 'تعذر رفض الطلب');
                                   }
@@ -469,7 +469,7 @@ class SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTicke
                                   if (confirm == true) {
                                     await syndic.acceptSuggestion(suggestion.id);
                                     if (context.mounted) {
-                                      AppAlert.success(context, 'تمت الموافقة على الاقتراح بنجاح ✓');
+                                      AppAlert.success(context, 'تمت الموافقة على الاقتراح');
                                     }
                                   }
                                 },
@@ -930,7 +930,7 @@ class SyndicCommunityTabState extends State<SyndicCommunityTab> with SingleTicke
                                 final confirm = await _showConfirmDialog(
                                   context,
                                   title: 'حذف الإعلان',
-                                  message: 'هل أنت متأكد من حذف هذا الإعلان نهائياً؟',
+                                  message: 'هل تريد حذف هذا الإعلان؟',
                                   confirmText: 'حذف',
                                   confirmColor: AppColors.danger,
                                 );

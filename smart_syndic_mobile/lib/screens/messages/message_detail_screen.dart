@@ -72,7 +72,7 @@ class _MessageDetailScreenState extends State<MessageDetailScreen> {
         _replyController.clear();
         await _refreshDetails();
         if (mounted) {
-          AppAlert.success(context, 'تم إرسال الرد بنجاح ✓');
+          AppAlert.success(context, 'تم إرسال الرد');
         }
       }
     }
@@ -206,7 +206,7 @@ class _MessageDetailScreenState extends State<MessageDetailScreen> {
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                '🚨 عاجل',
+                                'عاجل',
                                 style: GoogleFonts.cairo(
                                   fontSize: 9.5,
                                   fontWeight: FontWeight.bold,
@@ -326,7 +326,7 @@ class _MessageDetailScreenState extends State<MessageDetailScreen> {
                     const Icon(Icons.check_circle_outline_rounded, size: 16, color: Color(0xff10b981)),
                     const SizedBox(width: 6),
                     Text(
-                      'تم إرسال هذه الرسالة بنجاح إلى: ${msg.recipientLabel}',
+                      'المرسل إليه: ${msg.recipientLabel}',
                       style: GoogleFonts.cairo(fontSize: 11.5, color: AppColors.textSecondary, fontWeight: FontWeight.bold),
                     ),
                   ],
@@ -345,9 +345,10 @@ class _MessageDetailScreenState extends State<MessageDetailScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('ℹ️ ', style: TextStyle(fontSize: 13)),
+                    const Icon(Icons.info_outline_rounded, size: 14, color: Color(0xff4f46e5)),
+                    const SizedBox(width: 4),
                     Text(
-                      'إعلان رسمي من الإدارة العامة للمنصة',
+                      'إعلان رسمي من إدارة المنصة',
                       style: GoogleFonts.cairo(fontSize: 11, color: const Color(0xff4f46e5), fontWeight: FontWeight.bold),
                     ),
                   ],

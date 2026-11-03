@@ -39,7 +39,7 @@ class _SubmitSuggestionDialogState extends State<SubmitSuggestionDialog> {
     if (mounted) {
       setState(() => _isSubmitting = false);
       if (success) {
-        await AppAlert.success(context, 'تم إرسال اقتراحك إلى السانديك بنجاح ✓');
+        await AppAlert.success(context, 'تم إرسال اقتراحك إلى السانديك');
         if (mounted) Navigator.pop(context, true);
       } else {
         AppAlert.error(

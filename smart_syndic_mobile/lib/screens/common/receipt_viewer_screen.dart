@@ -76,7 +76,7 @@ class ReceiptViewerScreen extends StatefulWidget {
       if (context.mounted) {
         AppAlert.success(
           context,
-          'جاري تنزيل الوصل ($receiptNumber.pdf)... تفقد قائمة التنزيلات',
+          'جارٍ تنزيل الوصل',
         );
       }
     } catch (e) {
@@ -125,7 +125,7 @@ class _ReceiptViewerScreenState extends State<ReceiptViewerScreen> {
       if (context.mounted) {
         AppAlert.success(
           context,
-          'جاري تنزيل الوصل (${widget.receiptNumber}.pdf)... تفقد قائمة التنزيلات',
+          'جارٍ تنزيل الوصل',
         );
       }
     } catch (e) {
@@ -177,7 +177,7 @@ class _ReceiptViewerScreenState extends State<ReceiptViewerScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'معاينة الوصل الرسمي',
+              'معاينة الوصل',
               style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             Text(
@@ -192,7 +192,7 @@ class _ReceiptViewerScreenState extends State<ReceiptViewerScreen> {
         actions: [
           // Direct Download button in AppBar
           IconButton(
-            tooltip: 'تحميل مباشر للوصل',
+            tooltip: 'تحميل الوصل',
             onPressed: () => _downloadDirect(context),
             icon: const Icon(Icons.download_rounded),
           ),
@@ -247,7 +247,7 @@ class _ReceiptViewerScreenState extends State<ReceiptViewerScreen> {
                           const CircularProgressIndicator(color: AppColors.primary),
                           const SizedBox(height: 16),
                           Text(
-                            'جاري تحميل ومعاينة الوصل الرسمي...',
+                            'جارٍ تحميل الوصل...',
                             style: GoogleFonts.cairo(fontSize: 13, color: AppColors.textPrimary),
                           ),
                         ],
@@ -283,7 +283,7 @@ class _ReceiptViewerScreenState extends State<ReceiptViewerScreen> {
                             ),
                             onPressed: () => _downloadDirect(context),
                             icon: const Icon(Icons.download_rounded, size: 18),
-                            label: Text('تحميل مباشر للوصل', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+                            label: Text('تحميل الوصل', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
                           ),
                         ],
                       ),
@@ -326,7 +326,7 @@ class _ReceiptViewerScreenState extends State<ReceiptViewerScreen> {
                         )
                       : const Icon(Icons.download_rounded, size: 18),
                   label: Text(
-                    'تحميل مباشر (PDF)',
+                    'تحميل الوصل (PDF)',
                     style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13),
                   ),
                 ),

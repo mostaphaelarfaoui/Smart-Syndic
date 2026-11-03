@@ -29,6 +29,12 @@ class ResidentHomeTab extends StatelessWidget {
     final isUpToDate = (balanceData?['is_settled'] == true) || arrears <= 0;
     final advancePaidMonths = (balanceData?['advance_paid_months'] as List?)?.cast<String>() ?? [];
 
+    final residentName = auth.user?.fullName.isNotEmpty == true
+        ? auth.user!.fullName
+        : (resident.profile?['name']?.toString().isNotEmpty == true
+            ? resident.profile!['name'].toString()
+            : 'الساكن');
+
     return RefreshIndicator(
       onRefresh: () async {
         await resident.fetchMyBalance();
@@ -37,7 +43,7 @@ class ResidentHomeTab extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Welcome greeting
+          // Resident profile banner
           InkWell(
             borderRadius: BorderRadius.circular(16),
             onTap: () => Navigator.push(
@@ -53,7 +59,7 @@ class ResidentHomeTab extends StatelessWidget {
                     radius: 20,
                     backgroundColor: AppColors.primary.withAlpha(20),
                     child: Text(
-                      (auth.user?.firstName.isNotEmpty ?? false) ? auth.user!.firstName.substring(0, 1) : 'S',
+                      residentName.isNotEmpty ? residentName.substring(0, 1) : 'س',
                       style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: AppColors.primary),
                     ),
                   ),
@@ -63,7 +69,7 @@ class ResidentHomeTab extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'أهلاً بك، ${auth.user?.fullName ?? "الجار العزيز"} 👋',
+                          residentName,
                           style: GoogleFonts.cairo(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -95,7 +101,7 @@ class ResidentHomeTab extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          auth.tenant?.name ?? 'إقامة الفردوس',
+                          auth.tenant?.name ?? 'الإقامة',
                           style: GoogleFonts.cairo(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
@@ -186,8 +192,8 @@ class ResidentHomeTab extends StatelessWidget {
                 ),
                 Text(
                   isUpToDate
-                      ? 'وضعية حسابك سليمة وخالصة تماماً، شكراً لالتزامك الدائم'
-                      : 'المبلغ الإجمالي المتبقي بذمتكم لصندوق السانديك',
+                      ? 'وضعية حسابك سليمة وخالصة'
+                      : 'المبلغ المتبقي بذمتكم',
                   style: GoogleFonts.cairo(
                     fontSize: 12,
                     color: Colors.white.withAlpha(220),
@@ -207,7 +213,7 @@ class ResidentHomeTab extends StatelessWidget {
                         const Icon(Icons.star, size: 14, color: Colors.amberAccent),
                         const SizedBox(width: 6),
                         Text(
-                          'مدفوع مسبقاً حتى شهر: ${advancePaidMonths.last}',
+                          'مدفوع حتى شهر: ${advancePaidMonths.last}',
                           style: GoogleFonts.cairo(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
@@ -226,7 +232,7 @@ class ResidentHomeTab extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'الواجب الشهري المعتمد',
+                          'الواجب الشهري',
                           style: GoogleFonts.cairo(fontSize: 11, color: Colors.white70),
                         ),
                         Text(
@@ -285,7 +291,7 @@ class ResidentHomeTab extends StatelessWidget {
                           style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          'للأداء عن طريق تحويل بنكي مباشر',
+                          'للتحويل البنكي المباشر',
                           style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary),
                         ),
                       ],
@@ -310,7 +316,7 @@ class ResidentHomeTab extends StatelessWidget {
                       InkWell(
                         onTap: () {
                           Clipboard.setData(const ClipboardData(text: '011780000012345678901234'));
-                          AppAlert.success(context, 'تم نسخ رقم الحساب (RIB) إلى الحافظة ✓');
+                          AppAlert.success(context, 'تم نسخ رقم الحساب');
                         },
                         child: const Icon(Icons.copy, size: 18, color: AppColors.primary),
                       ),
@@ -352,7 +358,7 @@ class ResidentHomeTab extends StatelessWidget {
                           style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13),
                         ),
                         Text(
-                          'مداخيل ومصاريف الإقامة',
+                          'المداخيل والمصاريف',
                           style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textLight),
                           textAlign: TextAlign.center,
                         ),
@@ -389,7 +395,7 @@ class ResidentHomeTab extends StatelessWidget {
                           style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13),
                         ),
                         Text(
-                          'شارك برأيك في القرارات',
+                          'المشاركة في القرارات',
                           style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textLight),
                           textAlign: TextAlign.center,
                         ),

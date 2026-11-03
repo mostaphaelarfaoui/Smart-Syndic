@@ -68,10 +68,10 @@ class ApartmentDetailsDialog extends StatelessWidget {
 
   Future<void> _toggleExemption(BuildContext context) async {
     final isBillable = apartment.isBillable;
-    final title = isBillable ? 'تأكيد إعفاء الشقة من واجبات السانديك' : 'إلغاء إعفاء الشقة وإعادة الفوترة';
+    final title = isBillable ? 'إعفاء الشقة من الواجبات' : 'إلغاء إعفاء الشقة';
     final message = isBillable
-        ? 'هل أنت متأكد من رغبتك في إعفاء ${apartment.definiteUnit} من واجبات السانديك الشهرية؟\n\n• لن تُحسب عليها أي متأخرات.\n• سيتم استثناؤها من المداخيل الشهرية المتوقعة للإقامة.'
-        : 'هل تريد إلغاء إعفاء ${apartment.definiteUnit} وإعادة إدراجها في حسابات واجبات السانديك الشهرية والمتأخرات؟';
+        ? 'هل تريد إعفاء ${apartment.definiteUnit} من واجبات السانديك؟\n\n• لن تُحسب عليها متأخرات.\n• تُستثنى من المداخيل المتوقعة للإقامة.'
+        : 'هل تريد إلغاء إعفاء ${apartment.definiteUnit} وإعادة فوترتها؟';
 
     final confirm = await showDialog<bool>(
       context: context,
@@ -117,8 +117,8 @@ class ApartmentDetailsDialog extends StatelessWidget {
           await AppAlert.success(
             context,
             isBillable
-                ? 'تم إعفاء الشقة من واجبات السانديك بنجاح ✓'
-                : 'تم إلغاء الإعفاء وإعادة فوترة الشقة بنجاح ✓',
+                ? 'تم إعفاء الشقة من واجبات السانديك'
+                : 'تم إلغاء الإعفاء وإعادة فوترة الشقة',
           );
           if (context.mounted) Navigator.pop(context);
         } else {
@@ -136,14 +136,14 @@ class ApartmentDetailsDialog extends StatelessWidget {
     final residentName = resident?['name'] ?? 'الساكن';
     final confirm = await ConfirmActionDialog.show(
       context,
-      title: 'إخلاء الشقة (رحيل الساكن)',
-      message: 'هل أنت متأكد من رغبتك في إخلاء ${apartment.definiteUnit} وفك ارتباط $residentName؟\n\n'
-          '• ستصبح الشقة شاغرة ومتاحة لتسجيل ساكن جديد عبر رمز الدعوة.\n'
-          '• سيتم الاحتفاظ بكافة سجلات وإيصالات الدفعات السابقة لضمان سلامة المحاسبة والمالية.',
-      confirmText: 'تأكيد إخلاء الشقة',
+      title: 'إخلاء الشقة',
+      message: 'هل تريد إخلاء ${apartment.definiteUnit} وفك ارتباط $residentName؟\n\n'
+          '• ستصبح الشقة شاغرة لتسجيل ساكن جديد.\n'
+          '• ستبقى جميع السجلات المالية السابقة محفوظة.',
+      confirmText: 'تأكيد الإخلاء',
       type: ConfirmDialogType.danger,
       requiresPassword: true,
-      passwordHint: 'عملية حساسة: يرجى إدخال كلمة مرور حساب السانديك لتأكيد الإخلاء',
+      passwordHint: 'أدخل كلمة المرور لتأكيد الإخلاء',
     );
 
     if (confirm == true && context.mounted) {
@@ -153,7 +153,7 @@ class ApartmentDetailsDialog extends StatelessWidget {
         if (ok) {
           await AppAlert.success(
             context,
-            'تم إخلاء الشقة بنجاح مع الاحتفاظ بكافة السجلات المالية ✓',
+            'تم إخلاء الشقة',
           );
           if (context.mounted) Navigator.pop(context);
         } else {
@@ -277,9 +277,9 @@ class ApartmentDetailsDialog extends StatelessWidget {
                               children: [
                                 Text(
                                   !apartment.isBillable
-                                      ? 'الحالة: معفاة من أداء الواجبات ✓'
+                                      ? 'الحالة: معفاة من أداء الواجبات'
                                       : (apartment.isSettled
-                                          ? 'الحالة: خالصة الذمة ✓'
+                                          ? 'الحالة: خالصة'
                                           : 'الحالة: توجد متأخرات غير مسددة'),
                                   style: GoogleFonts.cairo(
                                     fontWeight: FontWeight.bold,
@@ -863,7 +863,7 @@ class ApartmentDetailsDialog extends StatelessWidget {
                                     ],
                                   ),
                                   content: Text(
-                                    'هذه الشقة مسكونة حالياً ومرتبطة بساكن.\n\nلحماية بيانات الساكن، يرجى أولاً الضغط على «إخلاء الشقة (رحيل الساكن)» في بطاقة الساكن بالأعلى، وبعد أن تصبح الشقة شاغرة يمكنك حذفها من العمارة إذا أردت ذلك.',
+                                    'هذه الشقة مرتبطة بساكن حالياً.\n\nيرجى أولاً إخلاء الشقة من بطاقة الساكن أعلاه لتتمكن من حذفها.',
                                     style: GoogleFonts.cairo(fontSize: 13, height: 1.5, color: AppColors.textPrimary),
                                   ),
                                   actions: [
@@ -875,7 +875,7 @@ class ApartmentDetailsDialog extends StatelessWidget {
                                       ),
                                       onPressed: () => Navigator.pop(ctx),
                                       child: Text(
-                                        'فهمت ذلك',
+                                        'حسناً',
                                         style: GoogleFonts.cairo(fontWeight: FontWeight.bold),
                                       ),
                                     ),
@@ -886,20 +886,19 @@ class ApartmentDetailsDialog extends StatelessWidget {
                             }
                             final confirm = await ConfirmActionDialog.show(
                               context,
-                              title: 'تأكيد حذف الشقة من العمارة',
-                              message: 'هل أنت متأكد من رغبتك في حذف ${apartment.definiteUnit} نهائياً؟\n\n'
-                                  '• سيتم مسح رقم هذه الشقة بالكامل من قائمة شقق الإقامة.',
-                              confirmText: 'تأكيد الحذف النهائي',
+                              title: 'حذف الشقة',
+                              message: 'هل تريد حذف ${apartment.definiteUnit} نهائياً؟',
+                              confirmText: 'تأكيد الحذف',
                               type: ConfirmDialogType.danger,
                               requiresPassword: true,
-                              passwordHint: 'لحماية بيانات الإقامة، يرجى إدخال كلمة مرور حسابك لتأكيد الحذف',
+                              passwordHint: 'أدخل كلمة المرور لتأكيد الحذف',
                             );
                             if (confirm == true && context.mounted) {
                               final syndic = context.read<SyndicProvider>();
                               final success = await syndic.deleteApartment(apartment.id);
                               if (context.mounted) {
                                 if (success) {
-                                  await AppAlert.success(context, 'تم حذف الشقة بنجاح ✓');
+                                  await AppAlert.success(context, 'تم حذف الشقة');
                                   if (context.mounted) Navigator.pop(context);
                                 } else {
                                   await AppAlert.error(context, syndic.errorMessage ?? 'تعذر حذف الشقة');

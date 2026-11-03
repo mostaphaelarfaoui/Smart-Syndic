@@ -51,11 +51,11 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
 
     if (discovered != null) {
       setState(() => _controller.text = discovered);
-      AppAlert.success(context, 'تم العثور على السيرفر بنجاح: $discovered');
+      AppAlert.success(context, 'تم العثور على السيرفر: $discovered');
     } else {
       AppAlert.error(
         context,
-        'لم يتم العثور على سيرفر نشط في هذه الشبكة. تأكد من تشغيل أمر: php artisan serve --host=0.0.0.0',
+        'لم يتم العثور على سيرفر نشط في الشبكة.',
       );
     }
   }
@@ -106,7 +106,7 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
                       )
                     : const Icon(Icons.radar, color: AppColors.primary),
                 label: Text(
-                  _isSearching ? (_searchStatus ?? 'جاري البحث...') : '🔍 كشف السيرفر تلقائياً في الشبكة',
+                  _isSearching ? (_searchStatus ?? 'جارٍ البحث...') : 'كشف السيرفر تلقائياً في الشبكة',
                   style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold),
                 ),
                 style: OutlinedButton.styleFrom(

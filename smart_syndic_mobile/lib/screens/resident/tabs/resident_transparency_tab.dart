@@ -108,15 +108,15 @@ class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
       statusIcon = Icons.block;
     } else if (status == 'PAID') {
       statusColor = AppColors.success;
-      statusTitle = 'خالصة بالكامل ✓';
+      statusTitle = 'خالصة بالكامل';
       statusIcon = Icons.check_circle_outline;
     } else if (status == 'PARTIAL') {
       statusColor = AppColors.warning;
-      statusTitle = 'أداء جزئي ⚠️';
+      statusTitle = 'أداء جزئي';
       statusIcon = Icons.timelapse;
     } else {
       statusColor = AppColors.danger;
-      statusTitle = 'عليها متأخرات ⏳';
+      statusTitle = 'عليها متأخرات';
       statusIcon = Icons.schedule;
     }
 
@@ -356,7 +356,7 @@ class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
                           Text(
                             computedArrears > 0
                                 ? '${unpaidMonths.length + partialMonths.length} شهر غير مكتمل'
-                                : 'لا توجد متأخرات ✓',
+                                : 'لا توجد متأخرات',
                             style: GoogleFonts.cairo(
                               fontSize: 10,
                               color: computedArrears > 0 ? AppColors.danger : AppColors.success,
@@ -531,7 +531,7 @@ class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
-                                    'غير مؤدى ⏳',
+                                    'غير مؤدى',
                                     style: GoogleFonts.cairo(
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
@@ -748,7 +748,7 @@ class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'الشقة خالصة بالكامل ✓',
+                                  'الشقة خالصة بالكامل',
                                   style: GoogleFonts.cairo(
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
@@ -1229,19 +1229,19 @@ class _ResidentTransparencyTabState extends State<ResidentTransparencyTab> {
                           subtitle = 'شقة شاغرة معفية من الواجبات';
                         } else if (effectiveStatus == 'PAID') {
                           cardColor = AppColors.success;
-                          badgeText = 'خالصة بالكامل ✓';
+                          badgeText = 'خالصة بالكامل';
                           badgeColor = AppColors.success;
                           icon = Icons.check_circle_outline;
                           subtitle = 'مؤداة بالكامل (${paidMonths.length} أشهر)';
                         } else if (effectiveStatus == 'PARTIAL') {
                           cardColor = AppColors.warning;
-                          badgeText = 'أداء جزئي ⚠️';
+                          badgeText = 'أداء جزئي';
                           badgeColor = AppColors.warning;
                           icon = Icons.timelapse;
                           subtitle = 'أداء جزئي (${partialMonths.length} أشهر) • متبقي: ${computedArrears.toStringAsFixed(0)} د.م';
                         } else {
                           cardColor = AppColors.danger;
-                          badgeText = 'متأخرات ⏳';
+                          badgeText = 'متأخرات';
                           badgeColor = AppColors.danger;
                           icon = Icons.schedule;
                           final unpaidDesc = _formatUnpaidMonthsSummary(unpaidMonths);

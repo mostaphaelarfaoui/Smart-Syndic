@@ -44,7 +44,7 @@ class _CreateAnnouncementDialogState extends State<CreateAnnouncementDialog> {
     if (mounted) {
       setState(() => _isSubmitting = false);
       if (success) {
-        await AppAlert.success(context, 'تم نشر الإعلان بنجاح وإرسال إشعار فوري لكافة السكان ✓');
+        await AppAlert.success(context, 'تم نشر الإعلان وإشعار السكان');
         if (mounted) Navigator.pop(context, true);
       } else {
         AppAlert.error(
@@ -80,7 +80,7 @@ class _CreateAnnouncementDialogState extends State<CreateAnnouncementDialog> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Center(
-                      child: Text('📢', style: TextStyle(fontSize: 22)),
+                      child: Icon(Icons.campaign_outlined, color: Color(0xff4f46e5), size: 24),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -89,11 +89,11 @@ class _CreateAnnouncementDialogState extends State<CreateAnnouncementDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'نشر إعلان جديد لكافة السكان',
+                          'نشر إعلان جديد',
                           style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 16),
                         ),
                         Text(
-                          'يصل إشعار فوري لجميع سكان الإقامة فور النشر',
+                          'يصل إشعار فوري لجميع السكان',
                           style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary),
                         ),
                       ],
@@ -142,15 +142,15 @@ class _CreateAnnouncementDialogState extends State<CreateAnnouncementDialog> {
                       Row(
                         children: [
                           Expanded(
-                            child: _buildPriorityOption('NORMAL', '📢 عادي', const Color(0xff64748b)),
+                            child: _buildPriorityOption('NORMAL', 'عادي', const Color(0xff64748b)),
                           ),
                           const SizedBox(width: 6),
                           Expanded(
-                            child: _buildPriorityOption('INFO', 'ℹ️ تنبيه هام', const Color(0xff4f46e5)),
+                            child: _buildPriorityOption('INFO', 'تنبيه هام', const Color(0xff4f46e5)),
                           ),
                           const SizedBox(width: 6),
                           Expanded(
-                            child: _buildPriorityOption('URGENT', '🚨 عاجل', const Color(0xffdc2626)),
+                            child: _buildPriorityOption('URGENT', 'عاجل', const Color(0xffdc2626)),
                           ),
                         ],
                       ),

@@ -72,8 +72,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 final confirm = await showDialog<bool>(
                   context: context,
                   builder: (ctx) => AlertDialog(
-                    title: Text('مسح كافة الإشعارات', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
-                    content: Text('هل أنت متأكد من مسح جميع الإشعارات من السجل؟', style: GoogleFonts.cairo()),
+                    title: Text('مسح الإشعارات', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+                    content: Text('هل تريد مسح جميع الإشعارات؟', style: GoogleFonts.cairo()),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(ctx, false),
@@ -82,7 +82,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
                         onPressed: () => Navigator.pop(ctx, true),
-                        child: Text('مسح الكل', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+                        child: Text('مسح', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
@@ -240,8 +240,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             const SizedBox(height: 6),
             Text(
               _filter == 'unread'
-                  ? 'جميع الإشعارات تم الاطلاع عليها وقراءتها.'
-                  : 'ستظهر هنا كافة الإشعارات والمستجدات المالية والشكاوى فور وصولها.',
+                  ? 'تمت قراءة جميع الإشعارات.'
+                  : 'ستظهر هنا جميع الإشعارات فور وصولها.',
               textAlign: TextAlign.center,
               style: GoogleFonts.cairo(fontSize: 13, color: AppColors.textSecondary),
             ),

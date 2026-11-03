@@ -47,7 +47,7 @@ class _SyndicPaymentsTabState extends State<SyndicPaymentsTab> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'هل تريد بالتأكيد تأكيد هذا الوصل؟',
+              'هل تريد تأكيد هذا الوصل؟',
               style: GoogleFonts.cairo(fontWeight: FontWeight.w600, fontSize: 14),
             ),
             const SizedBox(height: 8),
@@ -59,7 +59,7 @@ class _SyndicPaymentsTabState extends State<SyndicPaymentsTab> {
                 border: Border.all(color: Colors.amber.shade200),
               ),
               child: Text(
-                'تنبيه: بعد التأكيد، سيتم حفظ نسخة رقابية لدى الإدارة العامة (SuperAdmin) ولن تتمكن من تعديل أو حذف هذا الوصل.',
+                'تنبيه: بعد التأكيد لن تتمكن من تعديل أو حذف هذا الوصل.',
                 style: GoogleFonts.cairo(fontSize: 12, color: Colors.brown.shade900),
               ),
             ),
@@ -77,7 +77,7 @@ class _SyndicPaymentsTabState extends State<SyndicPaymentsTab> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('تأكيد الآن', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+            child: Text('تأكيد', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -87,7 +87,7 @@ class _SyndicPaymentsTabState extends State<SyndicPaymentsTab> {
       final success = await context.read<SyndicProvider>().confirmPayment(payment.id);
       if (mounted) {
         if (success) {
-          AppAlert.success(context, 'تم تأكيد الوصل بنجاح ووثق في الأرشيف الرقابي ✓');
+          AppAlert.success(context, 'تم تأكيد الوصل');
         } else {
           AppAlert.error(context, 'حدث خطأ أثناء تأكيد الوصل');
         }
@@ -108,7 +108,7 @@ class _SyndicPaymentsTabState extends State<SyndicPaymentsTab> {
           ],
         ),
         content: Text(
-          'سيتم إرسال هذا الوصل إلى حساب الساكن وتحديث ذمته المالية في تطبيقه.',
+          'سيتم إرسال هذا الوصل إلى حساب الساكن.',
           style: GoogleFonts.cairo(fontSize: 14),
         ),
         actions: [
@@ -133,7 +133,7 @@ class _SyndicPaymentsTabState extends State<SyndicPaymentsTab> {
       final success = await context.read<SyndicProvider>().sendPaymentToResident(payment.id);
       if (mounted) {
         if (success) {
-          AppAlert.success(context, 'تم إرسال الوصل للساكن بنجاح ✓');
+          AppAlert.success(context, 'تم إرسال الوصل للساكن');
         } else {
           AppAlert.error(context, 'حدث خطأ أثناء إرسال الوصل');
         }
@@ -145,18 +145,18 @@ class _SyndicPaymentsTabState extends State<SyndicPaymentsTab> {
     final confirmed = await ConfirmActionDialog.show(
       context,
       title: 'حذف مسودة الوصل',
-      message: 'هل أنت متأكد من حذف هذه المسودة المالية نهائياً؟ هذا الإجراء لا يمكن التراجع عنه.',
+      message: 'هل تريد حذف هذه المسودة المالية نهائياً؟',
       confirmText: 'تأكيد الحذف',
       type: ConfirmDialogType.danger,
       requiresPassword: true,
-      passwordHint: 'لحماية السجلات المالية، يرجى إدخال كلمة مرور حسابك لتأكيد الحذف',
+      passwordHint: 'أدخل كلمة المرور لتأكيد الحذف',
     );
 
     if (confirmed == true && mounted) {
       final success = await context.read<SyndicProvider>().deletePayment(payment.id);
       if (mounted) {
         if (success) {
-          AppAlert.success(context, 'تم حذف مسودة الوصل بنجاح');
+          AppAlert.success(context, 'تم حذف المسودة');
         } else {
           AppAlert.error(context, 'لا يمكن حذف هذا الوصل');
         }

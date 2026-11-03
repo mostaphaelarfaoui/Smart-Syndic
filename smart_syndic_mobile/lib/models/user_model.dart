@@ -28,7 +28,10 @@ class UserModel {
     required this.status,
   });
 
-  String get fullName => '$firstName $lastName';
+  String get fullName {
+    final name = '$firstName $lastName'.trim();
+    return name;
+  }
   bool get isSyndic => role == 'ADMIN_SYNDIC' || role == 'SUPER_ADMIN';
   bool get isResident => role == 'RESIDENT';
 

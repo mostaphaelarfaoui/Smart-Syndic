@@ -50,11 +50,11 @@ class AnnouncementModel {
   String get priorityLabel {
     switch (priority) {
       case 'URGENT':
-        return '🚨 عاجل';
+        return 'عاجل';
       case 'INFO':
-        return 'ℹ️ تنبيه هام';
+        return 'تنبيه هام';
       default:
-        return '📢 إعلان عام';
+        return 'إعلان عام';
     }
   }
 }

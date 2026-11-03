@@ -58,7 +58,9 @@ class SyndicDashboardTab extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        'مرحباً، ${auth.user?.fullName ?? "السيد السانديك"} 👋',
+                        (auth.user?.fullName.isNotEmpty == true)
+                            ? auth.user!.fullName
+                            : 'السيد السانديك',
                         style: GoogleFonts.cairo(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -76,7 +78,7 @@ class SyndicDashboardTab extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        auth.tenant?.name ?? 'إقامة الفردوس',
+                        auth.tenant?.name ?? 'الإقامة',
                         style: GoogleFonts.cairo(
                           fontSize: 12,
                           color: Colors.white,
@@ -88,7 +90,7 @@ class SyndicDashboardTab extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'لوحة تحكم وتسيير الشؤون المالية والقانونية للإقامة',
+                  'لوحة التحكم',
                   style: GoogleFonts.cairo(
                     fontSize: 13,
                     color: Colors.white.withAlpha(200),
@@ -456,7 +458,7 @@ class SyndicDashboardTab extends StatelessWidget {
                               ? null
                               : () {
                                   Clipboard.setData(ClipboardData(text: syndic.invitationCode!));
-                                  AppAlert.success(context, 'تم نسخ رمز الدعوة بنجاح ✓');
+                                  AppAlert.success(context, 'تم نسخ رمز الدعوة');
                                 },
                           icon: const Icon(Icons.copy, color: AppColors.primary),
                           tooltip: 'نسخ الرمز',
@@ -466,9 +468,9 @@ class SyndicDashboardTab extends StatelessWidget {
                             final confirm = await showDialog<bool>(
                               context: context,
                               builder: (ctx) => AlertDialog(
-                                title: Text('تجديد رمز الدعوة', style: GoogleFonts.cairo()),
+                                title: Text('تجديد رمز الانضمام', style: GoogleFonts.cairo()),
                                 content: Text(
-                                  'تجديد الرمز سيجعل الرمز القديم غير صالح. هل أنت متأكد؟',
+                                  'هل تريد تجديد رمز الانضمام وإلغاء الرمز السابق؟',
                                   style: GoogleFonts.cairo(),
                                 ),
                                 actions: [

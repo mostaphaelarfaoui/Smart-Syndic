@@ -54,7 +54,7 @@ class _EditApartmentDialogState extends State<EditApartmentDialog> {
     if (mounted) {
       setState(() => _isSubmitting = false);
       if (success) {
-        await AppAlert.success(context, 'تم تحديث بيانات الشقة بنجاح ✓');
+        await AppAlert.success(context, 'تم تحديث بيانات الشقة');
         if (mounted) Navigator.pop(context, true);
       } else {
         AppAlert.error(

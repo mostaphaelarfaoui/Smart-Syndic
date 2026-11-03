@@ -266,7 +266,7 @@ class SettingsScreen extends StatelessWidget {
           style: GoogleFonts.cairo(fontWeight: FontWeight.bold),
         ),
         content: Text(
-          'هل أنت متأكد من رغبتك في تسجيل الخروج من حسابك؟',
+          'هل تريد تسجيل الخروج من حسابك؟',
           style: GoogleFonts.cairo(fontSize: 14),
         ),
         actions: [
@@ -311,7 +311,7 @@ class SettingsScreen extends StatelessWidget {
           ],
         ),
         content: Text(
-          'هل أنت متأكد من رغبتك في إنهاء جميع الجلسات المفتوحة على الهواتف والمتصفحات الأخرى؟ ستبقى متصلاً فقط على هذا الجهاز الحالي.',
+          'هل تريد إنهاء الجلسات الأخرى والإبقاء على هذا الجهاز فقط؟',
           style: GoogleFonts.cairo(fontSize: 14),
         ),
         actions: [
@@ -326,7 +326,7 @@ class SettingsScreen extends StatelessWidget {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('تأكيد وتسجيل الخروج', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+            child: Text('إنهاء الجلسات', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -337,7 +337,7 @@ class SettingsScreen extends StatelessWidget {
       final success = await auth.logoutOtherDevices();
       if (context.mounted) {
         if (success) {
-          AppAlert.success(context, 'تم إنهاء الجلسات على جميع الأجهزة الأخرى بنجاح');
+          AppAlert.success(context, 'تم إنهاء الجلسات الأخرى');
         } else {
           AppAlert.error(context, auth.errorMessage ?? 'حدث خطأ');
         }
@@ -366,7 +366,7 @@ class SettingsScreen extends StatelessWidget {
                     const Icon(Icons.archive_outlined, color: Color(0xFF059669), size: 26),
                     const SizedBox(width: 10),
                     Text(
-                      'تصدير أرشيف وسجلات الإقامة',
+                      'تصدير السجلات',
                       style: GoogleFonts.cairo(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -377,7 +377,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'تحميل وتصدير نسخ رقمية من سجلات الإقامة بصيغة CSV و PDF:',
+                  'تصدير سجلات الإقامة بصيغة CSV و PDF:',
                   style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: 16),
@@ -386,9 +386,9 @@ class SettingsScreen extends StatelessWidget {
                     backgroundColor: Color(0xFFECFDF5),
                     child: Icon(Icons.picture_as_pdf, color: Color(0xFF059669)),
                   ),
-                  title: Text('كشف الحساب والتقرير المالي الرسمي (PDF)',
+                  title: Text('التقرير المالي (PDF)',
                       style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13)),
-                  subtitle: Text('استخراج تقرير مالي رسمي مفصل ومختوم للإقامة',
+                  subtitle: Text('تقرير مالي مفصل ومختوم للإقامة',
                       style: GoogleFonts.cairo(fontSize: 11)),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 14),
                   onTap: () {
@@ -405,9 +405,9 @@ class SettingsScreen extends StatelessWidget {
                     backgroundColor: Color(0xFFEFF6FF),
                     child: Icon(Icons.table_view_outlined, color: Color(0xFF2563EB)),
                   ),
-                  title: Text('سجل الشقق والوحدات (Excel / CSV)',
+                  title: Text('سجل الشقق (Excel / CSV)',
                       style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13)),
-                  subtitle: Text('أرقام الشقق، الطوابق، الواجب الشهري، والشاغلين',
+                  subtitle: Text('أرقام الشقق، الطوابق، والشاغلين',
                       style: GoogleFonts.cairo(fontSize: 11)),
                   trailing: const Icon(Icons.download, size: 20),
                   onTap: () {
@@ -421,9 +421,9 @@ class SettingsScreen extends StatelessWidget {
                     backgroundColor: Color(0xFFF5F3FF),
                     child: Icon(Icons.people_outline, color: Color(0xFF7C3AED)),
                   ),
-                  title: Text('دليل السكان والاتصال (Excel / CSV)',
+                  title: Text('دليل السكان (Excel / CSV)',
                       style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13)),
-                  subtitle: Text('الملاك، المكترين، أرقام الهواتف، والبريد الإلكتروني',
+                  subtitle: Text('بيانات الملاك والمكترين وأرقام الاتصال',
                       style: GoogleFonts.cairo(fontSize: 11)),
                   trailing: const Icon(Icons.download, size: 20),
                   onTap: () {

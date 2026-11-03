@@ -101,7 +101,7 @@ class _AddApartmentDialogState extends State<AddApartmentDialog> {
         if (success) {
           await AppAlert.success(
             context,
-            _isBulk ? 'تم توليد وإضافة الشقق بنجاح ✓' : 'تم إضافة الشقة بنجاح ✓',
+            _isBulk ? 'تمت إضافة الشقق' : 'تمت إضافة الشقة',
           );
           if (mounted) Navigator.pop(context, true);
         } else {
@@ -384,7 +384,7 @@ class _AddApartmentDialogState extends State<AddApartmentDialog> {
                           controller: _totalUnitsController,
                           keyboardType: TextInputType.number,
                           decoration: InputDecoration(
-                            labelText: 'عدد الشقق المراد إضافتها',
+                            labelText: 'عدد الشقق',
                             hintText: 'مثلاً: 10',
                             hintStyle: GoogleFonts.cairo(color: AppColors.textLight, fontSize: 12),
                             labelStyle: GoogleFonts.cairo(fontSize: 13),
@@ -406,7 +406,7 @@ class _AddApartmentDialogState extends State<AddApartmentDialog> {
                         child: TextFormField(
                           controller: _prefixController,
                           decoration: InputDecoration(
-                            labelText: 'بادئة الترقيم (اختياري)',
+                            labelText: 'بادئة الترقيم',
                             hintText: 'مثلاً: شقة أو A-',
                             hintStyle: GoogleFonts.cairo(color: AppColors.textLight, fontSize: 11),
                             labelStyle: GoogleFonts.cairo(fontSize: 13),
@@ -456,7 +456,7 @@ class _AddApartmentDialogState extends State<AddApartmentDialog> {
                   child: _isSubmitting
                       ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                       : Text(
-                          _isBulk ? 'توليد وإضافة الشقق' : 'حفظ الشقة',
+                          _isBulk ? 'إضافة الشقق' : 'حفظ الشقة',
                           style: GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
                         ),
                 ),

@@ -122,7 +122,7 @@ class _ConfirmActionDialogState extends State<ConfirmActionDialog> {
           Navigator.of(context).pop(true);
         } else {
           setState(() {
-            _passwordError = 'كلمة المرور غير صحيحة. يرجى التأكد وإعادة المحاولة.';
+            _passwordError = 'كلمة المرور غير صحيحة';
             _isVerifying = false;
           });
         }
@@ -132,14 +132,14 @@ class _ConfirmActionDialogState extends State<ConfirmActionDialog> {
         setState(() {
           _passwordError = e.message.isNotEmpty
               ? e.message
-              : 'كلمة المرور غير صحيحة. يرجى التأكد وإعادة المحاولة.';
+              : 'كلمة المرور غير صحيحة';
           _isVerifying = false;
         });
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-          _passwordError = 'تعذر التحقق من كلمة المرور. يرجى المحاولة ثانية.';
+          _passwordError = 'تعذر التحقق من كلمة المرور';
           _isVerifying = false;
         });
       }

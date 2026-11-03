@@ -653,7 +653,7 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
   void _copyReceiptNumber(BuildContext context, [String? rNo]) {
     final textToCopy = rNo ?? receiptNumber;
     Clipboard.setData(ClipboardData(text: textToCopy));
-    AppAlert.success(context, 'تم نسخ رقم الوصل بنجاح ✓');
+    AppAlert.success(context, 'تم نسخ رقم الوصل');
   }
 
   @override
@@ -693,8 +693,8 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
 
               Text(
                 hasMultiReceipts
-                    ? 'تم تأكيد الدفع وإصدار ${generatedPayments!.length} وصولات بنجاح'
-                    : 'تم تأكيد الدفع وإصدار الوصل بنجاح',
+                    ? 'تم تسجيل الدفع وإصدار ${generatedPayments!.length} وصولات'
+                    : 'تم تسجيل الدفع وإصدار الوصل',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.cairo(
                   fontSize: 18,
@@ -705,8 +705,8 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 hasMultiReceipts
-                    ? 'تم إصدار وصل رسمي منفصل لكل شهر وإيداعها في حساب الساكن'
-                    : 'تم خصم المبلغ من متأخرات الشقة وإيداع الوصل في حساب الساكن الخاص',
+                    ? 'تم إصدار وصل لكل شهر وإيداعه في حساب الساكن'
+                    : 'تم خصم المبلغ وإيداع الوصل في حساب الساكن',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.cairo(
                   fontSize: 12,
@@ -765,8 +765,8 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
                     ],
                     const Divider(height: 16),
                     _buildRow(
-                      label: 'المستحقات المتبقية على الشقة',
-                      value: remainingArrears <= 0 ? '0 درهم (خالصة ✓)' : '${remainingArrears.toStringAsFixed(0)} درهم',
+                      label: 'المستحقات المتبقية',
+                      value: remainingArrears <= 0 ? '0 درهم (خالصة)' : '${remainingArrears.toStringAsFixed(0)} درهم',
                       valueColor: remainingArrears <= 0 ? AppColors.success : AppColors.danger,
                       isBold: true,
                     ),
@@ -782,7 +782,7 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
                     const Icon(Icons.receipt_long, size: 18, color: AppColors.primary),
                     const SizedBox(width: 6),
                     Text(
-                      'الوصولات الصادرة (وصل لكل شهر):',
+                      'الوصولات الصادرة:',
                       style: GoogleFonts.cairo(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
@@ -894,7 +894,7 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'تم وضع جميع إيصالات الدفع في حساب صاحب الشقة في ركن إيصالات الدفع، ولن تظهر لباقي الشقق لضمان الخصوصية التامة.',
+                        'تم إيداع الوصل في حساب الساكن الخاص، ولا يظهر لباقي الشقق لضمان الخصوصية.',
                         style: GoogleFonts.cairo(
                           fontSize: 11,
                           color: AppColors.textPrimary,
@@ -920,7 +920,7 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
                   onPressed: () => _viewReceipt(context),
                   icon: const Icon(Icons.visibility_rounded, size: 20),
                   label: Text(
-                    'معاينة الوصل داخل التطبيق',
+                    'معاينة الوصل',
                     style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13.5),
                   ),
                 ),
@@ -937,7 +937,7 @@ class PaymentReceiptSuccessDialog extends StatelessWidget {
                   onPressed: () => _downloadReceipt(context),
                   icon: const Icon(Icons.download_rounded, size: 20),
                   label: Text(
-                    'تحميل مباشر للوصل (PDF)',
+                    'تحميل الوصل (PDF)',
                     style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13.5),
                   ),
                 ),

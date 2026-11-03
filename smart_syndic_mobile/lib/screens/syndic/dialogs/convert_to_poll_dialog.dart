@@ -97,7 +97,7 @@ class _ConvertToPollDialogState extends State<ConvertToPollDialog> {
     if (mounted) {
       setState(() => _isSubmitting = false);
       if (success) {
-        await AppAlert.success(context, 'تم تحويل الاقتراح إلى استطلاع رأي بنجاح ✓');
+        await AppAlert.success(context, 'تم تحويل الاقتراح إلى استطلاع رأي');
         if (mounted) Navigator.pop(context, true);
       } else {
         AppAlert.error(
@@ -141,7 +141,7 @@ class _ConvertToPollDialogState extends State<ConvertToPollDialog> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              'تحويل الاقتراح لتصويت عام',
+                              'تحويل الاقتراح لتصويت',
                               style: GoogleFonts.cairo(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -202,7 +202,7 @@ class _ConvertToPollDialogState extends State<ConvertToPollDialog> {
                       const SizedBox(height: 8),
                       CheckboxListTile(
                         title: Text(
-                          'إظهار رقم الشقة وصاحب الاقتراح؟',
+                          'إظهار صاحب الاقتراح والشقة',
                           style: GoogleFonts.cairo(fontSize: 13, color: AppColors.textPrimary),
                         ),
                         value: _showResidentInfo,
@@ -221,7 +221,7 @@ class _ConvertToPollDialogState extends State<ConvertToPollDialog> {
                 const SizedBox(height: 16),
 
                 Text(
-                  'خيارات التصويت المتاحة للسكان:',
+                  'خيارات التصويت:',
                   style: GoogleFonts.cairo(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
@@ -261,7 +261,7 @@ class _ConvertToPollDialogState extends State<ConvertToPollDialog> {
                     child: TextButton.icon(
                       onPressed: _addOption,
                       icon: const Icon(Icons.add, size: 16),
-                      label: Text('إضافة خيار إضافي', style: GoogleFonts.cairo(fontSize: 12)),
+                      label: Text('إضافة خيار', style: GoogleFonts.cairo(fontSize: 12)),
                     ),
                   ),
 
@@ -292,7 +292,7 @@ class _ConvertToPollDialogState extends State<ConvertToPollDialog> {
                         const Icon(Icons.timer_outlined, color: AppColors.textSecondary, size: 20),
                         const SizedBox(width: 12),
                         Text(
-                          'تاريخ انتهاء التصويت: ${DateFormat('yyyy-MM-dd').format(_expiresAt)}',
+                          'تاريخ الانتهاء: ${DateFormat('yyyy-MM-dd').format(_expiresAt)}',
                           style: GoogleFonts.cairo(
                             fontSize: 13,
                             color: AppColors.textPrimary,
@@ -315,7 +315,7 @@ class _ConvertToPollDialogState extends State<ConvertToPollDialog> {
                           child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                         )
                       : Text(
-                          'إطلاق التصويت لجميع السكان',
+                          'إطلاق التصويت',
                           style: GoogleFonts.cairo(fontWeight: FontWeight.bold),
                         ),
                 ),

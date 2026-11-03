@@ -100,7 +100,7 @@ class _RegisterResidentScreenState extends State<RegisterResidentScreen> {
     if (_selectedApartmentData != null && _selectedApartmentData!['is_occupied'] == true) {
       AppAlert.error(
         context,
-        '⚠️ هذه الشقة مشغولة ومسجل بها ساكن مسبقاً، يرجى اختيار شقة أخرى شاغرة أو التواصل مع السانديك.',
+        'هذه الشقة مشغولة ومسجل بها ساكن، يرجى اختيار شقة شاغرة أو التواصل مع السانديك.',
       );
       return;
     }
@@ -144,11 +144,11 @@ class _RegisterResidentScreenState extends State<RegisterResidentScreen> {
             children: [
               const Icon(Icons.check_circle, color: AppColors.success, size: 28),
               const SizedBox(width: 8),
-              Text('تم إرسال طلبكم بنجاح', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+              Text('تم إرسال الطلب', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
             ],
           ),
           content: Text(
-            'تم تسجيل طلب الانضمام لدى إدارة العقار بنجاح. سيقوم السانديك بمراجعة وتفعيل حسابكم قريباً.',
+            'تم تسجيل طلب الانضمام. سيقوم السانديك بمراجعته وتفعيل حسابكم قريباً.',
             style: GoogleFonts.cairo(),
           ),
           actions: [
@@ -409,7 +409,7 @@ class _RegisterResidentScreenState extends State<RegisterResidentScreen> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              isOccupied ? 'مشغولة ⚠️' : 'شاغرة ✓',
+                              isOccupied ? 'مشغولة' : 'شاغرة',
                               style: GoogleFonts.cairo(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
@@ -452,7 +452,7 @@ class _RegisterResidentScreenState extends State<RegisterResidentScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          '⚠️ تنبيه: هذه الشقة مشغولة ومسجل بها ساكن مسبقاً! يرجى اختيار شقة أخرى شاغرة.',
+                          'هذه الشقة مشغولة ومسجل بها ساكن، يرجى اختيار شقة شاغرة.',
                           style: GoogleFonts.cairo(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,

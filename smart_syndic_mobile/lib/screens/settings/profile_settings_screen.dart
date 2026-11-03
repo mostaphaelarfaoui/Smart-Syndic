@@ -87,7 +87,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
 
     if (hasNewPassword || hasCurrentPassword) {
       if (!hasCurrentPassword) {
-        AppAlert.error(context, 'يرجى إدخال كلمة المرور الحالية لتأكيد التغيير');
+        AppAlert.error(context, 'يرجى إدخال كلمة المرور الحالية');
         setState(() => _isSubmitting = false);
         return;
       }
@@ -106,7 +106,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     if (mounted) {
       setState(() => _isSubmitting = false);
       if (success) {
-        await AppAlert.success(context, 'تم تحديث معلومات الحساب بنجاح');
+        await AppAlert.success(context, 'تم تحديث معلومات الحساب');
         if (mounted) Navigator.pop(context);
       } else {
         AppAlert.error(

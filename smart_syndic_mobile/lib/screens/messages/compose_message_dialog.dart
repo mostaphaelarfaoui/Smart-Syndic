@@ -80,7 +80,7 @@ class _ComposeMessageDialogState extends State<ComposeMessageDialog> {
     if (mounted) {
       setState(() => _isSubmitting = false);
       if (success) {
-        await AppAlert.success(context, 'تم إرسال الرسالة بنجاح ✓');
+        await AppAlert.success(context, 'تم إرسال الرسالة');
         if (mounted) Navigator.pop(context, true);
       } else {
         AppAlert.error(
@@ -180,7 +180,7 @@ class _ComposeMessageDialogState extends State<ComposeMessageDialog> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '💡 الرسائل مخصصة للتواصل المباشر الفردي فقط. للإعلانات العامة الموجهة للجميع، يرجى استخدام قسم الإعلانات.',
+                          'الرسائل للتواصل الفردي المباشر. للإعلانات العامة استخدم قسم الإعلانات.',
                           style: GoogleFonts.cairo(fontSize: 10.5, color: AppColors.textSecondary),
                         ),
                         const SizedBox(height: 12),
@@ -230,8 +230,8 @@ class _ComposeMessageDialogState extends State<ComposeMessageDialog> {
                                   ),
                                   items: [
                                     DropdownMenuItem(value: 'NORMAL', child: Text('عادي', style: GoogleFonts.cairo(fontSize: 12))),
-                                    DropdownMenuItem(value: 'HIGH', child: Text('⚠️ هام', style: GoogleFonts.cairo(fontSize: 12))),
-                                    DropdownMenuItem(value: 'URGENT', child: Text('🚨 عاجل', style: GoogleFonts.cairo(fontSize: 12))),
+                                    DropdownMenuItem(value: 'HIGH', child: Text('هام', style: GoogleFonts.cairo(fontSize: 12))),
+                                    DropdownMenuItem(value: 'URGENT', child: Text('عاجل', style: GoogleFonts.cairo(fontSize: 12))),
                                   ],
                                   onChanged: (v) => setState(() => _priority = v ?? 'NORMAL'),
                                 ),

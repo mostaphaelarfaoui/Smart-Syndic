@@ -64,7 +64,7 @@ class ResidentPaymentsTab extends StatelessWidget {
 
   void _copyReceiptNumber(BuildContext context, String receiptNumber) {
     Clipboard.setData(ClipboardData(text: receiptNumber));
-    AppAlert.success(context, 'تم نسخ رقم الوصل بنجاح ✓');
+    AppAlert.success(context, 'تم نسخ رقم الوصل');
   }
 
   @override
@@ -479,7 +479,7 @@ class ResidentPaymentsTab extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'إيصالات الأداء الخاصة بشقتكم 🔒',
+                  'إيصالات الأداء الخاصة بشقتكم',
                   style: GoogleFonts.cairo(
                     fontWeight: FontWeight.bold,
                     fontSize: 13,

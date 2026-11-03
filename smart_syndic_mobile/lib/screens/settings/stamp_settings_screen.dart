@@ -68,7 +68,7 @@ class _StampSettingsScreenState extends State<StampSettingsScreen> {
         filePath: picked.path,
       );
       if (mounted) {
-        _showSuccess('تم رفع صورة الطابع بنجاح ✅');
+        _showSuccess('تم رفع صورة الطابع');
         await _loadSettings();
       }
     } catch (e) {
@@ -83,7 +83,7 @@ class _StampSettingsScreenState extends State<StampSettingsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text('حذف الطابع', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
-        content: Text('هل تريد حذف صورة الطابع؟ سيؤثر ذلك على الوصولات المستقبلية.', style: GoogleFonts.cairo()),
+        content: Text('هل تريد حذف صورة الطابع؟', style: GoogleFonts.cairo()),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -104,7 +104,7 @@ class _StampSettingsScreenState extends State<StampSettingsScreen> {
     try {
       await _api.delete(ApiConstants.syndicStampUpload);
       if (mounted) {
-        _showSuccess('تم حذف الطابع.');
+        _showSuccess('تم حذف الطابع');
         await _loadSettings();
       }
     } catch (e) {
@@ -198,7 +198,7 @@ class _StampSettingsScreenState extends State<StampSettingsScreen> {
                   const SizedBox(height: 12),
                   Center(
                     child: Text(
-                      _hasStamp ? '✅ الطابع مُفعَّل' : 'لا يوجد طابع مُحمَّل بعد',
+                      _hasStamp ? 'الطابع مُفعَّل' : 'لا يوجد طابع مُحمَّل',
                       style: GoogleFonts.cairo(
                         color: _hasStamp ? AppColors.success : AppColors.textSecondary,
                         fontWeight: FontWeight.bold,

@@ -96,7 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _showPendingResidentDialog(Map<String, dynamic> data) {
-    final residentName = data['user']?['name'] as String? ?? 'الجار العزيز';
+    final residentName = data['user']?['name'] as String? ?? 'الساكن';
     final residenceName = data['residence']?['name'] as String? ?? 'الإقامة';
     final unitNumber = data['apartment']?['unit_number'] as String? ?? '';
     final buildingName = data['apartment']?['building'] as String?;
@@ -138,7 +138,7 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'مرحباً بك $residentName! 👋\nلقد تم تسجيل حسابك وإرسال طلب الانضمام إلى $residenceName بنجاح.',
+                'تم تسجيل حسابك وإرسال طلب الانضمام إلى $residenceName.',
                 style: GoogleFonts.cairo(fontSize: 13, height: 1.6, color: AppColors.textPrimary),
               ),
               const SizedBox(height: 12),
@@ -179,7 +179,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 12),
 
               Text(
-                'حسابك الآن بانتظار موافقة السانديك وتأكيد الشقة. بمجرد قبوله للطلب ستتمكن من تسجيل الدخول مباشرة للاطلاع على وضعية شقتك وإيصالاتك والمشاركة في القرارات.',
+                'الحساب بانتظار موافقة السانديك. ستتمكن من تسجيل الدخول فور قبول الطلب.',
                 style: GoogleFonts.cairo(fontSize: 12, height: 1.5, color: AppColors.textSecondary),
               ),
 
@@ -317,7 +317,7 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'حساب السانديك الخاص بك قيد المراجعة حالياً من قبل إدارة المنصة (SuperAdmin). لن تتمكن من الدخول حتى يتم التفعيل.',
+                'حسابك قيد المراجعة من طرف إدارة المنصة، وسيتم تفعيله قريباً.',
                 style: GoogleFonts.cairo(fontSize: 13, height: 1.5),
               ),
               const SizedBox(height: 16),
@@ -332,7 +332,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'معلومات التواصل مع إدارة المنصة للتفعيل:',
+                      'للتواصل مع الإدارة للتفعيل:',
                       style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.primary),
                     ),
                     const SizedBox(height: 8),
@@ -431,7 +431,7 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'الحساب موقوف أو معطل',
+                'الحساب موقوف',
                 style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 16),
               ),
             ),

@@ -70,7 +70,7 @@ class _BulkGenerateApartmentsDialogState extends State<BulkGenerateApartmentsDia
     if (mounted) {
       setState(() => _isSubmitting = false);
       if (success) {
-        await AppAlert.success(context, 'تم توليد وإضافة الشقق بنجاح ✓');
+        await AppAlert.success(context, 'تمت إضافة الشقق');
         if (mounted) Navigator.pop(context, true);
       } else {
         AppAlert.error(
@@ -123,7 +123,7 @@ class _BulkGenerateApartmentsDialogState extends State<BulkGenerateApartmentsDia
                               style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                             ),
                             Text(
-                              'إضافة عمارة وشققها في ثانية واحدة',
+                              'إضافة عمارة وشققها دفعة واحدة',
                               style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary),
                             ),
                           ],

@@ -20,12 +20,12 @@ class _SyndicExpensesTabState extends State<SyndicExpensesTab> {
 
   final List<Map<String, String>> _categories = [
     {'value': 'ALL', 'label': 'الكل'},
-    {'value': 'CLEANING', 'label': '🧹 النظافة'},
-    {'value': 'ELEVATOR', 'label': '🛗 المصعد'},
-    {'value': 'WATER_ELECTRICITY', 'label': '💡 الماء والكهرباء'},
-    {'value': 'SECURITY', 'label': '🔒 الحراسة'},
-    {'value': 'MAINTENANCE', 'label': '🔧 الصيانة'},
-    {'value': 'OTHER', 'label': '📋 أخرى'},
+    {'value': 'CLEANING', 'label': 'النظافة'},
+    {'value': 'ELEVATOR', 'label': 'المصعد'},
+    {'value': 'WATER_ELECTRICITY', 'label': 'الماء والكهرباء'},
+    {'value': 'SECURITY', 'label': 'الحراسة'},
+    {'value': 'MAINTENANCE', 'label': 'الصيانة'},
+    {'value': 'OTHER', 'label': 'أخرى'},
   ];
 
   @override

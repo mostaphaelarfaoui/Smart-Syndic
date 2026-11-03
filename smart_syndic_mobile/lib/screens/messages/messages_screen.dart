@@ -312,8 +312,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
               const SizedBox(height: 6),
               Text(
                 _selectedFilter == 'unread'
-                    ? 'تمت قراءة جميع المحادثات بنجاح!'
-                    : 'ابدأ محادثة جديدة للتواصل السريع والفعال مع إدارة الإقامة والسكان.',
+                    ? 'تمت قراءة جميع المحادثات.'
+                    : 'ابدأ محادثة جديدة للتواصل مع الإدارة أو السكان.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary, height: 1.5),
               ),

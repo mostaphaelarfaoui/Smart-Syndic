@@ -78,7 +78,7 @@ class _CreatePollDialogState extends State<CreatePollDialog> {
     if (mounted) {
       setState(() => _isSubmitting = false);
       if (success) {
-        await AppAlert.success(context, 'تم إنشاء التصويت بنجاح ✓');
+        await AppAlert.success(context, 'تم إنشاء التصويت');
         if (mounted) Navigator.pop(context, true);
       } else {
         AppAlert.error(
@@ -159,7 +159,7 @@ class _CreatePollDialogState extends State<CreatePollDialog> {
                 const SizedBox(height: 16),
 
                 Text(
-                  'خيارات التصويت المتاحة للسكان:',
+                  'خيارات التصويت:',
                   style: GoogleFonts.cairo(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
@@ -199,7 +199,7 @@ class _CreatePollDialogState extends State<CreatePollDialog> {
                     child: TextButton.icon(
                       onPressed: _addOption,
                       icon: const Icon(Icons.add, size: 16),
-                      label: Text('إضافة خيار إضافي', style: GoogleFonts.cairo(fontSize: 12)),
+                      label: Text('إضافة خيار', style: GoogleFonts.cairo(fontSize: 12)),
                     ),
                   ),
 
@@ -233,7 +233,7 @@ class _CreatePollDialogState extends State<CreatePollDialog> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'ينتهي التصويت في',
+                              'تاريخ الانتهاء',
                               style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary),
                             ),
                             Text(

@@ -28,19 +28,19 @@ class _RecordExpenseDialogState extends State<RecordExpenseDialog> {
   bool _isSubmitting = false;
 
   final List<Map<String, String>> _paymentMethods = [
-    {'value': 'CASH', 'label': '💵 نقداً (يخصم من الصندوق)'},
-    {'value': 'BANK_TRANSFER', 'label': '🏦 تحويل بنكي (يخصم من البنك)'},
-    {'value': 'CHEQUE', 'label': '🧾 شيك بنكي (يخصم من البنك)'},
+    {'value': 'CASH', 'label': 'نقداً (الصندوق)'},
+    {'value': 'BANK_TRANSFER', 'label': 'تحويل بنكي'},
+    {'value': 'CHEQUE', 'label': 'شيك بنكي'},
   ];
 
   final List<Map<String, String>> _categories = [
-    {'value': 'CLEANING', 'label': '🧹 النظافة'},
-    {'value': 'ELEVATOR', 'label': '🛗 صيانة المصعد'},
-    {'value': 'WATER_ELECTRICITY', 'label': '💡 الماء والكهرباء'},
-    {'value': 'SECURITY', 'label': '🔒 الحراسة والأمن'},
-    {'value': 'GARDENING', 'label': '🌿 البستنة'},
-    {'value': 'MAINTENANCE', 'label': '🔧 صيانة عامة'},
-    {'value': 'OTHER', 'label': '📋 مصاريف أخرى'},
+    {'value': 'CLEANING', 'label': 'النظافة'},
+    {'value': 'ELEVATOR', 'label': 'صيانة المصعد'},
+    {'value': 'WATER_ELECTRICITY', 'label': 'الماء والكهرباء'},
+    {'value': 'SECURITY', 'label': 'الحراسة والأمن'},
+    {'value': 'GARDENING', 'label': 'البستنة'},
+    {'value': 'MAINTENANCE', 'label': 'صيانة عامة'},
+    {'value': 'OTHER', 'label': 'مصاريف أخرى'},
   ];
 
   @override
@@ -141,7 +141,7 @@ class _RecordExpenseDialogState extends State<RecordExpenseDialog> {
     if (mounted) {
       setState(() => _isSubmitting = false);
       if (success) {
-        await AppAlert.success(context, 'تم تسجيل المصروف وإرفاق الفاتورة بنجاح ✓');
+        await AppAlert.success(context, 'تم تسجيل المصروف وإرفاق الفاتورة');
         if (mounted) Navigator.pop(context, true);
       } else {
         AppAlert.error(
@@ -336,7 +336,7 @@ class _RecordExpenseDialogState extends State<RecordExpenseDialog> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'تم إرفاق الفاتورة ✓',
+                                'تم إرفاق الفاتورة',
                                 style: GoogleFonts.cairo(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 13,

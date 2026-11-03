@@ -457,7 +457,7 @@ class _SyndicApartmentsTabState extends State<SyndicApartmentsTab> {
                           ),
                           child: Text(
                             apt.isSettled
-                                ? 'خالص ✓'
+                                ? 'خالص'
                                 : 'متأخرات: ${apt.arrears.toStringAsFixed(0)} د.م',
                             style: GoogleFonts.cairo(
                               fontSize: 10,

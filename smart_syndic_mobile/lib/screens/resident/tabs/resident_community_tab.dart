@@ -64,9 +64,9 @@ class ResidentCommunityTabState extends State<ResidentCommunityTab> with SingleT
             labelStyle: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 13),
             unselectedLabelStyle: GoogleFonts.cairo(fontSize: 13),
             tabs: const [
-              Tab(text: '📢 إعلانات الإقامة'),
-              Tab(text: 'استطلاعات الرأي والتصويت'),
-              Tab(text: 'اقتراحاتي وملاحظاتي'),
+              Tab(text: 'إعلانات الإقامة'),
+              Tab(text: 'استطلاعات الرأي'),
+              Tab(text: 'اقتراحاتي'),
             ],
           ),
         ),
@@ -109,8 +109,8 @@ class ResidentCommunityTabState extends State<ResidentCommunityTab> with SingleT
       child: polls.isEmpty
           ? const EmptyStateWidget(
               icon: Icons.how_to_vote_outlined,
-              title: 'لا توجد استطلاعات رأي نشطة حالياً',
-              description: 'عندما يطرح السانديك تصويتاً جديداً للمصادقة على قرار يهم الإقامة، سيظهر هنا للمشاركة برأيك',
+              title: 'لا توجد استطلاعات رأي حالياً',
+              description: 'ستظهر هنا استطلاعات الرأي الجديدة للمشاركة والتصويت',
             )
           : ListView.builder(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
@@ -152,7 +152,7 @@ class ResidentCommunityTabState extends State<ResidentCommunityTab> with SingleT
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              hasVoted ? 'صوتك مسجل ✓' : 'مفتوح للتصويت',
+                              hasVoted ? 'صوتك مسجل' : 'مفتوح للتصويت',
                               style: GoogleFonts.cairo(
                                 fontSize: 11,
                                 color: hasVoted ? AppColors.success : AppColors.primary,
@@ -308,7 +308,7 @@ class ResidentCommunityTabState extends State<ResidentCommunityTab> with SingleT
                                     setState(() => _votingProgress[poll.id] = false);
                                     if (context.mounted) {
                                       if (ok) {
-                                        AppAlert.success(context, 'تم تسجيل صوتك بنجاح ✓');
+                                        AppAlert.success(context, 'تم تسجيل صوتك');
                                       } else {
                                         AppAlert.error(context, resident.errorMessage ?? 'تعذر تسجيل صوتك');
                                       }
@@ -317,7 +317,7 @@ class ResidentCommunityTabState extends State<ResidentCommunityTab> with SingleT
                                 },
                           child: isSubmitting
                               ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                              : Text('تأكيد صوتي في هذا الاستطلاع', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+                              : Text('تأكيد التصويت', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
                         ),
                       ],
 
@@ -465,9 +465,9 @@ class ResidentCommunityTabState extends State<ResidentCommunityTab> with SingleT
       child: suggestions.isEmpty
           ? EmptyStateWidget(
               icon: Icons.lightbulb_outline,
-              title: 'لم تقم بتقديم أي اقتراح بعد',
-              description: 'هل لديك فكرة أو ملاحظة لتحسين الإقامة؟ شاركها مع السانديك بكل بساطة وسرية',
-              buttonText: 'تقديم أول فكرة',
+              title: 'لم تقدم أي اقتراح بعد',
+              description: 'شارك أفكارك وملاحظاتك لتحسين الإقامة مع السانديك',
+              buttonText: 'تقديم اقتراح',
               onButtonPressed: () {
                 showDialog(
                   context: context,
@@ -562,8 +562,8 @@ class ResidentCommunityTabState extends State<ResidentCommunityTab> with SingleT
       child: announcements.isEmpty
           ? const EmptyStateWidget(
               icon: Icons.campaign_outlined,
-              title: 'لا توجد إعلانات منشورة حالياً',
-              description: 'عندما تنشر إدارة السانديك بياناً أو إعلاناً للإقامة، سيصلك إشعار فوري وسيظهر هنا.',
+              title: 'لا توجد إعلانات حالياً',
+              description: 'ستظهر هنا جميع الإعلانات والبيانات الصادرة عن إدارة السانديك',
             )
           : ListView.builder(
               padding: const EdgeInsets.only(left: 14, right: 14, top: 12, bottom: 20),

@@ -184,7 +184,7 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'تم تسجيل حساب السانديك بنجاح! الإقامة حالياً في انتظار تفعيل السوبر أدمن (SuperAdmin) قبل أن تتمكن من الدخول.',
+                    'تم تسجيل الحساب. الإقامة قيد المراجعة لدى إدارة المنصة للتفعيل.',
                     style: GoogleFonts.cairo(fontSize: 13, height: 1.5),
                   ),
                   const SizedBox(height: 16),
@@ -199,7 +199,7 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'معلومات التواصل مع إدارة المنصة للتفعيل:',
+                          'للتواصل مع الإدارة للتفعيل:',
                           style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.primary),
                         ),
                         const SizedBox(height: 8),
@@ -455,7 +455,7 @@ class _RegisterSyndicScreenState extends State<RegisterSyndicScreen> {
                               const SizedBox(width: 6),
                               Expanded(
                                 child: Text(
-                                  'سيتم إنشاء $total شقة تلقائياً عند اكتمال التسجيل ✓',
+                                  'سيتم إنشاء $total شقة تلقائياً عند اكتمال التسجيل',
                                   style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.success),
                                 ),
                               ),

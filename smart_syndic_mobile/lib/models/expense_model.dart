@@ -22,19 +22,19 @@ class ExpenseModel {
   String get categoryArabic {
     switch (category) {
       case 'ELEVATOR':
-        return '🛗 المصعد';
+        return 'المصعد';
       case 'CLEANING':
-        return '🧹 النظافة';
+        return 'النظافة';
       case 'SECURITY':
-        return '🔒 الحراسة والأمن';
+        return 'الحراسة';
       case 'WATER_ELECTRICITY':
-        return '💡 الماء والكهرباء';
+        return 'الماء والكهرباء';
       case 'GARDENING':
-        return '🌿 البستنة';
+        return 'البستنة';
       case 'MAINTENANCE':
-        return '🔧 الصيانة العامة';
+        return 'الصيانة';
       default:
-        return '📋 أخرى';
+        return 'أخرى';
     }
   }
 

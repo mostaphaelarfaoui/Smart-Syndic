@@ -51,7 +51,7 @@ class _ResidentProfileScreenState extends State<ResidentProfileScreen> {
 
   void _copyToClipboard(BuildContext context, String text, String label) {
     Clipboard.setData(ClipboardData(text: text));
-    AppAlert.success(context, 'تم نسخ $label بنجاح ✓');
+    AppAlert.success(context, 'تم نسخ $label');
   }
 
   Future<void> _showEditProfileDialog(BuildContext context, Map<String, dynamic>? user) async {
@@ -126,7 +126,7 @@ class _ResidentProfileScreenState extends State<ResidentProfileScreen> {
                         Navigator.pop(ctx);
                         if (success) {
                           context.read<ResidentProvider>().fetchProfile();
-                          AppAlert.success(context, 'تم تحديث المعلومات الشخصية بنجاح ✓');
+                          AppAlert.success(context, 'تم تحديث المعلومات الشخصية');
                         } else {
                           AppAlert.error(context, auth.errorMessage ?? 'حدث خطأ أثناء التحديث');
                         }
@@ -251,7 +251,7 @@ class _ResidentProfileScreenState extends State<ResidentProfileScreen> {
                       if (context.mounted) {
                         Navigator.pop(ctx);
                         if (success) {
-                          AppAlert.success(context, 'تم تغيير كلمة المرور بنجاح ✓');
+                          AppAlert.success(context, 'تم تغيير كلمة المرور');
                         } else {
                           AppAlert.error(context, auth.errorMessage ?? 'حدث خطأ في تغيير كلمة المرور');
                         }
@@ -273,7 +273,7 @@ class _ResidentProfileScreenState extends State<ResidentProfileScreen> {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text('تسجيل الخروج', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
-        content: Text('هل أنت متأكد من رغبتك في تسجيل الخروج من حساب الساكن؟', style: GoogleFonts.cairo()),
+        content: Text('هل تريد تسجيل الخروج من حسابك؟', style: GoogleFonts.cairo()),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -728,7 +728,7 @@ class _ResidentProfileScreenState extends State<ResidentProfileScreen> {
                           _buildDetailRow(label: 'الصفة القانونية:', value: occupancyType, icon: Icons.badge_outlined),
                           _buildDetailRow(
                             label: 'جهة الاتصال:',
-                            value: (apartment?['is_primary_contact'] ?? true) ? 'جهة اتصال رئيسية ✓' : 'ساكن إضافي',
+                            value: (apartment?['is_primary_contact'] ?? true) ? 'جهة اتصال رئيسية' : 'ساكن إضافي',
                             icon: Icons.verified_user_outlined,
                           ),
                         ],
